@@ -63,7 +63,7 @@ export function PatientDashboard() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-teal-50">
               <HeartPulse className="h-5 w-5" />
-              <span className="font-medium tracking-wide uppercase text-sm">Arogya Saathi Health Pass</span>
+              <span className="font-medium tracking-wide uppercase text-sm">Sehat Saathi Health Pass</span>
             </div>
             <h2 className="text-2xl font-bold">{currentUser?.name || 'Citizen'}</h2>
             <p className="text-teal-50/90 text-sm max-w-md">

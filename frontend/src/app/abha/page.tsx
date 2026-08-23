@@ -104,7 +104,7 @@ export default function AbhaPage() {
               <CardContent className="p-6">
                 <div className="space-y-6">
                   {[
-                    "Visit nearest Arogya Mandir or PHC",
+                    "Visit nearest SEHAT Mandir or PHC",
                     "Authenticate via Aadhaar OTP or biometric",
                     "Health worker syncs existing records",
                     "Future consultations are automatically linked"

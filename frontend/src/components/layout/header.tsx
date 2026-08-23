@@ -46,13 +46,13 @@ export function Header({ onMenuClick }: HeaderProps) {
             {getPageTitle(pathname)}
           </h1>
           <div className="flex items-center text-xs font-medium text-slate-400 gap-1.5">
-            <span>Arogya Saathi</span>
+            <span>Sehat Saathi</span>
             <span>/</span>
             <span className="text-teal-600">{getPageTitle(pathname)}</span>
           </div>
         </div>
         <span className="font-bold text-xl md:hidden ml-1 text-slate-800 tracking-tight">
-          Arogya Saathi
+          Sehat Saathi
         </span>
       </div>
       

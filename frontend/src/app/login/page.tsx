@@ -51,7 +51,7 @@ export default function LoginPage() {
                 <ShieldPlus className="w-8 h-8" />
               </div>
               <h1 className="text-3xl font-black tracking-tight text-blue-900">
-                AROGYA <span className="text-teal-500">SAATHI</span>
+                SEHAT <span className="text-teal-500">SAATHI</span>
               </h1>
             </div>
             <p className="text-slate-500 font-medium ml-1">AI-Powered Healthcare for a Healthier India</p>
@@ -64,7 +64,7 @@ export default function LoginPage() {
               <span className="text-slate-800">Stronger Communities.</span>
             </h2>
             <p className="text-slate-600 text-lg max-w-md leading-relaxed">
-              Arogya Saathi connects patients, doctors, and healthcare providers on one intelligent platform for a healthier India.
+              Sehat Saathi connects patients, doctors, and healthcare providers on one intelligent platform for a healthier India.
             </p>
           </div>
 
@@ -118,7 +118,7 @@ export default function LoginPage() {
               
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold text-blue-950">Welcome back</h2>
-                <p className="text-slate-500 font-medium">Sign in to continue to Arogya Saathi</p>
+                <p className="text-slate-500 font-medium">Sign in to continue to Sehat Saathi</p>
               </div>
 
               <form onSubmit={handleLogin} className="space-y-6">

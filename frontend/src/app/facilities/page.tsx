@@ -65,7 +65,7 @@ export default function FacilitiesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Types</SelectItem>
-                <SelectItem value={FacilityType.AROGYA_MANDIR}>Arogya Mandir</SelectItem>
+                <SelectItem value={FacilityType.SEHAT_MANDIR}>SEHAT Mandir</SelectItem>
                 <SelectItem value={FacilityType.PHC}>PHC</SelectItem>
                 <SelectItem value={FacilityType.CHC}>CHC</SelectItem>
                 <SelectItem value={FacilityType.DISTRICT_HOSPITAL}>District Hospital</SelectItem>

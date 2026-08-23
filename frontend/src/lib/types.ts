@@ -1,5 +1,5 @@
 // ============================================================
-// Arogya Saathi AI — Type Definitions
+// Sehat Saathi AI — Type Definitions
 // Mirrors the planned Prisma schema for future migration
 // ============================================================
 
@@ -21,7 +21,7 @@ export enum Urgency {
 }
 
 export enum FacilityType {
-  AROGYA_MANDIR = "AROGYA_MANDIR",
+  SEHAT_MANDIR = "SEHAT_MANDIR",
   PHC = "PHC",
   CHC = "CHC",
   DISTRICT_HOSPITAL = "DISTRICT_HOSPITAL",

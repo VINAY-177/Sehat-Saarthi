@@ -17,7 +17,7 @@ interface PatientFormProps {
   isLoading?: boolean;
 }
 
-const DRAFT_KEY = "Arogya Saathi-draft";
+const DRAFT_KEY = "Sehat Saathi-draft";
 
 const defaultState: PatientRegistrationInput = {
   name: "",
@@ -179,7 +179,7 @@ export function PatientForm({ onSubmit, isLoading }: PatientFormProps) {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-base font-semibold">2. Vital Signs (Recorded at Arogya Mandir / Camp)</h3>
+        <h3 className="text-base font-semibold">2. Vital Signs (Recorded at SEHAT Mandir / Camp)</h3>
         <Separator />
         <VitalsInput vitals={formData.vitals} onChange={(v) => setFormData({...formData, vitals: v})} />
       </section>

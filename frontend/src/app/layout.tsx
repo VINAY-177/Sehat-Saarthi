@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/app-shell";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Arogya Saathi — Intelligent Healthcare Navigation",
+  title: "Sehat Saathi — Intelligent Healthcare Navigation",
   description: "An intelligent healthcare navigation and referral platform connecting citizens, health workers, and facilities.",
 };
 

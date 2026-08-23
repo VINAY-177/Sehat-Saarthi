@@ -55,7 +55,7 @@ export default function SchemesPage() {
       
       if (scheme.schemeName.includes("PM-JAY")) {
         if (incomeCategory === "BPL" || incomeCategory === "EWS") status = "POTENTIALLY_ELIGIBLE";
-      } else if (scheme.schemeName.includes("Arogya Kosh") && stateName === "Delhi") {
+      } else if (scheme.schemeName.includes("SEHAT Kosh") && stateName === "Delhi") {
         status = "POTENTIALLY_ELIGIBLE";
       } else if (scheme.schemeName.includes("Mohalla")) {
         status = "POTENTIALLY_ELIGIBLE";
@@ -245,7 +245,7 @@ export default function SchemesPage() {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <p className="text-sm text-amber-900 leading-relaxed">
-                <strong className="font-semibold">Disclaimer:</strong> This navigator provides informational guidance based on government rules. Final verification and e-card issuance require biometric Aadhaar KYC at your local Ayushman Arogya Mandir, CSC Kiosk, or Empanelled Hospital.
+                <strong className="font-semibold">Disclaimer:</strong> This navigator provides informational guidance based on government rules. Final verification and e-card issuance require biometric Aadhaar KYC at your local Ayushman SEHAT Mandir, CSC Kiosk, or Empanelled Hospital.
               </p>
             </CardContent>
           </Card>

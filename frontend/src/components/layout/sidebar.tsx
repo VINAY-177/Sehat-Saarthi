@@ -110,7 +110,7 @@ export function Sidebar() {
           <HeartPulse className="h-6 w-6 text-white" />
         </div>
         <div className="flex flex-col">
-          <span className="font-bold text-xl tracking-tight text-slate-900 leading-tight">Arogya Saathi</span>
+          <span className="font-bold text-xl tracking-tight text-slate-900 leading-tight">Sehat Saathi</span>
           <span className="text-[10px] font-semibold text-teal-600 uppercase tracking-wider">AI Healthcare</span>
         </div>
       </div>

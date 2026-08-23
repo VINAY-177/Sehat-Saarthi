@@ -1,7 +1,7 @@
 import { Vitals, Comorbidities, RiskFactor, RiskResult, Urgency } from "@/lib/types";
 
 // ============================================================
-// Arogya Saathi AI — Rule-Based Risk Scoring Engine
+// Sehat Saathi AI — Rule-Based Risk Scoring Engine
 // Pure TypeScript, zero dependencies, fully deterministic
 // ============================================================
 
@@ -337,7 +337,7 @@ function generateSummary(
       recommendation = "Recommend visit to PHC or CHC for evaluation and monitoring.";
       break;
     case Urgency.LOW:
-      recommendation = "Routine follow-up at PHC or Arogya Mandir recommended.";
+      recommendation = "Routine follow-up at PHC or SEHAT Mandir recommended.";
       break;
   }
 
