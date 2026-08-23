@@ -437,18 +437,18 @@ export default function MessagesPage() {
         </div>
 
         {/* Column 3: Patient Clinical Context Panel (3.5 cols) */}
-        <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-6 overflow-y-auto flex flex-col justify-between">
-          <div className="space-y-5">
+        <div className="lg:col-span-3 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-4 overflow-y-auto flex flex-col">
+          <div className="space-y-4 flex-1">
             {/* Header / Profile */}
-            <div className="text-center space-y-2 pb-4 border-b border-slate-100">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-black text-2xl flex items-center justify-center mx-auto shadow-md shadow-teal-500/20">
+            <div className="text-center space-y-1.5 pb-3 border-b border-slate-100">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-bold text-lg flex items-center justify-center mx-auto shadow-sm">
                 {activePatient?.name?.charAt(0) || "P"}
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 text-base">{activePatient?.name || "Citizen Record"}</h3>
-                <p className="text-xs text-slate-400 font-mono">{activePatient?.mrn || "MRN-2025-0001"}</p>
+                <h3 className="font-extrabold text-slate-900 text-sm">{activePatient?.name || "Patient Record"}</h3>
+                <p className="text-[10px] text-slate-400 font-mono">{activePatient?.mrn || "MRN-2025-0001"}</p>
               </div>
-              <div className="flex items-center justify-center gap-2 pt-1">
+              <div className="flex items-center justify-center gap-1.5 pt-0.5">
                 <UrgencyBadge urgency={(activePatient?.riskLevel as Urgency) || Urgency.HIGH} size="sm" />
                 <Badge variant="outline" className="text-[10px] bg-slate-50 font-semibold">
                   {activePatient?.age || 40} yrs • {activePatient?.gender || "Male"}
@@ -457,15 +457,15 @@ export default function MessagesPage() {
             </div>
 
             {/* Active Conditions */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                 Active Diagnoses ({activePatient?.conditions?.length || 2})
               </span>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {(activePatient?.conditions || [{ id: "1", name: "Hypertension (I10)", status: "CHRONIC" }, { id: "2", name: "Coronary Artery Disease", status: "ACTIVE" }]).map((c) => (
-                  <div key={c.id} className="p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-800 flex justify-between items-center">
+                  <div key={c.id} className="p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs font-semibold text-slate-800 flex justify-between items-center gap-1">
                     <span className="truncate">{c.name}</span>
-                    <Badge variant="outline" className="text-[9px] py-0 bg-white">
+                    <Badge variant="outline" className="text-[9px] py-0 bg-white shrink-0">
                       {c.status}
                     </Badge>
                   </div>
@@ -474,17 +474,17 @@ export default function MessagesPage() {
             </div>
 
             {/* Vitals Snapshot */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                 Latest Telemetry
               </span>
               <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                   <span className="text-[10px] text-slate-400 block font-bold">BP</span>
                   <span className="font-extrabold text-slate-900">138/88</span>
                 </div>
-                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 block font-bold">SpO₂</span>
+                <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+                  <span className="text-[10px] text-slate-400 block font-bold whitespace-nowrap">SpO₂</span>
                   <span className="font-extrabold text-emerald-600">97%</span>
                 </div>
               </div>
@@ -492,16 +492,16 @@ export default function MessagesPage() {
           </div>
 
           {/* Context Action Links */}
-          <div className="space-y-2 pt-4 border-t border-slate-100">
+          <div className="space-y-2 pt-3 mt-3 border-t border-slate-100">
             <Link href={`/patients/${activePatient?.id || "p-1"}/encounter`}>
-              <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl h-10 text-xs gap-1.5 shadow-sm">
+              <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl h-9 text-xs gap-1.5 shadow-sm">
                 <Stethoscope className="w-3.5 h-3.5" />
                 Start Clinical Consultation
               </Button>
             </Link>
 
             <Link href={`/patients/${activePatient?.id || "p-1"}`}>
-              <Button variant="outline" className="w-full font-bold rounded-xl h-10 text-xs border-slate-200 hover:bg-slate-50">
+              <Button variant="outline" className="w-full font-bold rounded-xl h-9 text-xs border-slate-200 hover:bg-slate-50">
                 Open Patient 360° Profile
               </Button>
             </Link>

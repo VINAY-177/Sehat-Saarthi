@@ -58,22 +58,24 @@ export function VitalsInput({ vitals, onChange }: VitalsInputProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div className="space-y-2 col-span-1 md:col-span-2 lg:col-span-1">
-        <Label>Blood Pressure (mmHg)</Label>
-        <div className="flex items-center space-x-2">
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Blood Pressure (mmHg)</Label>
+        <div className="flex items-center gap-2">
           <Input
             type="number"
             placeholder="Systolic"
             value={vitals.bpSystolic || ""}
             onChange={(e) => handleChange("bpSystolic", e.target.value)}
+            className="h-11 rounded-lg"
           />
-          <span className="text-muted-foreground">/</span>
+          <span className="text-muted-foreground font-bold text-lg shrink-0">/</span>
           <Input
             type="number"
             placeholder="Diastolic"
             value={vitals.bpDiastolic || ""}
             onChange={(e) => handleChange("bpDiastolic", e.target.value)}
+            className="h-11 rounded-lg"
           />
         </div>
         <p className={`text-xs flex gap-1 ${getBpSystolicColor(vitals.bpSystolic)} ${getBpDiastolicColor(vitals.bpDiastolic)}`}>
@@ -81,57 +83,63 @@ export function VitalsInput({ vitals, onChange }: VitalsInputProps) {
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label>Pulse (bpm)</Label>
-        <Input
-          type="number"
-          placeholder="e.g. 72"
-          value={vitals.pulse || ""}
-          onChange={(e) => handleChange("pulse", e.target.value)}
-        />
-        <p className={`text-xs flex gap-1 ${getPulseColor(vitals.pulse)}`}>
-          <span className="text-muted-foreground">Normal:</span> 60-100
-        </p>
-      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Pulse (bpm)</Label>
+          <Input
+            type="number"
+            placeholder="e.g. 72"
+            value={vitals.pulse || ""}
+            onChange={(e) => handleChange("pulse", e.target.value)}
+            className="h-11 rounded-lg"
+          />
+          <p className={`text-xs flex gap-1 ${getPulseColor(vitals.pulse)}`}>
+            <span className="text-muted-foreground">Normal:</span> 60-100
+          </p>
+        </div>
 
-      <div className="space-y-2">
-        <Label>Temperature (°C)</Label>
-        <Input
-          type="number"
-          step="0.1"
-          placeholder="e.g. 36.5"
-          value={vitals.temperature || ""}
-          onChange={(e) => handleChange("temperature", e.target.value)}
-        />
-        <p className={`text-xs flex gap-1 ${getTempColor(vitals.temperature)}`}>
-          <span className="text-muted-foreground">Normal:</span> 36.1-37.2
-        </p>
-      </div>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Temperature (°C)</Label>
+          <Input
+            type="number"
+            step="0.1"
+            placeholder="e.g. 36.5"
+            value={vitals.temperature || ""}
+            onChange={(e) => handleChange("temperature", e.target.value)}
+            className="h-11 rounded-lg"
+          />
+          <p className={`text-xs flex gap-1 ${getTempColor(vitals.temperature)}`}>
+            <span className="text-muted-foreground">Normal:</span> 36.1-37.2
+          </p>
+        </div>
 
-      <div className="space-y-2">
-        <Label>SpO2 (%)</Label>
-        <Input
-          type="number"
-          placeholder="e.g. 98"
-          value={vitals.spO2 || ""}
-          onChange={(e) => handleChange("spO2", e.target.value)}
-        />
-        <p className={`text-xs flex gap-1 ${getSpO2Color(vitals.spO2)}`}>
-          <span className="text-muted-foreground">Normal:</span> 95-100
-        </p>
-      </div>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">SpO2 (%)</Label>
+          <Input
+            type="number"
+            placeholder="e.g. 98"
+            value={vitals.spO2 || ""}
+            onChange={(e) => handleChange("spO2", e.target.value)}
+            className="h-11 rounded-lg"
+          />
+          <p className={`text-xs flex gap-1 ${getSpO2Color(vitals.spO2)}`}>
+            <span className="text-muted-foreground">Normal:</span> 95-100
+          </p>
+        </div>
 
-      <div className="space-y-2">
-        <Label>Respiratory Rate (breaths/min)</Label>
-        <Input
-          type="number"
-          placeholder="e.g. 16"
-          value={vitals.respiratoryRate || ""}
-          onChange={(e) => handleChange("respiratoryRate", e.target.value)}
-        />
-        <p className={`text-xs flex gap-1 ${getRrColor(vitals.respiratoryRate)}`}>
-          <span className="text-muted-foreground">Normal:</span> 12-20
-        </p>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Respiratory Rate (breaths/min)</Label>
+          <Input
+            type="number"
+            placeholder="e.g. 16"
+            value={vitals.respiratoryRate || ""}
+            onChange={(e) => handleChange("respiratoryRate", e.target.value)}
+            className="h-11 rounded-lg"
+          />
+          <p className={`text-xs flex gap-1 ${getRrColor(vitals.respiratoryRate)}`}>
+            <span className="text-muted-foreground">Normal:</span> 12-20
+          </p>
+        </div>
       </div>
     </div>
   );

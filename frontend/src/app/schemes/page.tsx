@@ -107,11 +107,11 @@ export default function SchemesPage() {
           <CardDescription className="text-slate-500 text-base">Enter household details to run the automated scheme qualification rules.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <div className="space-y-2">
               <Label htmlFor="income" className="text-slate-700 font-medium">Income / Socio-Economic Category *</Label>
               <Select value={incomeCategory} onValueChange={(val) => val && setIncomeCategory(val)}>
-                <SelectTrigger id="income" className="h-11 rounded-lg border-slate-200 focus:ring-teal-500">
+                <SelectTrigger id="income" className="h-11 w-full rounded-lg border-slate-200 focus:ring-teal-500">
                   <SelectValue placeholder="Select income category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,14 +132,14 @@ export default function SchemesPage() {
                 placeholder="e.g. 45"
                 value={age}
                 onChange={(e) => setAge(e.target.value ? Number(e.target.value) : "")}
-                className="h-11 rounded-lg border-slate-200 focus-visible:ring-teal-500"
+                className="h-11 w-full rounded-lg border-slate-200 focus-visible:ring-teal-500"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="gender" className="text-slate-700 font-medium">Gender</Label>
               <Select value={gender} onValueChange={(val) => val && setGender(val)}>
-                <SelectTrigger id="gender" className="h-11 rounded-lg border-slate-200 focus:ring-teal-500">
+                <SelectTrigger id="gender" className="h-11 w-full rounded-lg border-slate-200 focus:ring-teal-500">
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
@@ -153,7 +153,7 @@ export default function SchemesPage() {
             <div className="space-y-2">
               <Label htmlFor="state" className="text-slate-700 font-medium">State of Residence</Label>
               <Select value={stateName} onValueChange={(val) => val && setStateName(val)}>
-                <SelectTrigger id="state" className="h-11 rounded-lg border-slate-200 focus:ring-teal-500">
+                <SelectTrigger id="state" className="h-11 w-full rounded-lg border-slate-200 focus:ring-teal-500">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
                 <SelectContent>

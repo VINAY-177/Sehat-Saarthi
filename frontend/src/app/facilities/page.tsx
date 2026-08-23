@@ -56,11 +56,11 @@ export default function FacilitiesPage() {
           <FilterIcon className="h-4 w-4 text-slate-500" />
           <h3 className="font-semibold text-sm text-slate-700">Filter Network</h3>
         </div>
-        <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-          <div className="space-y-2">
+        <CardContent className="p-4 space-y-3">
+          <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-slate-500 uppercase">Facility Type</Label>
             <Select value={selectedType} onValueChange={(val) => val && setSelectedType(val)}>
-              <SelectTrigger className="h-10 rounded-xl bg-slate-50/50 border-slate-200">
+              <SelectTrigger className="h-10 w-full rounded-xl bg-slate-50/50 border-slate-200">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
@@ -72,23 +72,25 @@ export default function FacilitiesPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center space-x-2 pb-2.5 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 h-10">
-            <Checkbox 
-              id="pmjay" 
-              checked={pmjayOnly} 
-              onCheckedChange={(checked) => setPmjayOnly(!!checked)} 
-              className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
-            />
-            <Label htmlFor="pmjay" className="text-sm font-medium cursor-pointer text-slate-700 flex-1">PM-JAY Empanelled</Label>
-          </div>
-          <div className="flex items-center space-x-2 pb-2.5 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 h-10">
-            <Checkbox 
-              id="icu" 
-              checked={hasIcuOnly} 
-              onCheckedChange={(checked) => setHasIcuOnly(!!checked)}
-              className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600" 
-            />
-            <Label htmlFor="icu" className="text-sm font-medium cursor-pointer text-slate-700 flex-1">ICU Beds Available</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <div className="flex items-center space-x-2.5 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 min-h-[40px]">
+              <Checkbox 
+                id="pmjay" 
+                checked={pmjayOnly} 
+                onCheckedChange={(checked) => setPmjayOnly(!!checked)} 
+                className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+              />
+              <Label htmlFor="pmjay" className="text-xs font-medium cursor-pointer text-slate-700 leading-tight">PM-JAY</Label>
+            </div>
+            <div className="flex items-center space-x-2.5 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 min-h-[40px]">
+              <Checkbox 
+                id="icu" 
+                checked={hasIcuOnly} 
+                onCheckedChange={(checked) => setHasIcuOnly(!!checked)}
+                className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600" 
+              />
+              <Label htmlFor="icu" className="text-xs font-medium cursor-pointer text-slate-700 leading-tight">ICU Avail</Label>
+            </div>
           </div>
         </CardContent>
       </Card>

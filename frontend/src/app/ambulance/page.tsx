@@ -135,16 +135,16 @@ export default function AmbulancePage() {
                 key={amb.id} 
                 className={`border-l-4 ${getBorderColor(amb.status)} shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group`}
               >
-                <CardHeader className="pb-2 bg-slate-50/30 group-hover:bg-slate-50/80 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <Badge variant="outline" className="mb-2 text-xs font-medium text-slate-500 border-slate-200">
-                        ALS Unit
-                      </Badge>
-                      <CardTitle className="text-lg font-bold text-slate-800">{amb.vehicleNo}</CardTitle>
-                    </div>
+                <CardHeader className="pb-3 bg-slate-50/40 group-hover:bg-slate-50/80 transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <Badge variant="outline" className="text-[10px] font-bold text-teal-700 bg-teal-50/60 border-teal-200">
+                      {amb.vehicleNo.includes("ALS") ? "Advanced Life Support (ALS)" : "Basic Life Support (BLS)"}
+                    </Badge>
                     {getStatusBadge(amb.status)}
                   </div>
+                  <CardTitle className="text-base font-bold text-slate-800 leading-snug">
+                    {amb.vehicleNo}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="py-4">
                   <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 p-2 rounded-md">
