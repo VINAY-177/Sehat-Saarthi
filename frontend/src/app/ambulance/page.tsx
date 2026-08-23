@@ -12,8 +12,13 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Ambulance fleet - populated from live data in production
-const initialAmbulances: Ambulance[] = [];
+// Ambulance fleet across Delhi/NCR
+const initialAmbulances: Ambulance[] = [
+  { id: "amb-101", vehicleNo: "DL-01-EA-1081 (ALS Unit - AIIMS)", lat: 28.5672, lng: 77.2100, status: AmbulanceStatus.AVAILABLE },
+  { id: "amb-102", vehicleNo: "DL-02-EA-1082 (ICU Mobile - Safdarjung)", lat: 28.5700, lng: 77.2070, status: AmbulanceStatus.AVAILABLE },
+  { id: "amb-103", vehicleNo: "DL-03-EA-1083 (BLS Unit - Max Saket)", lat: 28.5280, lng: 77.2120, status: AmbulanceStatus.DISPATCHED },
+  { id: "amb-104", vehicleNo: "DL-04-EA-1084 (Cardiac Response - Fortis Okhla)", lat: 28.5600, lng: 77.2800, status: AmbulanceStatus.AVAILABLE },
+];
 
 export default function AmbulancePage() {
   const { role } = useStore();
