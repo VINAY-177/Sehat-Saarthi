@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Fingerprint,
   UserCircle,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
@@ -34,6 +35,7 @@ const getNavGroups = (role: Role) => {
         {
           label: "Health Services",
           items: [
+            { href: '/scheduling', label: 'Book Appointment', icon: Calendar },
             { href: '/hospitals', label: 'Nearby Hospitals', icon: Hospital },
             { href: '/ambulance', label: 'Ambulance 108', icon: Siren },
             { href: '/assess', label: 'Symptom Checker', icon: Activity },
@@ -56,6 +58,7 @@ const getNavGroups = (role: Role) => {
         {
           label: "Clinical",
           items: [
+            { href: '/scheduling', label: 'Appointment Schedule', icon: Calendar },
             { href: '/patients', label: 'Patient Records', icon: Users },
             { href: '/assess', label: 'Risk Assessment', icon: Activity },
             { href: '/referrals', label: 'Referrals', icon: Ambulance },
@@ -77,6 +80,7 @@ const getNavGroups = (role: Role) => {
         {
           label: "Operations",
           items: [
+            { href: '/scheduling', label: 'Appointments & Roster', icon: Calendar },
             { href: '/facilities', label: 'Facilities & Beds', icon: Hospital },
             { href: '/referrals', label: 'Referral Mgmt', icon: Ambulance },
             { href: '/ambulance', label: 'Ambulance Fleet', icon: Siren },
