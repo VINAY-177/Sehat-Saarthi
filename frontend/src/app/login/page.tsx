@@ -220,7 +220,7 @@ export default function LoginPage() {
 
                 {/* Register Link */}
                 <p className="text-center text-sm font-medium text-slate-500 pt-2">
-                  New here? <a href="/register" className="text-teal-600 font-bold hover:underline">Create an account</a>
+                  New here? <a href="/signup" className="text-teal-600 font-bold hover:underline">Create an account</a>
                 </p>
 
               </form>

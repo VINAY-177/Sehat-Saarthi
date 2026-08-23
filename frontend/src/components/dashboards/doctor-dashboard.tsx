@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useStore } from "@/lib/store";
-import { Urgency } from "@/lib/types";
+import { Urgency, Role } from "@/lib/types";
 import { StatCard } from "@/components/stat-card";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, AlertTriangle, Ambulance, Bed, Activity, ArrowRight } from "lucide-react";
+import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
 
 export function DoctorDashboard() {
   const { patients, screenings, referrals, stats, currentUser } = useStore();
@@ -80,6 +81,9 @@ export function DoctorDashboard() {
           description="Live available in network"
         />
       </div>
+
+      {/* Appointment & Consultation Schedule Calendar */}
+      <AppointmentCalendarWidget role={Role.DOCTOR} userId={currentUser?.id} userName={currentUser?.name} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Emergency Triage Queue (8 cols) */}

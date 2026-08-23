@@ -19,17 +19,19 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const isPublicRoute = pathname === '/login' || pathname === '/signup';
+
   useEffect(() => {
-    if (!isAuthenticated && pathname !== '/login') {
+    if (!isAuthenticated && !isPublicRoute) {
       router.replace('/login');
     }
-  }, [isAuthenticated, pathname, router]);
+  }, [isAuthenticated, isPublicRoute, router]);
 
-  if (!isAuthenticated && pathname !== '/login') {
+  if (!isAuthenticated && !isPublicRoute) {
     return null; // Avoid flicker before redirect
   }
 
-  if (pathname === '/login') {
+  if (isPublicRoute) {
     return (
       <>
         {children}

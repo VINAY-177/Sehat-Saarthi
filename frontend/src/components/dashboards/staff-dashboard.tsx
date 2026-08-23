@@ -7,7 +7,9 @@ import { UrgencyBadge } from "@/components/urgency-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Role } from "@/lib/types";
 import { Building2, Bed, Ambulance, Droplets, BedDouble, Users, FileText, Clock } from "lucide-react";
+import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
 
 export function StaffDashboard() {
   const { currentUser, facilities, referrals, patients, stats } = useStore();
@@ -174,6 +176,9 @@ export function StaffDashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* Facility Appointment & Consultation Schedule Calendar */}
+      <AppointmentCalendarWidget role={Role.HOSPITAL_STAFF} userId={currentUser?.id} userName={currentUser?.name} />
 
       {/* Incoming Referrals Table */}
       <Card className="shadow-sm border-slate-200/80 rounded-3xl overflow-hidden bg-white">

@@ -15,6 +15,8 @@ import {
   MapPin,
   Sparkles
 } from "lucide-react";
+import { Role } from "@/lib/types";
+import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
 
 export function PatientDashboard() {
   const { currentUser, facilities } = useStore();
@@ -135,7 +137,10 @@ export function PatientDashboard() {
         </Link>
       </div>
 
-      {/* 4. Nearby Hospitals Preview */}
+      {/* 4. Appointment Calendar Widget */}
+      <AppointmentCalendarWidget role={Role.PATIENT} userId={currentUser?.id} userName={currentUser?.name} />
+
+      {/* 5. Nearby Hospitals Preview */}
       <div>
         <div className="flex justify-between items-end mb-5">
           <h2 className="text-2xl font-bold tracking-tight">Nearby Hospitals</h2>
