@@ -11,6 +11,7 @@ import { calculateRiskScore } from "@/lib/risk-engine";
 import { PatientForm } from "@/components/patient-form";
 import { PatientRegistrationInput, RiskResult } from "@/lib/types";
 import { RiskScoreCard } from "@/components/risk-score-card";
+import { Badge } from "@/components/ui/badge";
 import { UserPlus } from "lucide-react";
 
 export default function RegisterPage() {
@@ -77,31 +78,39 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto animate-in fade-in duration-500 pb-12">
-      <div className="flex items-center gap-3 border-b pb-4">
-        <div className="p-3 bg-teal-100/50 text-teal-600 rounded-xl shadow-sm">
-          <UserPlus className="h-6 w-6" />
+    <div className="max-w-5xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-sm">
+            <UserPlus className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">Register New Citizen</h1>
+            <p className="text-xs text-slate-500 font-medium">
+              EHR patient intake with instant rule-based AI clinical risk triage.
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Register New Patient</h1>
-          <p className="text-slate-500 mt-1">Clinical intake form with instant AI risk triage.</p>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-bold px-3 py-1 text-xs gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+            EHR Intake Active
+          </Badge>
         </div>
       </div>
 
-      <Card className="shadow-lg rounded-2xl border-slate-200/60 overflow-hidden bg-white">
-        <div className="h-2 w-full bg-gradient-to-r from-teal-400 to-emerald-500" />
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-6">
-          <CardTitle className="text-xl font-semibold text-slate-800 flex items-center gap-2">
-            Patient Information
+      <Card className="shadow-sm rounded-3xl border-slate-200/80 overflow-hidden bg-white">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+          <CardTitle className="text-base font-bold text-slate-900">
+            Citizen Clinical Intake Record
           </CardTitle>
-          <CardDescription className="text-slate-500">
-            Please fill in the patient&apos;s details below.
+          <CardDescription className="text-xs text-slate-500 font-medium">
+            Enter demographics, baseline vitals, reported symptoms, and pre-existing medical history.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 md:p-8 [&_input]:h-11 [&_input]:rounded-lg [&_button[type='submit']]:h-14 [&_button[type='submit']]:w-full [&_button[type='submit']]:bg-gradient-to-r [&_button[type='submit']]:from-teal-500 [&_button[type='submit']]:to-emerald-600 [&_button[type='submit']]:text-lg [&_button[type='submit']]:shadow-md hover:[&_button[type='submit']]:shadow-lg [&_button[type='submit']]:transition-all [&_button[type='submit']]:rounded-xl">
-          {/* Note: In a real app we'd fully inline the PatientForm to add the exact icons inside relative divs as requested, 
-              but since PatientForm has complex internal state, we inject some CSS overrides to meet the aesthetic requirements 
-              while maintaining state logic. */}
+        <CardContent className="p-6 md:p-8">
           <PatientForm onSubmit={handleSubmit} isLoading={isLoading} />
         </CardContent>
       </Card>

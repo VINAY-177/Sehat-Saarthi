@@ -100,22 +100,26 @@ export function PatientForm({ onSubmit, isLoading }: PatientFormProps) {
         </Button>
       </div>
 
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">1. Citizen Demographics</h3>
-        <Separator />
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-teal-100 text-teal-800 text-xs font-bold">1</span>
+          <h3 className="text-sm font-bold text-slate-900">Citizen Demographics</h3>
+        </div>
+        <Separator className="bg-slate-100" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-1.5 lg:col-span-2">
-            <Label htmlFor="name">Full Name *</Label>
+            <Label htmlFor="name" className="text-xs font-semibold text-slate-700">Full Name *</Label>
             <Input 
               id="name" 
               placeholder="e.g. Ramesh Kumar"
               value={formData.name} 
               onChange={(e) => setFormData({...formData, name: e.target.value})} 
+              className="h-10 rounded-xl border-slate-200"
               required 
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="age">Age (Years) *</Label>
+            <Label htmlFor="age" className="text-xs font-semibold text-slate-700">Age (Years) *</Label>
             <Input 
               id="age" 
               type="number" 
@@ -123,13 +127,14 @@ export function PatientForm({ onSubmit, isLoading }: PatientFormProps) {
               max={120} 
               value={formData.age || ""} 
               onChange={(e) => setFormData({...formData, age: Number(e.target.value)})} 
+              className="h-10 rounded-xl border-slate-200"
               required 
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="gender">Gender *</Label>
+            <Label htmlFor="gender" className="text-xs font-semibold text-slate-700">Gender *</Label>
             <Select value={formData.gender} onValueChange={(v) => v && setFormData({...formData, gender: v})}>
-              <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+              <SelectTrigger className="h-10 rounded-xl border-slate-200"><SelectValue placeholder="Select gender" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Male">Male</SelectItem>
                 <SelectItem value="Female">Female</SelectItem>
@@ -138,9 +143,9 @@ export function PatientForm({ onSubmit, isLoading }: PatientFormProps) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="bloodGroup">Blood Group</Label>
+            <Label htmlFor="bloodGroup" className="text-xs font-semibold text-slate-700">Blood Group</Label>
             <Select value={formData.bloodGroup} onValueChange={(v) => v && setFormData({...formData, bloodGroup: v})}>
-              <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
+              <SelectTrigger className="h-10 rounded-xl border-slate-200"><SelectValue placeholder="Select blood group" /></SelectTrigger>
               <SelectContent>
                 {BLOOD_GROUPS.map(bg => (
                   <SelectItem key={bg} value={bg}>{bg}</SelectItem>
@@ -149,25 +154,29 @@ export function PatientForm({ onSubmit, isLoading }: PatientFormProps) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="village">Village / Ward</Label>
+            <Label htmlFor="village" className="text-xs font-semibold text-slate-700">Village / Ward</Label>
             <Input 
               id="village" 
+              placeholder="e.g. Rampur"
               value={formData.village} 
               onChange={(e) => setFormData({...formData, village: e.target.value})} 
+              className="h-10 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="district">District</Label>
+            <Label htmlFor="district" className="text-xs font-semibold text-slate-700">District</Label>
             <Input 
               id="district" 
+              placeholder="e.g. Varanasi"
               value={formData.district} 
               onChange={(e) => setFormData({...formData, district: e.target.value})} 
+              className="h-10 rounded-xl border-slate-200"
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="incomeCategory">Socio-Economic Category</Label>
+            <Label htmlFor="incomeCategory" className="text-xs font-semibold text-slate-700">Socio-Economic Category</Label>
             <Select value={formData.incomeCategory || ""} onValueChange={(v) => v && setFormData({...formData, incomeCategory: v})}>
-              <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+              <SelectTrigger className="h-10 rounded-xl border-slate-200"><SelectValue placeholder="Select category" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="BPL">BPL (Below Poverty Line)</SelectItem>
                 <SelectItem value="APL">APL (Above Poverty Line)</SelectItem>
@@ -178,46 +187,66 @@ export function PatientForm({ onSubmit, isLoading }: PatientFormProps) {
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">2. Vital Signs (Recorded at SEHAT Mandir / Camp)</h3>
-        <Separator />
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-blue-100 text-blue-800 text-xs font-bold">2</span>
+          <h3 className="text-sm font-bold text-slate-900">Vital Signs Telemetry</h3>
+        </div>
+        <Separator className="bg-slate-100" />
         <VitalsInput vitals={formData.vitals} onChange={(v) => setFormData({...formData, vitals: v})} />
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">3. Reported Symptoms</h3>
-        <Separator />
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-100 text-amber-800 text-xs font-bold">3</span>
+          <h3 className="text-sm font-bold text-slate-900">Reported Symptoms</h3>
+        </div>
+        <Separator className="bg-slate-100" />
         <SymptomPicker selected={formData.symptoms} onChange={(s) => setFormData({...formData, symptoms: s})} />
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-base font-semibold">4. Known Pre-existing Conditions / Comorbidities</h3>
-        <Separator />
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {(Object.keys(formData.comorbidities) as Array<keyof Comorbidities>).map((condition) => (
-            <label key={condition} className="flex items-center space-x-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4"
-                checked={formData.comorbidities[condition]}
-                onChange={(e) => setFormData({
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-rose-100 text-rose-800 text-xs font-bold">4</span>
+          <h3 className="text-sm font-bold text-slate-900">Known Pre-existing Conditions</h3>
+        </div>
+        <Separator className="bg-slate-100" />
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(formData.comorbidities) as Array<keyof Comorbidities>).map((condition) => {
+            const isSelected = formData.comorbidities[condition];
+            return (
+              <button
+                type="button"
+                key={condition}
+                onClick={() => setFormData({
                   ...formData,
                   comorbidities: {
                     ...formData.comorbidities,
-                    [condition]: e.target.checked
+                    [condition]: !isSelected
                   }
                 })}
-              />
-              <span className="capitalize">{condition.replace(/([A-Z])/g, ' $1').trim()}</span>
-            </label>
-          ))}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all border ${
+                  isSelected 
+                    ? 'bg-teal-50 border-teal-300 text-teal-800 shadow-sm' 
+                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100'
+                }`}
+              >
+                {condition.replace(/([A-Z])/g, ' $1').trim()}
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      <div className="pt-2">
-        <Button type="submit" size="lg" className="w-full sm:w-auto h-11 text-base font-semibold" disabled={isLoading}>
-          <HeartPulse className="h-5 w-5 mr-2" />
-          {isLoading ? "Evaluating Clinical Triage..." : "Register Citizen & Assess AI Risk"}
+      <div className="pt-4 border-t border-slate-100">
+        <Button 
+          type="submit" 
+          size="lg" 
+          className="w-full h-12 text-sm font-bold bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-md rounded-xl" 
+          disabled={isLoading}
+        >
+          <HeartPulse className="h-4 w-4 mr-2" />
+          {isLoading ? "Evaluating Clinical Triage..." : "Register Citizen & Run AI Triage Evaluation"}
         </Button>
       </div>
     </form>
