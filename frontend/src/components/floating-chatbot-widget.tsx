@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export function FloatingChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const { role } = useStore();
+  const { role, t } = useStore();
 
   // The appointment booking assistant is strictly for Patients / Citizens.
   // Hide completely for Doctor and Hospital Staff, as well as on auth and chatbot pages.
@@ -45,10 +45,10 @@ export function FloatingChatbotWidget() {
 
           <div className="text-left">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-black tracking-tight leading-none text-white">Book with AI</span>
+              <span className="text-xs font-black tracking-tight leading-none text-white">{t("bookWithAi")}</span>
               <Sparkles className="w-3 h-3 text-amber-300" />
             </div>
-            <span className="text-[10px] text-teal-100 font-medium leading-tight block">Voice &amp; Chat</span>
+            <span className="text-[10px] text-teal-100 font-medium leading-tight block">{t("voiceAndChat")}</span>
           </div>
         </button>
       </div>

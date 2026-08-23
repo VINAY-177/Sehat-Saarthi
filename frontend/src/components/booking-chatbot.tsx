@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { 
   Bot, User, Mic, Volume2, VolumeX, Send, RefreshCw, 
   CheckCircle2, Clock, Stethoscope, Building2, Sparkles,
-  Edit3, XCircle
+  Edit3, XCircle, ArrowLeft, Download, Calendar as CalendarIcon
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,7 +55,8 @@ interface BookingDetails {
   appointmentId?: string;
 }
 
-const SYMPTOM_EXAMPLES = [
+// English Options
+const SYMPTOM_EXAMPLES_EN = [
   "Fever & Chills",
   "Cough & Cold",
   "Chest Pain",
@@ -66,20 +67,20 @@ const SYMPTOM_EXAMPLES = [
   "Skin Rash / Allergy",
 ];
 
-const DURATION_OPTIONS = [
+const DURATION_OPTIONS_EN = [
   "Today",
   "1 to 2 days",
   "3 to 7 days",
   "More than a week",
 ];
 
-const SEVERITY_OPTIONS = [
+const SEVERITY_OPTIONS_EN = [
   "Mild (Manageable discomfort)",
   "Moderate (Uncomfortable, affecting routine)",
   "Severe (Urgent clinical attention)",
 ];
 
-const DOCTOR_SPECIALTIES = [
+const DOCTOR_SPECIALTIES_EN = [
   "General Physician",
   "Cardiologist",
   "Pediatrician",
@@ -89,7 +90,7 @@ const DOCTOR_SPECIALTIES = [
   "ENT Specialist",
 ];
 
-const POPULAR_CITIES = [
+const POPULAR_CITIES_EN = [
   "New Delhi",
   "Varanasi",
   "Noida",
@@ -99,7 +100,7 @@ const POPULAR_CITIES = [
   "Patna",
 ];
 
-const HOSPITAL_OPTIONS = [
+const HOSPITAL_OPTIONS_EN = [
   "AI Nearest Suitable Hospital (Auto-Match)",
   "AIIMS New Delhi",
   "Safdarjung Hospital, New Delhi",
@@ -107,6 +108,61 @@ const HOSPITAL_OPTIONS = [
   "District Hospital, Varanasi",
   "Max Super Speciality Hospital",
   "Fortis Memorial Research Institute",
+];
+
+// Hindi Options
+const SYMPTOM_EXAMPLES_HI = [
+  "बुखार और ठंड लगना (Fever)",
+  "खांसी और जुकाम (Cough & Cold)",
+  "सीने में दर्द (Chest Pain)",
+  "सांस फूलना / सांस लेने में तकलीफ",
+  "सिरदर्द और चक्कर आना",
+  "पेट दर्द और मतली (Stomach Ache)",
+  "जोड़ों और पीठ का दर्द (Joint Pain)",
+  "त्वचा पर चकत्ते / एलर्जी (Skin Rash)",
+];
+
+const DURATION_OPTIONS_HI = [
+  "आज से (Today)",
+  "1 से 2 दिन (1-2 days)",
+  "3 से 7 दिन (3-7 days)",
+  "एक सप्ताह से अधिक (>1 week)",
+];
+
+const SEVERITY_OPTIONS_HI = [
+  "हल्का (सामान्य असुविधा)",
+  "मध्यम (दिनचर्या प्रभावित)",
+  "गंभीर (तत्काल डॉक्टरी परामर्श आवश्यक)",
+];
+
+const DOCTOR_SPECIALTIES_HI = [
+  "सामान्य चिकित्सक (General Physician)",
+  "हृदय रोग विशेषज्ञ (Cardiologist)",
+  "शिशु रोग विशेषज्ञ (Pediatrician)",
+  "हड्डी रोग विशेषज्ञ (Orthopedic)",
+  "महिला रोग विशेषज्ञ (Gynecologist)",
+  "फेफड़ा / श्वसन रोग विशेषज्ञ (Pulmonologist)",
+  "ईएनटी विशेषज्ञ (ENT Specialist)",
+];
+
+const POPULAR_CITIES_HI = [
+  "नई दिल्ली (New Delhi)",
+  "वाराणसी (Varanasi)",
+  "नोएडा (Noida)",
+  "लखनऊ (Lucknow)",
+  "गुरुग्राम (Gurugram)",
+  "मुंबई (Mumbai)",
+  "पटना (Patna)",
+];
+
+const HOSPITAL_OPTIONS_HI = [
+  "AI नजदीकी उपयुक्त अस्पताल (Auto-Match)",
+  "एम्स नई दिल्ली (AIIMS New Delhi)",
+  "सफदरजंग अस्पताल, नई दिल्ली",
+  "सर सुंदरलाल अस्पताल (BHU), वाराणसी",
+  "जिला अस्पताल, वाराणसी",
+  "मैक्स सुपर स्पेशियलिटी अस्पताल",
+  "फोर्टिस मेमोरियल रिसर्च इंस्टीट्यूट",
 ];
 
 interface ISpeechRecognitionInstance {
@@ -126,7 +182,7 @@ interface ISpeechRecognitionConstructor {
 
 export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () => void }) {
   const router = useRouter();
-  const { currentUser } = useStore();
+  const { currentUser, language, setLanguage, t } = useStore();
 
   const [currentStep, setCurrentStep] = useState<ChatStep>(ChatStep.GREETING);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -149,12 +205,20 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     doctorSpecialty: "",
     doctorName: "Dr. Rajesh Sharma",
     hospital: "AIIMS New Delhi",
-    date: "Tomorrow",
+    date: language === "hi" ? "कल (Tomorrow)" : "Tomorrow",
     time: "10:30 AM",
   });
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const handleUserInputRef = useRef<(input: string) => void>(() => {});
+
+  const isHindi = language === "hi";
+  const symptomExamples = isHindi ? SYMPTOM_EXAMPLES_HI : SYMPTOM_EXAMPLES_EN;
+  const durationOptions = isHindi ? DURATION_OPTIONS_HI : DURATION_OPTIONS_EN;
+  const severityOptions = isHindi ? SEVERITY_OPTIONS_HI : SEVERITY_OPTIONS_EN;
+  const doctorSpecialties = isHindi ? DOCTOR_SPECIALTIES_HI : DOCTOR_SPECIALTIES_EN;
+  const popularCities = isHindi ? POPULAR_CITIES_HI : POPULAR_CITIES_EN;
+  const hospitalOptions = isHindi ? HOSPITAL_OPTIONS_HI : HOSPITAL_OPTIONS_EN;
 
   // Text-To-Speech
   const speakText = useCallback((text: string) => {
@@ -164,12 +228,12 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#🤖🩺👤👨‍⚕️🏥📅]/g, ""));
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
-      utterance.lang = "en-IN";
+      utterance.lang = isHindi ? "hi-IN" : "en-IN";
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.warn("TTS speech synthesis error:", e);
     }
-  }, [isSpeechEnabled]);
+  }, [isSpeechEnabled, isHindi]);
 
   // Add message helper
   const addBotMessage = useCallback((text: string, options?: string[], step?: ChatStep, isSummary?: boolean) => {
@@ -209,7 +273,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         const recognition = new SpeechRec();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = "en-IN";
+        recognition.lang = isHindi ? "hi-IN" : "en-IN";
 
         recognition.onresult = (event: { results: Array<Array<{ transcript: string }>> }) => {
           const transcript = event.results[0][0].transcript;
@@ -232,11 +296,11 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         recognitionRef.current = recognition;
       }
     }
-  }, []);
+  }, [isHindi]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      toast.error("Voice input is not supported in this browser.");
+      toast.error(isHindi ? "इस ब्राउज़र में वॉयस इनपुट समर्थित नहीं है।" : "Voice input is not supported in this browser.");
       return;
     }
 
@@ -245,21 +309,26 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       setIsListening(false);
     } else {
       try {
+        recognitionRef.current.lang = isHindi ? "hi-IN" : "en-IN";
         recognitionRef.current.start();
         setIsListening(true);
-        toast.info("Listening... Speak your response clearly.");
+        toast.info(isHindi ? "सुन रहे हैं... कृपया अपना उत्तर बोलें।" : "Listening... Speak your response clearly.");
       } catch (err) {
         console.warn("Could not start recognition:", err);
       }
     }
   };
 
-  // Initial bot message on load
-  useEffect(() => {
-    const greetingText = "Hi, I'm your Sehat Saathi 🤖. I can help you book an appointment.";
-    const nameQuestion = currentUser?.name 
-      ? `What's your full name? (Or tap your saved name below)`
-      : `What's your full name?`;
+  // Initial bot message on load / language switch
+  const startConversation = useCallback(() => {
+    setCurrentStep(ChatStep.GREETING);
+    const greetingText = isHindi 
+      ? "नमस्ते! मैं आपका सेहत साथी हूँ 🤖। मैं डॉक्टर अपॉइंटमेंट बुक करने में आपकी मदद कर सकता हूँ।"
+      : "Hi, I'm your Sehat Saathi 🤖. I can help you book an appointment.";
+    
+    const nameQuestion = isHindi
+      ? (currentUser?.name ? `आपका पूरा नाम क्या है? (या नीचे अपने नाम पर टैप करें)` : `आपका पूरा नाम क्या है?`)
+      : (currentUser?.name ? `What's your full name? (Or tap your saved name below)` : `What's your full name?`);
 
     setMessages([
       {
@@ -275,7 +344,11 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       addBotMessage(nameQuestion, currentUser?.name ? [currentUser.name] : undefined, ChatStep.NAME);
       setCurrentStep(ChatStep.NAME);
     }, 600);
-  }, []);
+  }, [isHindi, currentUser?.name, addBotMessage, speakText]);
+
+  useEffect(() => {
+    startConversation();
+  }, [startConversation]);
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -285,22 +358,40 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
   // AI Rule-Based Doctor Recommendation Engine
   const suggestDoctorForSymptoms = (symptomList: string[]): { specialty: string; doctorName: string } => {
     const text = symptomList.join(" ").toLowerCase();
-    if (text.includes("chest") || text.includes("heart") || text.includes("breath") || text.includes("palpitation")) {
-      return { specialty: "Cardiologist", doctorName: "Dr. Priya Sharma (Cardiology Specialist)" };
+    if (text.includes("chest") || text.includes("heart") || text.includes("breath") || text.includes("सीने") || text.includes("हृदय") || text.includes("सांस")) {
+      return { 
+        specialty: isHindi ? "हृदय रोग विशेषज्ञ (Cardiologist)" : "Cardiologist", 
+        doctorName: isHindi ? "डॉ. प्रिया शर्मा (कार्डियोलॉजी)" : "Dr. Priya Sharma (Cardiology Specialist)" 
+      };
     }
-    if (text.includes("child") || text.includes("infant") || text.includes("baby")) {
-      return { specialty: "Pediatrician", doctorName: "Dr. Anjali Verma (Pediatrics Lead)" };
+    if (text.includes("child") || text.includes("infant") || text.includes("baby") || text.includes("बच्चे") || text.includes("शिशु")) {
+      return { 
+        specialty: isHindi ? "शिशु रोग विशेषज्ञ (Pediatrician)" : "Pediatrician", 
+        doctorName: isHindi ? "डॉ. अंजलि वर्मा (बाल रोग विभाग)" : "Dr. Anjali Verma (Pediatrics Lead)" 
+      };
     }
-    if (text.includes("joint") || text.includes("bone") || text.includes("back") || text.includes("fracture")) {
-      return { specialty: "Orthopedic Surgeon", doctorName: "Dr. Vikram Sethi (Orthopedics)" };
+    if (text.includes("joint") || text.includes("bone") || text.includes("back") || text.includes("जोड़ों") || text.includes("पीठ") || text.includes("हड्डी")) {
+      return { 
+        specialty: isHindi ? "हड्डी रोग विशेषज्ञ (Orthopedic)" : "Orthopedic Surgeon", 
+        doctorName: isHindi ? "डॉ. विक्रम सेठी (ऑर्थोपेडिक्स)" : "Dr. Vikram Sethi (Orthopedics)" 
+      };
     }
-    if (text.includes("throat") || text.includes("ear") || text.includes("nose") || text.includes("sinus")) {
-      return { specialty: "ENT Specialist", doctorName: "Dr. Sanjay Gupta (ENT Specialist)" };
+    if (text.includes("throat") || text.includes("ear") || text.includes("nose") || text.includes("गले") || text.includes("कान") || text.includes("नाक")) {
+      return { 
+        specialty: isHindi ? "ईएनटी विशेषज्ञ (ENT Specialist)" : "ENT Specialist", 
+        doctorName: isHindi ? "डॉ. संजय गुप्ता (ईएनटी)" : "Dr. Sanjay Gupta (ENT Specialist)" 
+      };
     }
-    if (text.includes("pregnancy") || text.includes("women") || text.includes("period")) {
-      return { specialty: "Gynecologist", doctorName: "Dr. Meenakshi Sundaram (OB-GYN)" };
+    if (text.includes("pregnancy") || text.includes("women") || text.includes("period") || text.includes("गर्भवती") || text.includes("महिला")) {
+      return { 
+        specialty: isHindi ? "महिला रोग विशेषज्ञ (Gynecologist)" : "Gynecologist", 
+        doctorName: isHindi ? "डॉ. मीनाक्षी सुंदरम (स्त्री रोग)" : "Dr. Meenakshi Sundaram (OB-GYN)" 
+      };
     }
-    return { specialty: "General Physician", doctorName: "Dr. Rajesh Kumar (Senior Consultant)" };
+    return { 
+      specialty: isHindi ? "सामान्य चिकित्सक (General Physician)" : "General Physician", 
+      doctorName: isHindi ? "डॉ. राजेश कुमार (वरिष्ठ चिकित्सक)" : "Dr. Rajesh Kumar (Senior Consultant)" 
+    };
   };
 
   // State Machine Step Transition Handler
@@ -315,7 +406,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         setBooking((prev) => ({ ...prev, fullName: cleanInput }));
         setCurrentStep(ChatStep.PHONE);
         addBotMessage(
-          `Nice to meet you, ${cleanInput}! Please enter your mobile number.`,
+          isHindi ? `आपसे मिलकर खुशी हुई, ${cleanInput}! कृपया अपना 10 अंकों का मोबाइल नंबर दर्ज करें:` : `Nice to meet you, ${cleanInput}! Please enter your mobile number.`,
           currentUser?.phone ? [currentUser.phone] : undefined,
           ChatStep.PHONE
         );
@@ -326,8 +417,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         setBooking((prev) => ({ ...prev, phone: cleanInput }));
         setCurrentStep(ChatStep.LOCATION);
         addBotMessage(
-          "Got it. Which city or area are you currently in?",
-          POPULAR_CITIES,
+          isHindi ? "धन्यवाद। आप किस शहर या इलाके में हैं?" : "Got it. Which city or area are you currently in?",
+          popularCities,
           ChatStep.LOCATION
         );
         break;
@@ -337,8 +428,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         setBooking((prev) => ({ ...prev, location: cleanInput }));
         setCurrentStep(ChatStep.SYMPTOMS);
         addBotMessage(
-          "Please describe your symptoms. You can pick an option or type your own.",
-          SYMPTOM_EXAMPLES,
+          isHindi ? "कृपया अपने लक्षण बताएं। आप नीचे दिए गए विकल्पों में से चुन सकते हैं या लिखकर बता सकते हैं:" : "Please describe your symptoms. You can pick an option or type your own.",
+          symptomExamples,
           ChatStep.SYMPTOMS
         );
         break;
@@ -357,8 +448,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
         setCurrentStep(ChatStep.DURATION);
         addBotMessage(
-          `Recorded: "${cleanInput}". How long have you had these symptoms?`,
-          DURATION_OPTIONS,
+          isHindi ? `दर्ज किया गया: "${cleanInput}"। आपको ये लक्षण कब से हैं?` : `Recorded: "${cleanInput}". How long have you had these symptoms?`,
+          durationOptions,
           ChatStep.DURATION
         );
         break;
@@ -368,8 +459,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         setBooking((prev) => ({ ...prev, duration: cleanInput }));
         setCurrentStep(ChatStep.SEVERITY);
         addBotMessage(
-          "How severe are your symptoms?",
-          SEVERITY_OPTIONS,
+          isHindi ? "आपके लक्षणों की गंभीरता कैसी है?" : "How severe are your symptoms?",
+          severityOptions,
           ChatStep.SEVERITY
         );
         break;
@@ -381,22 +472,24 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
         const aiRec = suggestDoctorForSymptoms(booking.symptoms);
         addBotMessage(
-          `Based on your symptoms, our AI suggests consulting a ${aiRec.specialty}. What type of doctor would you like to consult?`,
-          [`AI Suggested: ${aiRec.specialty}`, ...DOCTOR_SPECIALTIES],
+          isHindi 
+            ? `आपके लक्षणों के आधार पर हमारा AI ${aiRec.specialty} से परामर्श की सलाह देता है। आप किस डॉक्टर से मिलना चाहते हैं?` 
+            : `Based on your symptoms, our AI suggests consulting a ${aiRec.specialty}. What type of doctor would you like to consult?`,
+          [`${isHindi ? "AI सुझाव: " : "AI Suggested: "}${aiRec.specialty}`, ...doctorSpecialties],
           ChatStep.DOCTOR_TYPE
         );
         break;
       }
 
       case ChatStep.DOCTOR_TYPE: {
-        const chosenSpecialty = cleanInput.replace("AI Suggested: ", "");
-        const docName = chosenSpecialty === "Cardiologist" 
-          ? "Dr. Priya Sharma (Cardiology)" 
-          : chosenSpecialty === "Pediatrician"
-          ? "Dr. Anjali Verma (Pediatrics)"
-          : chosenSpecialty === "Orthopedic Surgeon"
-          ? "Dr. Vikram Sethi (Orthopedics)"
-          : "Dr. Rajesh Kumar (General Physician)";
+        const chosenSpecialty = cleanInput.replace("AI Suggested: ", "").replace("AI सुझाव: ", "");
+        const docName = chosenSpecialty.includes("Cardiologist") || chosenSpecialty.includes("हृदय") 
+          ? (isHindi ? "डॉ. प्रिया शर्मा (कार्डियोलॉजी)" : "Dr. Priya Sharma (Cardiology)") 
+          : chosenSpecialty.includes("Pediatrician") || chosenSpecialty.includes("शिशु")
+          ? (isHindi ? "डॉ. अंजलि वर्मा (बाल रोग)" : "Dr. Anjali Verma (Pediatrics)")
+          : chosenSpecialty.includes("Orthopedic") || chosenSpecialty.includes("हड्डी")
+          ? (isHindi ? "डॉ. विक्रम सेठी (ऑर्थोपेडिक्स)" : "Dr. Vikram Sethi (Orthopedics)")
+          : (isHindi ? "डॉ. राजेश कुमार (सामान्य चिकित्सक)" : "Dr. Rajesh Kumar (General Physician)");
 
         setBooking((prev) => ({
           ...prev,
@@ -406,8 +499,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
         setCurrentStep(ChatStep.HOSPITAL);
         addBotMessage(
-          "Do you have a preferred hospital? Or should I find the nearest suitable one?",
-          HOSPITAL_OPTIONS,
+          isHindi ? "क्या आपका कोई पसंदीदा अस्पताल है? या मैं नजदीकी उपयुक्त अस्पताल खोजूं?" : "Do you have a preferred hospital? Or should I find the nearest suitable one?",
+          hospitalOptions,
           ChatStep.HOSPITAL
         );
         break;
@@ -415,14 +508,19 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
       case ChatStep.HOSPITAL: {
         const chosenHospital = cleanInput.includes("Auto-Match") 
-          ? (booking.location.toLowerCase().includes("varanasi") ? "District Hospital, Varanasi" : "AIIMS New Delhi (Nearest Match)") 
+          ? (booking.location.toLowerCase().includes("varanasi") || booking.location.includes("वाराणसी") ? (isHindi ? "जिला अस्पताल, वाराणसी" : "District Hospital, Varanasi") : (isHindi ? "एम्स नई दिल्ली (नजदीकी अस्पताल)" : "AIIMS New Delhi (Nearest Match)")) 
           : cleanInput;
 
         setBooking((prev) => ({ ...prev, hospital: chosenHospital }));
         setCurrentStep(ChatStep.DATE_TIME);
         addBotMessage(
-          "When would you prefer your consultation? Choose a preferred date and time slot:",
-          [
+          isHindi ? "आप किस दिन और समय पर परामर्श लेना चाहेंगे? पसंदीदा समय चुनें:" : "When would you prefer your consultation? Choose a preferred date and time slot:",
+          isHindi ? [
+            "आज शाम 04:00 बजे (Today 4 PM)",
+            "कल सुबह 10:30 बजे (Tomorrow 10:30 AM)",
+            "कल दोपहर 02:00 बजे (Tomorrow 2 PM)",
+            "परसों सुबह 11:00 बजे (Day After 11 AM)",
+          ] : [
             "Today at 04:00 PM",
             "Tomorrow at 10:30 AM",
             "Tomorrow at 02:00 PM",
@@ -434,42 +532,32 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       }
 
       case ChatStep.DATE_TIME: {
-        let datePart = "Tomorrow";
+        let datePart = isHindi ? "कल (Tomorrow)" : "Tomorrow";
         let timePart = "10:30 AM";
 
-        if (cleanInput.includes("Today")) {
-          datePart = "Today";
-          timePart = cleanInput.replace("Today at ", "").trim();
-        } else if (cleanInput.includes("Tomorrow")) {
-          datePart = "Tomorrow";
-          timePart = cleanInput.replace("Tomorrow at ", "").replace("Day After ", "").trim();
+        if (cleanInput.includes("Today") || cleanInput.includes("आज")) {
+          datePart = isHindi ? "आज (Today)" : "Today";
+          timePart = "04:00 PM";
+        } else if (cleanInput.includes("Tomorrow") || cleanInput.includes("कल")) {
+          datePart = isHindi ? "कल (Tomorrow)" : "Tomorrow";
+          timePart = cleanInput.includes("02:00") ? "02:00 PM" : "10:30 AM";
         } else {
-          timePart = cleanInput;
+          datePart = isHindi ? "परसों" : "Day After Tomorrow";
+          timePart = "11:00 AM";
         }
 
         const updatedBooking = { ...booking, date: datePart, time: timePart };
         setBooking(updatedBooking);
         setCurrentStep(ChatStep.SUMMARY);
 
-        const summaryText = `Here is your appointment summary:\n• Patient: ${updatedBooking.fullName} (${updatedBooking.phone}, ${updatedBooking.location || "Local"})\n• Symptoms: ${updatedBooking.symptoms.join(", ")} (${updatedBooking.duration}, ${updatedBooking.severity})\n• Doctor: ${updatedBooking.doctorName}\n• Hospital: ${updatedBooking.hospital}\n• Date & Time: ${datePart} at ${timePart}\n\nPlease verify and confirm your booking.`;
-
-        addBotMessage(summaryText, ["Confirm Appointment", "Edit Details", "Cancel"], ChatStep.SUMMARY, true);
-        break;
-      }
-
-      case ChatStep.SUMMARY: {
-        if (cleanInput.toLowerCase().includes("confirm")) {
-          handleConfirmBooking();
-        } else if (cleanInput.toLowerCase().includes("edit")) {
-          handleResetToStep(ChatStep.SYMPTOMS);
-        } else if (cleanInput.toLowerCase().includes("cancel")) {
-          handleCancelBooking();
-        } else {
-          addBotMessage(
-            "Please tap 'Confirm Appointment' to finalize, 'Edit Details' to change info, or 'Cancel'.",
-            ["Confirm Appointment", "Edit Details", "Cancel"]
-          );
-        }
+        addBotMessage(
+          isHindi 
+            ? "उत्कृष्ट! आपके अपॉइंटमेंट का विवरण तैयार है। कृपया नीचे दिए गए सारांश की समीक्षा करें और पुष्टि करें:"
+            : "Great! I have prepared your booking summary. Please review the details below:",
+          undefined,
+          ChatStep.SUMMARY,
+          true
+        );
         break;
       }
 
@@ -478,333 +566,356 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     }
   };
 
-  // Final Confirmation Action
-  const handleConfirmBooking = async () => {
-    const appointmentId = `APT-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
-    
-    try {
-      // Save appointment to backend
-      await fetch("http://localhost:5000/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patientId: currentUser?.id || "p-1",
-          doctorId: "doc-1",
-          dateTime: new Date(Date.now() + 86400000).toISOString(),
-          status: "CONFIRMED",
-          visitType: "NEW",
-          reason: `${booking.symptoms.join(", ")} (${booking.severity})`,
-          notes: `Booked via Sehat Saathi Voice AI Assistant. Location: ${booking.location}, Hospital: ${booking.hospital}`,
-        }),
-      });
-    } catch (e) {
-      console.warn("Backend save skipped:", e);
-    }
+  handleUserInputRef.current = handleUserInput;
 
-    setBooking((prev) => ({ ...prev, appointmentId }));
+  // Confirmation Flow
+  const handleConfirmBooking = () => {
+    const generatedId = `OPD-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+    const finalBooking = { ...booking, appointmentId: generatedId };
+    setBooking(finalBooking);
     setCurrentStep(ChatStep.CONFIRMED);
 
-    const confirmSpeech = `Your appointment is confirmed! Appointment ID is ${appointmentId} with ${booking.doctorName} at ${booking.hospital} on ${booking.date} at ${booking.time}.`;
+    // Save appointment to backend API
+    fetch("http://localhost:5000/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        patientId: currentUser?.id || "p-demo-1",
+        doctorId: "doc-1",
+        dateTime: new Date(Date.now() + 86400000).toISOString(),
+        status: "CONFIRMED",
+        visitType: "NEW",
+        reason: `${finalBooking.doctorSpecialty}: ${finalBooking.symptoms.join(", ")}`,
+        notes: `Booked via Sehat Saathi AI Bot. Severity: ${finalBooking.severity}. Hospital: ${finalBooking.hospital}`,
+      }),
+    }).catch((err) => console.warn("Failed to persist appointment:", err));
+
     addBotMessage(
-      `🎉 Appointment Confirmed Successfully!\nAppointment ID: ${appointmentId}\nDoctor: ${booking.doctorName}\nHospital: ${booking.hospital}\nDate & Time: ${booking.date} at ${booking.time}`,
+      isHindi 
+        ? `🎉 बधाई! आपका अपॉइंटमेंट सफलतापूर्वक बुक हो गया है। आपका टोकन आईडी ${generatedId} है।`
+        : `🎉 Congratulations! Your appointment is confirmed with Token ID ${generatedId}.`,
       undefined,
       ChatStep.CONFIRMED
     );
-    speakText(confirmSpeech);
-    toast.success("Appointment Confirmed!");
+
+    toast.success(isHindi ? "अपॉइंटमेंट सफलतापूर्वक बुक हो गया!" : "Appointment Confirmed Successfully!");
   };
 
-  const handleResetToStep = (step: ChatStep) => {
-    setCurrentStep(step);
-    if (step === ChatStep.SYMPTOMS) {
-      addBotMessage(
-        "Let's update your symptoms. What are you experiencing?",
-        SYMPTOM_EXAMPLES,
-        ChatStep.SYMPTOMS
-      );
-    } else {
-      addBotMessage("Please type your updated information.");
-    }
+  const handleEditBooking = () => {
+    setCurrentStep(ChatStep.SYMPTOMS);
+    addBotMessage(
+      isHindi ? "कोई बात नहीं! आइए लक्षणों को फिर से दर्ज करें। आप क्या अनुभव कर रहे हैं?" : "No problem! Let's update your symptoms. What are you experiencing?",
+      symptomExamples,
+      ChatStep.SYMPTOMS
+    );
   };
 
   const handleCancelBooking = () => {
-    setCurrentStep(ChatStep.GREETING);
     addBotMessage(
-      "Your appointment request was cancelled. Let me know when you'd like to book again!",
-      ["Start New Booking"]
+      isHindi ? "अपॉइंटमेंट बुकिंग रद्द कर दी गई है। आप कभी भी नया परामर्श बुक कर सकते हैं।" : "Your booking session has been cancelled. You can restart anytime.",
+      [isHindi ? "नया अपॉइंटमेंट बुक करें" : "Book New Appointment"]
     );
-    toast.info("Booking cancelled.");
+    setTimeout(() => {
+      if (onBackToDashboard) onBackToDashboard();
+      else router.push("/");
+    }, 1500);
   };
-
-  const handleOptionClick = (option: string) => {
-    if (option === "Start New Booking") {
-      setCurrentStep(ChatStep.NAME);
-      addBotMessage("What's your full name?", currentUser?.name ? [currentUser.name] : undefined, ChatStep.NAME);
-      return;
-    }
-    if (option === "Confirm Appointment") {
-      handleConfirmBooking();
-      return;
-    }
-    if (option === "Edit Details") {
-      handleResetToStep(ChatStep.SYMPTOMS);
-      return;
-    }
-    if (option === "Cancel") {
-      handleCancelBooking();
-      return;
-    }
-    handleUserInput(option);
-  };
-
-  handleUserInputRef.current = handleUserInput;
 
   return (
-    <div className="flex flex-col h-[650px] max-h-[85vh] bg-white rounded-3xl border border-slate-200/80 shadow-2xl overflow-hidden font-sans">
-      {/* Chatbot Top Header Bar */}
-      <div className="bg-gradient-to-r from-teal-700 via-teal-600 to-emerald-600 text-white px-5 py-4 flex items-center justify-between shadow-md shrink-0">
+    <div className="flex flex-col h-full max-h-[82vh] bg-white rounded-3xl border border-slate-200/80 shadow-lg overflow-hidden font-sans">
+      
+      {/* ── Chatbot Header ── */}
+      <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 p-4 sm:p-5 text-white flex items-center justify-between shadow-md border-b border-teal-500/20 shrink-0">
         <div className="flex items-center gap-3">
+          {onBackToDashboard && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onBackToDashboard}
+              className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl mr-1 h-9 w-9"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+
           <div className="relative">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
-              <Bot className="w-6 h-6 text-white" />
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 p-0.5 shadow-md flex items-center justify-center">
+              <Bot className="w-6 h-6 text-slate-950" />
             </div>
-            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-teal-800" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-950 rounded-full animate-pulse" />
           </div>
+
           <div>
-            <div className="flex items-center gap-1.5">
-              <h2 className="font-extrabold text-base tracking-tight text-white">Sehat Saathi AI</h2>
-              <Badge className="bg-white/20 text-white text-[10px] font-bold border-0 h-4 px-1.5">
-                Voice Assistant
+            <div className="flex items-center gap-2">
+              <h2 className="font-extrabold text-sm sm:text-base tracking-tight">{t("botTitle")}</h2>
+              <Badge className="bg-teal-400/20 text-teal-300 border-teal-400/30 text-[10px] font-bold px-1.5 py-0">
+                {t("onlineAssistant")}
               </Badge>
             </div>
-            <p className="text-xs text-teal-100/90 font-medium">Smart Clinical Appointment Booking</p>
+            <p className="text-[11px] text-slate-400 font-medium">
+              {t("botSubtitle")}
+            </p>
           </div>
         </div>
 
-        {/* Voice & Sound Toggles */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
+        {/* Header Action Controls: Language Toggle + Voice + Reset */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          
+          {/* Language Switcher Button */}
+          <div className="flex items-center bg-white/10 backdrop-blur-md p-0.5 rounded-xl border border-white/15">
+            <button
+              type="button"
+              onClick={() => setLanguage("en")}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                language === "en" ? "bg-teal-500 text-slate-950 shadow-xs" : "text-slate-300 hover:text-white"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage("hi")}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                language === "hi" ? "bg-teal-500 text-slate-950 shadow-xs" : "text-slate-300 hover:text-white"
+              }`}
+            >
+              हिंदी
+            </button>
+          </div>
+
+          {/* Voice Readback Mute / Unmute */}
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => {
               setIsSpeechEnabled(!isSpeechEnabled);
-              if (isSpeechEnabled && typeof window !== "undefined") window.speechSynthesis?.cancel();
+              toast.info(isSpeechEnabled ? t("voiceOff") : t("voiceOn"));
             }}
-            className={`p-2 rounded-xl border transition-all ${
-              isSpeechEnabled 
-                ? "bg-white/20 border-white/30 text-white" 
-                : "bg-black/20 border-transparent text-white/50"
-            }`}
-            title={isSpeechEnabled ? "Voice Output: ON (Click to Mute)" : "Voice Output: OFF"}
+            className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl h-9 w-9"
+            title={isSpeechEnabled ? t("voiceOn") : t("voiceOff")}
           >
-            {isSpeechEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
+            {isSpeechEnabled ? <Volume2 className="w-4 h-4 text-teal-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+          </Button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setCurrentStep(ChatStep.NAME);
-              setMessages([]);
-              addBotMessage("Hi, I'm your Sehat Saathi 🤖. What's your full name?", currentUser?.name ? [currentUser.name] : undefined, ChatStep.NAME);
-            }}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors"
-            title="Restart Conversation"
+          {/* Reset Flow */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={startConversation}
+            className="text-slate-300 hover:text-white hover:bg-white/10 rounded-xl h-9 w-9"
+            title={t("resetChat")}
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Chat Messages Body */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/60">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex items-start gap-2.5 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
-          >
-            {/* Avatar */}
+      {/* ── Messages Chat Stream ── */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/60">
+        {messages.map((msg) => {
+          const isBot = msg.sender === "bot";
+          return (
             <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
-                msg.sender === "user"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gradient-to-br from-teal-500 to-emerald-600 text-white"
+              key={msg.id}
+              className={`flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                isBot ? "justify-start" : "justify-end"
               }`}
             >
-              {msg.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-            </div>
+              {isBot && (
+                <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0 mt-0.5">
+                  <Bot className="w-4 h-4" />
+                </div>
+              )}
 
-            {/* Bubble */}
-            <div className={`space-y-2 max-w-[85%] sm:max-w-[75%]`}>
-              <div
-                className={`p-3.5 rounded-2xl text-xs sm:text-sm font-medium leading-relaxed shadow-sm ${
-                  msg.sender === "user"
-                    ? "bg-blue-600 text-white rounded-tr-none"
-                    : "bg-white text-slate-800 border border-slate-200/70 rounded-tl-none"
-                }`}
-              >
-                {/* Check if summary card */}
-                {msg.isSummary ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-1.5 text-teal-700 font-extrabold text-xs uppercase tracking-wider pb-1 border-b border-slate-100">
-                      <Sparkles className="w-4 h-4 text-teal-600" /> Appointment Summary
-                    </div>
-                    <div className="grid grid-cols-1 gap-2 text-xs text-slate-700">
-                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                        <User className="w-4 h-4 text-teal-600 shrink-0" />
-                        <div>
-                          <span className="font-bold text-slate-900">{booking.fullName}</span>
-                          <span className="text-slate-500 ml-1">({booking.phone}, {booking.location})</span>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                        <Stethoscope className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-bold text-slate-900">{booking.symptoms.join(", ")}</span>
-                          <span className="text-slate-500 block text-[11px]">{booking.duration} • {booking.severity}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
-                        <Building2 className="w-4 h-4 text-teal-600 shrink-0" />
-                        <div>
-                          <span className="font-bold text-slate-900">{booking.doctorName}</span>
-                          <span className="text-slate-500 block text-[11px]">{booking.hospital}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 p-2 rounded-xl bg-teal-50/70 border border-teal-200 text-teal-950">
-                        <Clock className="w-4 h-4 text-teal-700 shrink-0" />
-                        <span className="font-extrabold">{booking.date} at {booking.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-line">{msg.text}</p>
-                )}
-                
-                <span
-                  className={`block text-[9px] mt-1 text-right font-mono ${
-                    msg.sender === "user" ? "text-blue-100" : "text-slate-400"
+              <div className={`space-y-3 max-w-[85%] sm:max-w-[75%]`}>
+                <div
+                  className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                    isBot
+                      ? "bg-white text-slate-800 border border-slate-200/80 rounded-tl-none font-medium"
+                      : "bg-[#1e3a5f] text-white rounded-tr-none font-semibold shadow-md shadow-[#1e3a5f]/15"
                   }`}
                 >
-                  {msg.timestamp}
-                </span>
+                  <p>{msg.text}</p>
+                </div>
+
+                {/* Structured Appointment Summary Card Component */}
+                {msg.isSummary && currentStep === ChatStep.SUMMARY && (
+                  <Card className="border border-teal-200 bg-white rounded-2xl shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                    <div className="bg-gradient-to-r from-teal-600 to-emerald-600 px-4 py-3 text-white flex items-center justify-between">
+                      <div className="flex items-center gap-2 font-bold text-xs">
+                        <Sparkles className="w-4 h-4 text-teal-200" />
+                        <span>{t("bookingSummaryTitle")}</span>
+                      </div>
+                      <Badge className="bg-white/20 text-white border-0 text-[10px]">
+                        {isHindi ? "समीक्षा करें" : "Review"}
+                      </Badge>
+                    </div>
+
+                    <CardContent className="p-4 space-y-3 text-xs">
+                      <div className="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                        <div>
+                          <span className="text-slate-400 font-bold uppercase text-[10px] block">{t("summaryPatient")}</span>
+                          <span className="font-extrabold text-slate-800 text-sm">{booking.fullName}</span>
+                          <span className="text-[11px] text-slate-500 block font-mono">{booking.phone}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-bold uppercase text-[10px] block">{t("summarySymptoms")}</span>
+                          <span className="font-bold text-slate-800">{booking.symptoms.join(", ")}</span>
+                          <span className="text-[10px] text-teal-700 font-semibold block">{booking.duration} · {booking.severity}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 pb-3 border-b border-slate-100">
+                        <div>
+                          <span className="text-slate-400 font-bold uppercase text-[10px] block">{t("summaryDoctor")}</span>
+                          <span className="font-bold text-slate-800 flex items-center gap-1">
+                            <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
+                            {booking.doctorName}
+                          </span>
+                          <Badge variant="outline" className="text-[9px] bg-teal-50 text-teal-800 border-teal-200 mt-0.5">
+                            {booking.doctorSpecialty}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-bold uppercase text-[10px] block">{t("summaryHospital")}</span>
+                          <span className="font-bold text-slate-800 flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                            {booking.hospital}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-teal-50/70 rounded-xl flex items-center justify-between text-teal-950 font-bold">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4 text-teal-700" />
+                          {t("summaryDateTime")}:
+                        </span>
+                        <span className="text-teal-800">{booking.date} @ {booking.time}</span>
+                      </div>
+
+                      {/* 3 Action Buttons: Confirm / Edit / Cancel */}
+                      <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Button
+                          onClick={handleConfirmBooking}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 rounded-xl shadow-sm gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          {t("confirmBooking")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={handleEditBooking}
+                          className="border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs h-10 rounded-xl gap-1.5"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-teal-600" />
+                          {t("editDetails")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={handleCancelBooking}
+                          className="text-rose-600 hover:bg-rose-50 font-bold text-xs h-10 rounded-xl gap-1"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          {t("cancelBooking")}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Final Success Banner after Confirmation */}
+                {msg.step === ChatStep.CONFIRMED && currentStep === ChatStep.CONFIRMED && (
+                  <Card className="border border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-lg p-5 text-center space-y-4 animate-in zoom-in-95 duration-500">
+                    <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+                      <CheckCircle2 className="w-7 h-7" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-black text-slate-900">{t("confirmedTitle")}</h3>
+                      <p className="text-xs text-slate-600 font-medium">
+                        {t("confirmedSubtitle")}
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-white rounded-xl border border-emerald-200 inline-block text-center shadow-xs">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t("opdTokenLabel")}</span>
+                      <span className="text-base font-black text-emerald-800 font-mono tracking-wide">{booking.appointmentId}</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          toast.success(isHindi ? "अपॉइंटमेंट पर्ची डाउनलोड हो रही है..." : "Downloading official OPD confirmation slip...");
+                        }}
+                        className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs rounded-xl h-9 gap-1.5 shadow-sm"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {t("downloadSlip")}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          router.push("/scheduling");
+                        }}
+                        className="border-slate-200 hover:bg-white text-slate-700 font-bold text-xs rounded-xl h-9 gap-1.5"
+                      >
+                        <CalendarIcon className="w-3.5 h-3.5 text-teal-600" />
+                        {t("addToCalendar")}
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={startConversation}
+                        className="text-teal-800 hover:bg-teal-100/50 font-bold text-xs rounded-xl h-9"
+                      >
+                        {t("bookAnother")}
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Quick Select Option Chips */}
+                {msg.options && msg.options.length > 0 && currentStep === msg.step && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {msg.options.map((opt, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleUserInput(opt)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-teal-800 border border-teal-200 hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all shadow-xs"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Quick Reply Pills */}
-              {msg.options && msg.options.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {msg.options.map((option, idx) => {
-                    const isConfirm = option === "Confirm Appointment";
-                    const isCancel = option === "Cancel";
-                    const isEdit = option === "Edit Details";
-
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleOptionClick(option)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
-                          isConfirm
-                            ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white hover:from-teal-700 hover:to-emerald-700 shadow-teal-600/20"
-                            : isCancel
-                            ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
-                            : isEdit
-                            ? "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
-                            : "bg-white text-slate-700 border border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 hover:text-teal-900"
-                        }`}
-                      >
-                        {isConfirm && <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />}
-                        {isEdit && <Edit3 className="w-3.5 h-3.5 inline mr-1" />}
-                        {isCancel && <XCircle className="w-3.5 h-3.5 inline mr-1" />}
-                        {option}
-                      </button>
-                    );
-                  })}
+              {!isBot && (
+                <div className="w-8 h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-xs shrink-0 mt-0.5">
+                  <User className="w-4 h-4" />
                 </div>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
-        {/* Typing Animation */}
+        {/* Typing indicator */}
         {isTyping && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-sm">
-              <Bot className="w-4 h-4" />
-            </div>
-            <div className="p-3 bg-white rounded-2xl rounded-tl-none border border-slate-200 shadow-sm flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-teal-500 animate-bounce" />
-              <span className="w-2 h-2 rounded-full bg-teal-500 animate-bounce [animation-delay:0.2s]" />
-              <span className="w-2 h-2 rounded-full bg-teal-500 animate-bounce [animation-delay:0.4s]" />
-            </div>
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold pl-11 animate-pulse">
+            <Bot className="w-4 h-4 text-teal-600" />
+            <span>{isHindi ? "सेहत साथी सोच रहा है..." : "Sehat Saathi is typing..."}</span>
           </div>
-        )}
-
-        {/* Confirmed Success State View */}
-        {currentStep === ChatStep.CONFIRMED && (
-          <Card className="border-2 border-emerald-500/40 bg-gradient-to-b from-emerald-50/80 to-white rounded-3xl overflow-hidden shadow-lg animate-in zoom-in-95 duration-300">
-            <CardContent className="p-6 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center shadow-inner">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-black text-slate-900">Appointment Booked!</h3>
-                <p className="text-xs text-slate-500 font-medium">Digital OPD Token Generated &amp; SMS Dispatched</p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-white border border-emerald-200/80 text-left space-y-2 text-xs shadow-sm">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                  <span className="text-slate-500 font-semibold">Appointment ID</span>
-                  <span className="font-mono font-extrabold text-teal-700">{booking.appointmentId}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Patient Name</span>
-                  <span className="font-bold text-slate-900">{booking.fullName}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Doctor &amp; Specialty</span>
-                  <span className="font-bold text-slate-900">{booking.doctorName}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Hospital</span>
-                  <span className="font-bold text-slate-900">{booking.hospital}</span>
-                </div>
-                <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                  <span className="text-slate-500 font-semibold">Schedule</span>
-                  <span className="font-extrabold text-emerald-700">{booking.date} at {booking.time}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (onBackToDashboard) {
-                      onBackToDashboard();
-                    } else {
-                      router.push("/");
-                    }
-                  }}
-                  className="flex-1 h-11 bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl text-xs shadow-sm"
-                >
-                  Back to Dashboard
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/scheduling")}
-                  className="flex-1 h-11 border-slate-200 font-bold rounded-xl text-xs hover:bg-slate-50"
-                >
-                  View in Appointments
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         )}
 
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input Bar with Mic & Send */}
+      {/* ── Input Control Bar ── */}
       <div className="p-3 sm:p-4 bg-white border-t border-slate-200/80 shrink-0">
         <form
           onSubmit={(e) => {
@@ -813,56 +924,41 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           }}
           className="flex items-center gap-2"
         >
-          {/* Voice Microphone Button */}
-          <button
+          {/* Voice Input Mic Button */}
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={toggleListening}
-            className={`p-3 rounded-2xl transition-all shadow-sm shrink-0 ${
+            className={`h-11 w-11 rounded-2xl shrink-0 transition-all ${
               isListening
-                ? "bg-rose-600 text-white animate-pulse shadow-rose-600/30 scale-105"
-                : "bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 border border-slate-200"
+                ? "bg-red-500 text-white border-red-500 animate-pulse shadow-md shadow-red-500/30"
+                : "border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-teal-600"
             }`}
-            title={isListening ? "Listening... Tap to stop" : "Speak naturally via Microphone"}
+            title={isListening ? t("listening") : t("tapToSpeak")}
           >
-            {isListening ? <Mic className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
+            <Mic className="w-5 h-5" />
+          </Button>
 
-          {/* Text Input */}
+          {/* Text Input Field */}
           <Input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={
-              isListening
-                ? "Listening to your voice..."
-                : currentStep === ChatStep.NAME
-                ? "Type your full name..."
-                : currentStep === ChatStep.PHONE
-                ? "Type your 10-digit mobile number..."
-                : currentStep === ChatStep.SYMPTOMS
-                ? "Describe your symptoms..."
-                : "Type your reply or tap an option above..."
-            }
-            className="h-11 rounded-2xl border-slate-200 focus-visible:ring-teal-600 text-xs sm:text-sm bg-slate-50/50"
-            disabled={currentStep === ChatStep.CONFIRMED}
+            placeholder={isListening ? t("listening") : t("typeMessagePlaceholder")}
+            className="h-11 rounded-2xl border-slate-200 bg-slate-50/70 text-xs sm:text-sm font-medium focus-visible:ring-teal-500 text-slate-800"
           />
 
           {/* Send Button */}
           <Button
             type="submit"
-            disabled={!inputText.trim() || currentStep === ChatStep.CONFIRMED}
-            className="h-11 px-4 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md shadow-teal-700/20 shrink-0"
+            disabled={!inputText.trim()}
+            className="h-11 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl shadow-sm shrink-0 disabled:opacity-40"
           >
             <Send className="w-4 h-4" />
           </Button>
         </form>
-
-        {isListening && (
-          <div className="flex items-center justify-center gap-2 pt-2 text-[11px] font-bold text-rose-600 animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-rose-600" />
-            Listening to your microphone... Speak naturally in English, Hindi, or Hinglish.
-          </div>
-        )}
       </div>
+
     </div>
   );
 }

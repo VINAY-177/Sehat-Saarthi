@@ -1,5 +1,5 @@
 // ============================================================
-// Sehat Saathi AI — Bilingual Localization (English / हिंदी)
+// Sehat Saathi AI — Comprehensive Bilingual Localization (English / हिंदी)
 // ============================================================
 
 export type Language = "en" | "hi";
@@ -102,6 +102,66 @@ export interface Translations {
   documentVerificationNeeded: string;
   officialPortal: string;
   disclaimerText: string;
+
+  // Login & Signup Screens
+  signInTitle: string;
+  signInSub: string;
+  signUpTitle: string;
+  signUpSub: string;
+  iAmA: string;
+  patientRole: string;
+  doctorRole: string;
+  staffRole: string;
+  emailOrMobile: string;
+  password: string;
+  forgotPassword: string;
+  continueBtn: string;
+  orDivider: string;
+  noAccount: string;
+  createOne: string;
+  alreadyAccount: string;
+  logInHere: string;
+  fullName: string;
+  phoneLabel: string;
+  specialtyLabel: string;
+  districtLabel: string;
+  facilityLabel: string;
+  createAccountBtn: string;
+  heroHeadline: string;
+  heroHeadlineAccent: string;
+  heroSubtext: string;
+  signupHeroHeadline: string;
+  signupHeroSubtext: string;
+  trustBadgeText: string;
+
+  // Chatbot Flow
+  botTitle: string;
+  botSubtitle: string;
+  onlineAssistant: string;
+  resetChat: string;
+  voiceOn: string;
+  voiceOff: string;
+  listening: string;
+  tapToSpeak: string;
+  typeMessagePlaceholder: string;
+  quickOptions: string;
+  suggestedByAi: string;
+  confirmBooking: string;
+  editDetails: string;
+  cancelBooking: string;
+  bookingSummaryTitle: string;
+  summaryPatient: string;
+  summarySymptoms: string;
+  summaryDoctor: string;
+  summaryHospital: string;
+  summaryDateTime: string;
+  summarySeverity: string;
+  confirmedTitle: string;
+  confirmedSubtitle: string;
+  opdTokenLabel: string;
+  downloadSlip: string;
+  addToCalendar: string;
+  bookAnother: string;
 
   // Common Actions
   viewAll: string;
@@ -212,6 +272,66 @@ export const translations: Record<Language, Translations> = {
     officialPortal: "Official Portal",
     disclaimerText: "This navigator provides automated rule-based guidance in compliance with National Health Stack standards.",
 
+    // Login & Signup Screens
+    signInTitle: "Sign in to your account",
+    signInSub: "Select your role and enter your credentials to continue.",
+    signUpTitle: "Create your account",
+    signUpSub: "Join thousands of citizens, doctors, and hospitals on Sehat Saathi.",
+    iAmA: "I AM A",
+    patientRole: "Patient",
+    doctorRole: "Doctor",
+    staffRole: "Staff",
+    emailOrMobile: "Email or Mobile Number",
+    password: "Password",
+    forgotPassword: "Forgot password?",
+    continueBtn: "Continue",
+    orDivider: "or",
+    noAccount: "Don't have an account?",
+    createOne: "Create one",
+    alreadyAccount: "Already have an account?",
+    logInHere: "Log in here",
+    fullName: "Full Name",
+    phoneLabel: "Mobile Number",
+    specialtyLabel: "Medical Specialty",
+    districtLabel: "District / City",
+    facilityLabel: "Hospital / Facility Name",
+    createAccountBtn: "Create Account & Sign In",
+    heroHeadline: "Smarter healthcare,",
+    heroHeadlineAccent: "accessible to everyone.",
+    heroSubtext: "One platform connecting patients, doctors, and hospitals — powered by AI for a healthier India.",
+    signupHeroHeadline: "Create Your Healthcare Account.",
+    signupHeroSubtext: "Join thousands of citizens, certified doctors, and healthcare facilities unified on the Sehat Saathi clinical intelligence network.",
+    trustBadgeText: "ABDM Compliant · End-to-End Encrypted · HIPAA Ready",
+
+    // Chatbot Flow
+    botTitle: "Sehat Saathi AI Voice & Chatbot",
+    botSubtitle: "Smart appointment booking with clinical symptom matching",
+    onlineAssistant: "AI Assistant Online",
+    resetChat: "Reset Flow",
+    voiceOn: "Voice Readback On",
+    voiceOff: "Voice Muted",
+    listening: "Listening... speak now",
+    tapToSpeak: "Tap to speak in Hindi or English",
+    typeMessagePlaceholder: "Type your answer or select an option below...",
+    quickOptions: "Quick Options",
+    suggestedByAi: "AI Smart Recommendation",
+    confirmBooking: "Confirm Appointment",
+    editDetails: "Edit Details",
+    cancelBooking: "Cancel",
+    bookingSummaryTitle: "Appointment Booking Summary",
+    summaryPatient: "Patient Name",
+    summarySymptoms: "Symptoms",
+    summaryDoctor: "Doctor / Specialty",
+    summaryHospital: "Hospital / Clinic",
+    summaryDateTime: "Date & Time",
+    summarySeverity: "Severity",
+    confirmedTitle: "Appointment Confirmed Successfully!",
+    confirmedSubtitle: "Your OPD appointment token and clinical record have been issued.",
+    opdTokenLabel: "Appointment ID / OPD Token",
+    downloadSlip: "Download Appointment Slip",
+    addToCalendar: "Add to Calendar",
+    bookAnother: "Book Another Appointment",
+
     // Common
     viewAll: "View All",
     search: "Search...",
@@ -319,6 +439,66 @@ export const translations: Record<Language, Translations> = {
     documentVerificationNeeded: "दस्तावेज़ सत्यापन आवश्यक",
     officialPortal: "आधिकारिक पोर्टल",
     disclaimerText: "यह नेविगेटर राष्ट्रीय स्वास्थ्य स्टैक मानकों के अनुपालन में स्वचालित मार्गदर्शन प्रदान करता है।",
+
+    // Login & Signup Screens
+    signInTitle: "अपने खाते में साइन इन करें",
+    signInSub: "जारी रखने के लिए अपनी भूमिका चुनें और विवरण दर्ज करें।",
+    signUpTitle: "नया खाता बनाएं",
+    signUpSub: "सेहत साथी पर हजारों नागरिकों, डॉक्टरों और अस्पतालों से जुड़ें।",
+    iAmA: "मेरी भूमिका है",
+    patientRole: "रोगी / नागरिक",
+    doctorRole: "चिकित्सक (Doctor)",
+    staffRole: "अस्पताल स्टाफ",
+    emailOrMobile: "ईमेल या मोबाइल नंबर",
+    password: "पासवर्ड",
+    forgotPassword: "पासवर्ड भूल गए?",
+    continueBtn: "साइन इन करें (Continue)",
+    orDivider: "या",
+    noAccount: "खाता नहीं है?",
+    createOne: "नया खाता बनाएं",
+    alreadyAccount: "पहले से खाता है?",
+    logInHere: "यहाँ लॉग इन करें",
+    fullName: "पूरा नाम",
+    phoneLabel: "मोबाइल नंबर",
+    specialtyLabel: "चिकित्सा विशेषता (Specialty)",
+    districtLabel: "जिला / शहर",
+    facilityLabel: "अस्पताल का नाम",
+    createAccountBtn: "खाता बनाएं और साइन इन करें",
+    heroHeadline: "स्मार्ट स्वास्थ्य सेवा,",
+    heroHeadlineAccent: "हर भारतीय के लिए सुलभ।",
+    heroSubtext: "मरीजों, डॉक्टरों और अस्पतालों को एक साथ जोड़ने वाला AI-संचालित डिजिटल स्वास्थ्य प्लेटफॉर्म।",
+    signupHeroHeadline: "अपना डिजिटल स्वास्थ्य खाता बनाएं।",
+    signupHeroSubtext: "सेहत साथी क्लिनिकल इंटेलिजेंस नेटवर्क पर हजारों नागरिकों, प्रमाणित डॉक्टरों और स्वास्थ्य सुविधाओं से जुड़ें।",
+    trustBadgeText: "एबीडीएम प्रमाणित · 256-बिट एन्क्रिप्टेड · सुरक्षित डेटा",
+
+    // Chatbot Flow
+    botTitle: "सेहत साथी एआई वॉयस एवं चैटबॉट",
+    botSubtitle: "स्मार्ट डॉक्टर अपॉइंटमेंट बुकिंग एवं लक्षण मिलान",
+    onlineAssistant: "एआई सहायक ऑनलाइन",
+    resetChat: "रीसेट करें",
+    voiceOn: "आवाज वाचन सक्रिय",
+    voiceOff: "आवाज म्यूट",
+    listening: "सुन रहे हैं... कृपया बोलें",
+    tapToSpeak: "हिंदी या अंग्रेजी में बोलने के लिए माइक दबाएं",
+    typeMessagePlaceholder: "अपना उत्तर लिखें या नीचे दिए गए विकल्पों में से चुनें...",
+    quickOptions: "त्वरित विकल्प",
+    suggestedByAi: "एआई स्मार्ट सुझाव",
+    confirmBooking: "अपॉइंटमेंट की पुष्टि करें",
+    editDetails: "विवरण संशोधित करें",
+    cancelBooking: "रद्द करें",
+    bookingSummaryTitle: "अपॉइंटमेंट बुकिंग सारांश",
+    summaryPatient: "मरीज का नाम",
+    summarySymptoms: "लक्षण",
+    summaryDoctor: "डॉक्टर / विशेषज्ञता",
+    summaryHospital: "अस्पताल / क्लिनिक",
+    summaryDateTime: "तिथि एवं समय",
+    summarySeverity: "गंभीरता",
+    confirmedTitle: "अपॉइंटमेंट सफलतापूर्वक बुक हो गया!",
+    confirmedSubtitle: "आपका ओपीडी टोकन और डिजिटल क्लिनिकल रिकॉर्ड जारी कर दिया गया है।",
+    opdTokenLabel: "अपॉइंटमेंट आईडी / ओपीडी टोकन",
+    downloadSlip: "अपॉइंटमेंट पर्ची डाउनलोड करें",
+    addToCalendar: "कैलेंडर में जोड़ें",
+    bookAnother: "एक और अपॉइंटमेंट बुक करें",
 
     // Common
     viewAll: "सभी देखें",

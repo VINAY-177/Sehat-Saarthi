@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight,
-  Heart, Shield, Cpu, User, Phone, MapPin, Award
+  Heart, Shield, Cpu, User, Phone, Award
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useStore();
+  const { login, language, setLanguage, t } = useStore();
   const [selectedRole, setSelectedRole] = useState<Role>(Role.PATIENT);
 
   // Common Fields
@@ -29,7 +29,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Role-Specific Optional Fields
-  const [district, setDistrict] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [facilityName, setFacilityName] = useState("");
 
@@ -37,15 +36,15 @@ export default function SignupPage() {
     e.preventDefault();
 
     if (!fullName.trim()) {
-      toast.error("Please enter your full name");
+      toast.error(language === "hi" ? "कृपया अपना पूरा नाम दर्ज करें" : "Please enter your full name");
       return;
     }
     if (!phone.trim()) {
-      toast.error("Please enter your phone number");
+      toast.error(language === "hi" ? "कृपया अपना मोबाइल नंबर दर्ज करें" : "Please enter your phone number");
       return;
     }
     if (!password.trim() || password.length < 4) {
-      toast.error("Password must be at least 4 characters");
+      toast.error(language === "hi" ? "पासवर्ड कम से कम 4 अक्षरों का होना चाहिए" : "Password must be at least 4 characters");
       return;
     }
 
@@ -60,12 +59,39 @@ export default function SignupPage() {
       facilityId: selectedRole === Role.HOSPITAL_STAFF ? "fac-1" : undefined,
     });
 
-    toast.success(`Welcome to Sehat Saathi, ${fullName}! Your ${selectedRole} account is active.`);
+    toast.success(language === "hi" ? `सेहत साथी में आपका स्वागत है, ${fullName}!` : `Welcome to Sehat Saathi, ${fullName}!`);
     router.push("/");
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 lg:p-8 font-sans">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 lg:p-8 font-sans relative">
+      
+      {/* Top Floating Language Switcher */}
+      <div className="absolute top-6 right-6 z-30 flex items-center bg-white/90 backdrop-blur-md p-1 rounded-2xl border border-slate-200 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setLanguage("en")}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+            language === "en"
+              ? "bg-[#1e3a5f] text-white shadow-xs"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          English
+        </button>
+        <button
+          type="button"
+          onClick={() => setLanguage("hi")}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+            language === "hi"
+              ? "bg-[#0d9488] text-white shadow-xs"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          हिंदी
+        </button>
+      </div>
+
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
         
         {/* Left Side - Brand & Illustration */}
@@ -86,55 +112,43 @@ export default function SignupPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-black tracking-tight text-[#003399]">
-                  Sehat <span className="text-teal-500">Saathi</span>
+                  {t("brandName")}
                 </h1>
-                <p className="text-xs font-bold text-teal-700 tracking-tight">Saath Aapka, Sehat Hamari</p>
+                <p className="text-xs font-bold text-teal-700 tracking-tight">{t("tagline")}</p>
               </div>
             </div>
-            <p className="text-slate-500 font-medium text-sm ml-1">AI-Powered Healthcare Navigation for India</p>
+            <p className="text-slate-500 font-medium text-sm ml-1">{t("subTagline")}</p>
           </div>
 
           {/* Hero Text */}
           <div className="space-y-4">
-            <h2 className="text-5xl font-extrabold text-slate-800 leading-[1.15]">
-              Create Your<br />
-              <span className="text-slate-800">Healthcare Account.</span>
+            <h2 className="text-4xl xl:text-5xl font-extrabold text-slate-800 leading-[1.15]">
+              {t("signupHeroHeadline")}
             </h2>
-            <p className="text-slate-600 text-lg max-w-md leading-relaxed">
-              Join thousands of citizens, certified doctors, and healthcare facilities unified on the Sehat Saathi clinical intelligence network.
+            <p className="text-slate-600 text-base xl:text-lg max-w-md leading-relaxed font-medium">
+              {t("signupHeroSubtext")}
             </p>
           </div>
 
-          {/* Illustration Container */}
-          <div className="relative mt-8 max-w-xl">
-            <Image 
-              src="/hospital-illustration.jpg" 
-              alt="Hospital Illustration" 
-              width={600} 
-              height={400} 
-              className="rounded-3xl mix-blend-multiply"
-              priority
-            />
-            
-            {/* Core Values Floating Card */}
-            <Card className="absolute -right-4 bottom-12 border-0 shadow-xl shadow-blue-900/10 rounded-2xl bg-white/95 backdrop-blur-sm">
-              <CardContent className="p-5 space-y-4">
-                <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                  <Heart className="w-5 h-5 text-blue-600" /> Compassion
-                </div>
-                <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                  <Shield className="w-5 h-5 text-blue-600" /> Trust &amp; ABDM Ready
-                </div>
-                <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                  <Cpu className="w-5 h-5 text-blue-600" /> AI-Assisted Care
-                </div>
-                <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                  <Users className="w-5 h-5 text-blue-600" /> Care for Every Citizen
-                </div>
-              </CardContent>
-            </Card>
+          {/* Core Values Floating Card */}
+          <div className="grid grid-cols-2 gap-3 max-w-md pt-2">
+            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
+              <Heart className="w-4 h-4 text-teal-600 shrink-0" />
+              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "सहानुभूतिपूर्ण देखभाल" : "Patient First Care"}</span>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
+              <Shield className="w-4 h-4 text-teal-600 shrink-0" />
+              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "ABDM डिजिटल रिकॉर्ड्स" : "ABDM Certified"}</span>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
+              <Cpu className="w-4 h-4 text-teal-600 shrink-0" />
+              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "AI क्लिनिकल ट्राइएज" : "AI Clinical Triage"}</span>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
+              <Users className="w-4 h-4 text-teal-600 shrink-0" />
+              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "सुलभ स्वास्थ्य सेवा" : "Universal Healthcare"}</span>
+            </div>
           </div>
-
         </div>
 
         {/* Right Side - Signup Form */}
@@ -143,8 +157,8 @@ export default function SignupPage() {
             <CardContent className="p-0 space-y-6">
               
               <div className="space-y-2">
-                <h3 className="text-3xl font-extrabold text-slate-900">Create an account</h3>
-                <p className="text-slate-500 font-medium text-sm">Select your role to get started</p>
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">{t("signUpTitle")}</h3>
+                <p className="text-slate-500 font-medium text-xs sm:text-sm">{t("signUpSub")}</p>
               </div>
 
               {/* 3-Way Role Selector */}
@@ -159,7 +173,7 @@ export default function SignupPage() {
                   }`}
                 >
                   <Users className={`w-5 h-5 mb-1 ${selectedRole === Role.PATIENT ? "text-teal-600" : "text-slate-400"}`} />
-                  <span className="text-xs">Citizen</span>
+                  <span className="text-xs">{t("patientRole")}</span>
                 </button>
 
                 <button
@@ -172,7 +186,7 @@ export default function SignupPage() {
                   }`}
                 >
                   <Stethoscope className={`w-5 h-5 mb-1 ${selectedRole === Role.DOCTOR ? "text-teal-600" : "text-slate-400"}`} />
-                  <span className="text-xs">Doctor</span>
+                  <span className="text-xs">{t("doctorRole")}</span>
                 </button>
 
                 <button
@@ -185,7 +199,7 @@ export default function SignupPage() {
                   }`}
                 >
                   <Building2 className={`w-5 h-5 mb-1 ${selectedRole === Role.HOSPITAL_STAFF ? "text-teal-600" : "text-slate-400"}`} />
-                  <span className="text-xs">Hospital Staff</span>
+                  <span className="text-xs">{t("staffRole")}</span>
                 </button>
               </div>
 
@@ -195,15 +209,15 @@ export default function SignupPage() {
                 {/* Full Name */}
                 <div className="space-y-1.5">
                   <Label className="text-slate-700 font-bold text-xs">
-                    {selectedRole === Role.DOCTOR ? "Doctor Full Name *" : "Full Name *"}
+                    {t("fullName")} *
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                     <Input 
-                      placeholder={selectedRole === Role.DOCTOR ? "e.g. Dr. Rajesh Sharma" : "e.g. Ramesh Kumar"} 
+                      placeholder={selectedRole === Role.DOCTOR ? (language === "hi" ? "उदा. डॉ. राजेश कुमार" : "e.g. Dr. Rajesh Kumar") : (language === "hi" ? "उदा. अमित शर्मा" : "e.g. Amit Sharma")} 
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
+                      className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
                       required
                     />
                   </div>
@@ -211,35 +225,81 @@ export default function SignupPage() {
 
                 {/* Phone Number */}
                 <div className="space-y-1.5">
-                  <Label className="text-slate-700 font-bold text-xs">Phone Number *</Label>
+                  <Label className="text-slate-700 font-bold text-xs">{t("phoneLabel")} *</Label>
                   <div className="relative">
                     <Phone className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                     <Input 
                       type="tel"
-                      placeholder="e.g. 9876543210" 
+                      placeholder="9876543210" 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="pl-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
+                      className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
                       required
                     />
                   </div>
                 </div>
 
+                {/* Optional Email */}
+                <div className="space-y-1.5">
+                  <Label className="text-slate-700 font-bold text-xs">{t("emailOrMobile")} ({language === "hi" ? "वैकल्पिक" : "Optional"})</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                    <Input 
+                      type="email"
+                      placeholder="you@example.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
+                    />
+                  </div>
+                </div>
+
+                {/* Role-Specific Fields */}
+                {selectedRole === Role.DOCTOR && (
+                  <div className="space-y-1.5 animate-in fade-in duration-200">
+                    <Label className="text-slate-700 font-bold text-xs">{t("specialtyLabel")}</Label>
+                    <div className="relative">
+                      <Award className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <Input 
+                        placeholder={language === "hi" ? "उदा. सामान्य चिकित्सा / हृदय रोग" : "e.g. General Medicine / Cardiology"} 
+                        value={specialty}
+                        onChange={(e) => setSpecialty(e.target.value)}
+                        className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {selectedRole === Role.HOSPITAL_STAFF && (
+                  <div className="space-y-1.5 animate-in fade-in duration-200">
+                    <Label className="text-slate-700 font-bold text-xs">{t("facilityLabel")}</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                      <Input 
+                        placeholder={language === "hi" ? "उदा. एम्स नई दिल्ली / जिला अस्पताल" : "e.g. AIIMS New Delhi / District Hospital"} 
+                        value={facilityName}
+                        onChange={(e) => setFacilityName(e.target.value)}
+                        className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Password */}
                 <div className="space-y-1.5">
-                  <Label className="text-slate-700 font-bold text-xs">Password *</Label>
+                  <Label className="text-slate-700 font-bold text-xs">{t("password")} *</Label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                     <Input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="Create a secure password" 
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••" 
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
+                      className="pl-10 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
                       required
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
                     >
@@ -248,97 +308,25 @@ export default function SignupPage() {
                   </div>
                 </div>
 
-                {/* Email (Optional) */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between">
-                    <Label className="text-slate-700 font-bold text-xs">Email Address</Label>
-                    <span className="text-[10px] text-slate-400 font-medium">Optional</span>
-                  </div>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      type="email"
-                      placeholder="e.g. ramesh@example.com" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Role-Specific Optional Field */}
-                {selectedRole === Role.PATIENT && (
-                  <div className="space-y-1.5 animate-in fade-in duration-200">
-                    <div className="flex justify-between">
-                      <Label className="text-slate-700 font-bold text-xs">District / City</Label>
-                      <span className="text-[10px] text-slate-400 font-medium">Optional</span>
-                    </div>
-                    <div className="relative">
-                      <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        placeholder="e.g. New Delhi / Varanasi" 
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        className="pl-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {selectedRole === Role.DOCTOR && (
-                  <div className="space-y-1.5 animate-in fade-in duration-200">
-                    <div className="flex justify-between">
-                      <Label className="text-slate-700 font-bold text-xs">Specialty / Registration No.</Label>
-                      <span className="text-[10px] text-slate-400 font-medium">Optional</span>
-                    </div>
-                    <div className="relative">
-                      <Award className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        placeholder="e.g. Cardiology / MCI-29481" 
-                        value={specialty}
-                        onChange={(e) => setSpecialty(e.target.value)}
-                        className="pl-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {selectedRole === Role.HOSPITAL_STAFF && (
-                  <div className="space-y-1.5 animate-in fade-in duration-200">
-                    <div className="flex justify-between">
-                      <Label className="text-slate-700 font-bold text-xs">Facility / Department</Label>
-                      <span className="text-[10px] text-slate-400 font-medium">Optional</span>
-                    </div>
-                    <div className="relative">
-                      <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        placeholder="e.g. AIIMS Delhi - Emergency Triage" 
-                        value={facilityName}
-                        onChange={(e) => setFacilityName(e.target.value)}
-                        className="pl-10 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-600 text-sm bg-white"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Submit */}
                 <Button 
                   type="submit" 
-                  className="w-full h-11 rounded-xl bg-[#003399] hover:bg-blue-800 text-white font-bold text-sm flex justify-between items-center px-6 shadow-md shadow-blue-900/20 mt-2"
+                  className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-md mt-2"
                 >
-                  <span className="mx-auto">Create Account &amp; Sign In</span>
-                  <ArrowRight className="h-4 w-4 absolute right-6" />
+                  {t("createAccountBtn")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
+              </form>
 
-                {/* Login Link */}
-                <p className="text-center text-sm font-medium text-slate-500 pt-1">
-                  Already have an account?{" "}
-                  <Link href="/login" className="text-teal-600 font-bold hover:underline">
-                    Sign In
+              {/* Login Link */}
+              <div className="text-center pt-2">
+                <p className="text-xs text-slate-500 font-medium">
+                  {t("alreadyAccount")}{" "}
+                  <Link href="/login" className="font-bold text-teal-600 hover:underline">
+                    {t("logInHere")}
                   </Link>
                 </p>
+              </div>
 
-              </form>
             </CardContent>
           </Card>
         </div>
