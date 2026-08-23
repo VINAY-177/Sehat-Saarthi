@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Notification } from "@/lib/types";
+import { Notification, Role } from "@/lib/types";
+import { useStore } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function NotificationsPage() {
+  const { role } = useStore();
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -77,12 +79,32 @@ export default function NotificationsPage() {
       read: true,
       createdAt: "Yesterday",
     },
+    {
+      id: "notif-6",
+      role: "HOSPITAL_STAFF",
+      category: "SYSTEM",
+      title: "Ward 4 Bed Telemetry Synchronized",
+      message: "8 ICU beds and 24 General ward beds are available for admissions.",
+      link: "/facilities",
+      urgency: "NORMAL",
+      read: false,
+      createdAt: "5 hours ago",
+    },
   ]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Strictly filter notifications by the current user's role
+  const isDoctor = role === Role.DOCTOR;
+  const isStaff = role === Role.HOSPITAL_STAFF;
+  const targetRole = isDoctor ? "DOCTOR" : isStaff ? "HOSPITAL_STAFF" : "PATIENT";
+
+  const roleScopedNotifications = useMemo(() => {
+    return notifications.filter((n) => n.role === targetRole);
+  }, [notifications, targetRole]);
+
+  const unreadCount = roleScopedNotifications.filter((n) => !n.read).length;
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((n) => (n.role === targetRole ? { ...n, read: true } : n)));
   };
 
   const markAsRead = (id: string) => {
@@ -94,10 +116,10 @@ export default function NotificationsPage() {
   };
 
   const filteredNotifications = useMemo(() => {
-    if (activeCategory === "ALL") return notifications;
-    if (activeCategory === "UNREAD") return notifications.filter((n) => !n.read);
-    return notifications.filter((n) => n.category === activeCategory);
-  }, [notifications, activeCategory]);
+    if (activeCategory === "ALL") return roleScopedNotifications;
+    if (activeCategory === "UNREAD") return roleScopedNotifications.filter((n) => !n.read);
+    return roleScopedNotifications.filter((n) => n.category === activeCategory);
+  }, [roleScopedNotifications, activeCategory]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-300">
