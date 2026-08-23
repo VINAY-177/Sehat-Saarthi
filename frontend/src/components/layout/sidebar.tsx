@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  HeartPulse,
   LayoutDashboard,
   UserPlus,
   Users,
@@ -118,15 +118,22 @@ export function Sidebar() {
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-white w-[280px] border-r border-slate-200/60 shadow-sm relative z-10">
-      <div className="p-6 flex items-center gap-3 border-b border-slate-100">
-        <div className="bg-teal-500 p-2 rounded-xl shadow-sm">
-          <HeartPulse className="h-6 w-6 text-white" />
+      <Link href="/" className="p-4 flex items-center gap-3 border-b border-slate-100/80 hover:bg-slate-50/50 transition-colors">
+        <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-sm border border-slate-100 shrink-0 bg-white p-1 flex items-center justify-center">
+          <Image 
+            src="/logo.png" 
+            alt="Sehat Saathi Official Logo" 
+            width={40} 
+            height={40} 
+            className="object-contain"
+            priority
+          />
         </div>
         <div className="flex flex-col">
-          <span className="font-bold text-xl tracking-tight text-slate-900 leading-tight">Sehat Saathi</span>
-          <span className="text-[10px] font-semibold text-teal-600 uppercase tracking-wider">AI Healthcare</span>
+          <span className="font-black text-lg tracking-tight text-slate-900 leading-tight">Sehat Saathi</span>
+          <span className="text-[10px] font-bold text-teal-600 tracking-tight">Saath Aapka, Sehat Hamari</span>
         </div>
-      </div>
+      </Link>
       
       <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto scrollbar-hide">
         {navGroups.map((group, i) => (

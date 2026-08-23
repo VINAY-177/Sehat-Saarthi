@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import { Menu, Bell, User as UserIcon, LogOut, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -51,9 +52,12 @@ export function Header({ onMenuClick }: HeaderProps) {
             <span className="text-teal-600">{getPageTitle(pathname)}</span>
           </div>
         </div>
-        <span className="font-bold text-xl md:hidden ml-1 text-slate-800 tracking-tight">
-          Sehat Saathi
-        </span>
+        <div className="flex items-center gap-2.5 md:hidden ml-1">
+          <Image src="/logo.png" alt="Sehat Saathi Logo" width={32} height={32} className="rounded-xl object-contain" />
+          <span className="font-bold text-lg text-slate-800 tracking-tight">
+            Sehat Saathi
+          </span>
+        </div>
       </div>
       
       <div className="flex items-center gap-3">

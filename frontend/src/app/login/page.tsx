@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  ShieldPlus, Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight,
+  Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight,
   Heart, Shield, Cpu
 } from "lucide-react";
 import Image from "next/image";
@@ -46,15 +46,25 @@ export default function LoginPage() {
           
           {/* Logo & Tagline */}
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-gradient-to-br from-blue-700 to-teal-500 p-2 rounded-xl text-white">
-                <ShieldPlus className="w-8 h-8" />
+            <div className="flex items-center gap-3.5 mb-2">
+              <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-md border border-slate-100 bg-white p-1 shrink-0">
+                <Image 
+                  src="/logo.png" 
+                  alt="Sehat Saathi Official Logo" 
+                  width={56} 
+                  height={56} 
+                  className="object-contain"
+                  priority
+                />
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-blue-900">
-                SEHAT <span className="text-teal-500">SAATHI</span>
-              </h1>
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-[#003399]">
+                  Sehat <span className="text-teal-500">Saathi</span>
+                </h1>
+                <p className="text-xs font-bold text-teal-700 tracking-tight">Saath Aapka, Sehat Hamari</p>
+              </div>
             </div>
-            <p className="text-slate-500 font-medium ml-1">AI-Powered Healthcare for a Healthier India</p>
+            <p className="text-slate-500 font-medium text-sm ml-1">AI-Powered Healthcare Navigation for India</p>
           </div>
 
           {/* Hero Text */}
