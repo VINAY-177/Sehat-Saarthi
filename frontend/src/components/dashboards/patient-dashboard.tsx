@@ -22,18 +22,18 @@ import { Role } from "@/lib/types";
 import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
 
 export function PatientDashboard() {
-  const { currentUser, facilities } = useStore();
+  const { currentUser, facilities, t, language } = useStore();
 
   const currentHour = new Date().getHours();
-  let greeting = "Good Evening";
+  let greeting = t("goodEvening");
   if (currentHour >= 5 && currentHour < 12) {
-    greeting = "Good Morning";
+    greeting = t("goodMorning");
   } else if (currentHour >= 12 && currentHour < 17) {
-    greeting = "Good Afternoon";
+    greeting = t("goodAfternoon");
   } else if (currentHour >= 17 && currentHour < 22) {
-    greeting = "Good Evening";
+    greeting = t("goodEvening");
   } else {
-    greeting = "Good Night";
+    greeting = t("goodNight");
   }
 
   return (
@@ -42,10 +42,10 @@ export function PatientDashboard() {
       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between mt-4">
         <div className="space-y-1.5">
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-            {greeting}, {currentUser?.name || 'Citizen'}!
+            {greeting}, {currentUser?.name || (language === "hi" ? "नागरिक" : "Citizen")}!
           </h1>
           <p className="text-muted-foreground text-lg">
-            Your health companion is ready to assist you.
+            {t("companionReady")}
           </p>
         </div>
         <a href="tel:108" className="inline-block shrink-0">
@@ -54,7 +54,7 @@ export function PatientDashboard() {
             className="rounded-full font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all flex items-center gap-2.5 text-base px-6 h-14"
           >
             <Siren className="h-6 w-6 animate-pulse" />
-            108 Emergency
+            {t("emergency108")}
           </Button>
         </a>
       </div>
@@ -68,19 +68,23 @@ export function PatientDashboard() {
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-teal-50">
               <HeartPulse className="h-5 w-5" />
-              <span className="font-medium tracking-wide uppercase text-sm">Sehat Saathi Health Pass</span>
+              <span className="font-medium tracking-wide uppercase text-sm">{t("brandName")} Health Pass</span>
             </div>
-            <h2 className="text-2xl font-bold">{currentUser?.name || 'Citizen'}</h2>
+            <h2 className="text-2xl font-bold">{currentUser?.name || (language === "hi" ? "नागरिक" : "Citizen")}</h2>
             <p className="text-teal-50/90 text-sm max-w-md">
-              ABHA Status: Link your ABHA ID for unified records and seamless access to healthcare services across India.
+              {language === "hi"
+                ? "आभा स्थिति: एकीकृत स्वास्थ्य रिकॉर्ड और पूरे भारत में डिजिटल स्वास्थ्य सेवाओं के लिए अपनी आभा आईडी लिंक करें।"
+                : "ABHA Status: Link your ABHA ID for unified records and seamless access to healthcare services across India."}
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white shrink-0 self-start md:self-center"
-          >
-            Link ABHA
-          </Button>
+          <Link href="/abha">
+            <Button 
+              variant="outline" 
+              className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white shrink-0 self-start md:self-center"
+            >
+              {language === "hi" ? "आभा लिंक करें" : "Link ABHA"}
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -97,19 +101,21 @@ export function PatientDashboard() {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-teal-400">Conversational AI</span>
-                  <Badge className="bg-teal-400/20 text-teal-300 border-teal-400/30 text-[10px] font-bold">Voice Enabled</Badge>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-teal-400">{language === "hi" ? "संवादात्मक एआई" : "Conversational AI"}</span>
+                  <Badge className="bg-teal-400/20 text-teal-300 border-teal-400/30 text-[10px] font-bold">{t("voiceAndChat")}</Badge>
                 </div>
-                <h3 className="text-xl font-black text-white">Book Doctor Consultation in 60 Seconds</h3>
+                <h3 className="text-xl font-black text-white">{t("bookDoctor60Sec")}</h3>
                 <p className="text-xs text-slate-300 max-w-xl">
-                  Talk or chat with Sehat Saathi to match your symptoms with the right specialist and get instant OPD tokens.
+                  {language === "hi"
+                    ? "अपने लक्षणों को सही विशेषज्ञ से मिलाने और तुरंत ओपीडी टोकन प्राप्त करने के लिए सेहत साथी से बात करें या चैट करें।"
+                    : "Talk or chat with Sehat Saathi to match your symptoms with the right specialist and get instant OPD tokens."}
                 </p>
               </div>
             </div>
 
             <Button className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs h-11 px-5 rounded-2xl shadow-md gap-1.5 shrink-0 group-hover:translate-x-0.5 transition-transform">
               <Mic className="w-4 h-4 text-slate-950" />
-              Talk to AI Saathi
+              {t("bookWithAi")}
               <ArrowRight className="w-4 h-4 ml-0.5" />
             </Button>
           </div>
@@ -125,8 +131,10 @@ export function PatientDashboard() {
                 <Building2 className="h-8 w-8 text-teal-700 dark:text-teal-400" />
               </div>
               <div>
-                <h3 className="font-bold text-teal-950 dark:text-teal-100 text-lg mb-1">Find Hospitals</h3>
-                <p className="text-sm text-teal-800/80 dark:text-teal-300/70 leading-snug">Nearby facilities & live bed status</p>
+                <h3 className="font-bold text-teal-950 dark:text-teal-100 text-lg mb-1">{t("findHospitals")}</h3>
+                <p className="text-sm text-teal-800/80 dark:text-teal-300/70 leading-snug">
+                  {language === "hi" ? "नजदीकी सुविधाएं और लाइव बेड स्थिति" : "Nearby facilities & live bed status"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -138,8 +146,10 @@ export function PatientDashboard() {
                 <Siren className="h-8 w-8 text-red-700 dark:text-red-400" />
               </div>
               <div>
-                <h3 className="font-bold text-red-950 dark:text-red-100 text-lg mb-1">Emergency 108</h3>
-                <p className="text-sm text-red-800/80 dark:text-red-300/70 leading-snug">Request ambulance dispatch now</p>
+                <h3 className="font-bold text-red-950 dark:text-red-100 text-lg mb-1">{t("emergency108")}</h3>
+                <p className="text-sm text-red-800/80 dark:text-red-300/70 leading-snug">
+                  {language === "hi" ? "आपातकालीन एम्बुलेंस अनुरोध करें" : "Request ambulance dispatch now"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -151,8 +161,10 @@ export function PatientDashboard() {
                 <Activity className="h-8 w-8 text-blue-700 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-bold text-blue-950 dark:text-blue-100 text-lg mb-1">Check Symptoms</h3>
-                <p className="text-sm text-blue-800/80 dark:text-blue-300/70 leading-snug">AI-powered clinical risk assessment</p>
+                <h3 className="font-bold text-blue-950 dark:text-blue-100 text-lg mb-1">{t("riskAssessment")}</h3>
+                <p className="text-sm text-blue-800/80 dark:text-blue-300/70 leading-snug">
+                  {language === "hi" ? "AI-आधारित क्लिनिकल जोखिम जांच" : "AI-powered clinical risk assessment"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -164,8 +176,10 @@ export function PatientDashboard() {
                 <ShieldCheck className="h-8 w-8 text-amber-700 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="font-bold text-amber-950 dark:text-amber-100 text-lg mb-1">Government Schemes</h3>
-                <p className="text-sm text-amber-800/80 dark:text-amber-300/70 leading-snug">PM-JAY & state scheme eligibility</p>
+                <h3 className="font-bold text-amber-950 dark:text-amber-100 text-lg mb-1">{t("govSchemes")}</h3>
+                <p className="text-sm text-amber-800/80 dark:text-amber-300/70 leading-snug">
+                  {language === "hi" ? "पीएम-जय एवं राज्य योजना पात्रता" : "PM-JAY & state scheme eligibility"}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -179,10 +193,10 @@ export function PatientDashboard() {
           {/* Nearby Hospitals Preview */}
           <div className="space-y-4">
             <div className="flex justify-between items-end">
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">Nearby Hospitals</h2>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">{t("nearbyHospitals")}</h2>
               <Link href="/hospitals">
                 <Button variant="ghost" size="sm" className="text-teal-700 hover:bg-teal-50 font-bold text-xs flex items-center gap-1">
-                  View All <ChevronRight className="h-4 w-4" />
+                  {t("viewAll")} <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -209,7 +223,7 @@ export function PatientDashboard() {
                         </div>
                         
                         <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
-                          <span className="text-slate-500">Available Beds:</span>
+                          <span className="text-slate-500">{t("bedsAvailable")}:</span>
                           <span className="font-extrabold text-emerald-700">{availableBeds}</span>
                         </div>
                       </CardContent>
@@ -221,7 +235,9 @@ export function PatientDashboard() {
               <Card className="bg-slate-50/50 border-dashed rounded-2xl">
                 <CardContent className="p-6 flex flex-col items-center text-center space-y-2 text-slate-400">
                   <Building2 className="h-8 w-8 opacity-30" />
-                  <p className="text-xs">No hospitals registered in the network yet.</p>
+                  <p className="text-xs">
+                    {language === "hi" ? "नेटवर्क में अभी कोई अस्पताल पंजीकृत नहीं है।" : "No hospitals registered in the network yet."}
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -234,9 +250,9 @@ export function PatientDashboard() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-extrabold text-teal-950">Daily Preventive Health Tip</h4>
+                <h4 className="text-sm font-extrabold text-teal-950">{t("dailyHealthTip")}</h4>
                 <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                  Stay hydrated — drink at least 8 glasses of water daily. Proper hydration supports your immune system and overall well-being.
+                  {t("healthTipText")}
                 </p>
               </div>
             </CardContent>

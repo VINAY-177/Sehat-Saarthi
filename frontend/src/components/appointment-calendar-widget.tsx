@@ -11,6 +11,8 @@ import {
   Clock, ShieldCheck, Edit3, Paperclip
 } from "lucide-react";
 
+import { useStore } from "@/lib/store";
+
 interface AppointmentCalendarWidgetProps {
   role?: Role;
   userId?: string;
@@ -19,17 +21,24 @@ interface AppointmentCalendarWidgetProps {
   onScheduleClick?: () => void;
 }
 
-const MONTH_NAMES = [
+const MONTH_NAMES_EN = [
   "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
   "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
 ];
 
-const DAY_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const MONTH_NAMES_HI = [
+  "जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून",
+  "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"
+];
+
+const DAY_NAMES_EN = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const DAY_NAMES_HI = ["रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"];
 
 export function AppointmentCalendarWidget({ 
   patientName = "Patient",
   onScheduleClick 
 }: AppointmentCalendarWidgetProps) {
+  const { t, language } = useStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   
   // Current viewing month and year
@@ -38,6 +47,9 @@ export function AppointmentCalendarWidget({
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
+
+  const monthNames = language === "hi" ? MONTH_NAMES_HI : MONTH_NAMES_EN;
+  const dayNames = language === "hi" ? DAY_NAMES_HI : DAY_NAMES_EN;
 
   useEffect(() => {
     fetch("http://localhost:5000/api/appointments")
@@ -174,7 +186,7 @@ export function AppointmentCalendarWidget({
               <CalendarIcon className="h-4 w-4" />
             </div>
             <CardTitle className="text-base font-extrabold text-slate-900">
-              Appointments
+              {t("appointments")}
             </CardTitle>
           </div>
 
@@ -202,12 +214,12 @@ export function AppointmentCalendarWidget({
         <CardContent className="p-5 space-y-4">
           {/* Month & Year Label */}
           <div className="text-center font-bold text-xs tracking-wider text-slate-700 uppercase">
-            {MONTH_NAMES[currentMonth]} {currentYear}
+            {monthNames[currentMonth]} {currentYear}
           </div>
 
           {/* Days of Week Header */}
           <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400">
-            {DAY_NAMES.map((d) => (
+            {dayNames.map((d) => (
               <div key={d} className="py-1">
                 {d}
               </div>
@@ -243,17 +255,22 @@ export function AppointmentCalendarWidget({
             })}
           </div>
 
-          {/* Selected Appointment Details Pill */}
-          <div className="pt-2">
+          {/* Selected Date Appointments Banner */}
+          <div className="pt-2 border-t border-slate-100 space-y-2">
             {selectedDayAppointments.length > 0 ? (
               selectedDayAppointments.map((appt) => (
                 <div
                   key={appt.id}
-                  className="p-3 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-950 text-xs flex items-center justify-between gap-2 shadow-sm"
+                  className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs flex items-center justify-between shadow-xs"
                 >
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                    <span className="font-extrabold">{appt.reason || "Scheduled Appointment"}</span>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                      <Clock className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{appt.reason}</span>
+                    </div>
+                    {appt.notes && (
+                      <p className="text-[11px] text-amber-800/80 font-medium pl-5">{appt.notes}</p>
+                    )}
                   </div>
                   <Badge variant="outline" className="bg-white/80 text-[10px] border-amber-300 text-amber-900 font-bold">
                     {appt.status}
@@ -262,8 +279,8 @@ export function AppointmentCalendarWidget({
               ))
             ) : (
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-500 text-xs flex items-center justify-between">
-                <span>No appointments for {MONTH_NAMES[currentMonth].slice(0, 3)} {selectedDay}</span>
-                <span className="text-[10px] font-mono text-slate-400">Available</span>
+                <span>{language === "hi" ? `${selectedDay} ${monthNames[currentMonth]} को कोई अपॉइंटमेंट नहीं है` : `No appointments for ${monthNames[currentMonth].slice(0, 3)} ${selectedDay}`}</span>
+                <span className="text-[10px] font-mono text-slate-400">{language === "hi" ? "उपलब्ध" : "Available"}</span>
               </div>
             )}
           </div>
@@ -277,7 +294,7 @@ export function AppointmentCalendarWidget({
                 className="w-full h-10 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs gap-1.5 shadow-sm"
               >
                 <CalendarIcon className="w-3.5 h-3.5" />
-                Schedule appointment
+                {t("scheduleAppointment")}
               </Button>
             </Link>
 
@@ -288,7 +305,7 @@ export function AppointmentCalendarWidget({
                 className="w-full h-10 border-slate-200 font-bold rounded-xl text-xs hover:bg-slate-50 text-slate-700 gap-1.5"
               >
                 <Edit3 className="w-3.5 h-3.5 text-teal-600" />
-                Add appointment note
+                {t("addAppointmentNote")}
               </Button>
             </Link>
           </div>
@@ -300,26 +317,26 @@ export function AppointmentCalendarWidget({
         <CardHeader className="py-3.5 px-6 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-teal-600" />
-            Insurance summary
+            {t("insuranceSummary")}
           </CardTitle>
           <Badge className="bg-emerald-100 text-emerald-800 text-[10px] font-bold border-0">
-            Active Cover
+            {t("activeCover")}
           </Badge>
         </CardHeader>
 
         <CardContent className="p-5 space-y-3.5 text-xs">
           <div className="flex justify-between items-center pb-2 border-b border-slate-100">
             <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-              INSURANCE PROFILE
+              {language === "hi" ? "बीमा प्रोफ़ाइल" : "INSURANCE PROFILE"}
             </span>
             <span className="font-extrabold text-slate-800">
-              Ayushman Bharat PM-JAY / Medicare B
+              Ayushman Bharat PM-JAY / Medicare
             </span>
           </div>
 
           <div className="flex justify-between items-center pb-2 border-b border-slate-100">
             <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-              MEMBER NUMBER
+              {language === "hi" ? "सदस्य संख्या" : "MEMBER NUMBER"}
             </span>
             <span className="font-mono font-extrabold text-slate-800">
               57 478911 B
@@ -328,7 +345,7 @@ export function AppointmentCalendarWidget({
 
           <div className="flex justify-between items-center pb-2 border-b border-slate-100">
             <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-              RESPONSIBILITY PARTY
+              {language === "hi" ? "लाभार्थी नाम" : "RESPONSIBLE PARTY"}
             </span>
             <span className="font-bold text-slate-800">
               {patientName}
@@ -343,11 +360,13 @@ export function AppointmentCalendarWidget({
               </div>
               <div>
                 <span className="font-bold text-slate-800 text-xs block">insurance.pdf</span>
-                <span className="text-[10px] text-slate-400 block">Uploaded on 22 Jan 2026</span>
+                <span className="text-[10px] text-slate-400 block">
+                  {language === "hi" ? "22 जनवरी 2026 को सत्यापित" : "Uploaded on 22 Jan 2026"}
+                </span>
               </div>
             </div>
             <Badge variant="outline" className="text-[10px] bg-white text-slate-600">
-              Verified
+              {language === "hi" ? "सत्यापित" : "Verified"}
             </Badge>
           </div>
         </CardContent>

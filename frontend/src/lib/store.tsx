@@ -1,17 +1,23 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react";
 import {
-  Patient, Screening, Facility, Referral, Role, Urgency,
+  Patient, Screening, Facility, Referral, Role,
   ReferralStatus, AuthUser,
 } from "@/lib/types";
+import { Language, translations, Translations } from "@/lib/i18n";
+
 // ============================================================
-// Sehat Saathi AI — In-Memory Data Store
-// React Context-based global state.
-// Designed for easy swap to Supabase/Prisma later.
+// Sehat Saathi AI — In-Memory Data Store & Language Context
 // ============================================================
 
 interface StoreState {
+  // Language & i18n
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  toggleLanguage: () => void;
+  t: (key: keyof Translations) => string;
+
   // Current role
   role: Role;
   setRole: (role: Role) => void;
@@ -61,6 +67,7 @@ function generateId(prefix: string): string {
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>("en");
   const [role, setRole] = useState<Role>(Role.PATIENT);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -68,6 +75,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+
+  // Language translation helper
+  const toggleLanguage = useCallback(() => {
+    setLanguage((prev) => (prev === "en" ? "hi" : "en"));
+  }, []);
+
+  const t = useCallback(
+    (key: keyof Translations): string => {
+      const dict = translations[language] || translations.en;
+      return dict[key] || translations.en[key] || String(key);
+    },
+    [language]
+  );
 
   const login = useCallback((user: AuthUser) => {
     setIsAuthenticated(true);
@@ -109,9 +129,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getScreeningsForPatient = useCallback((patientId: string): Screening[] => {
-    return screenings
-      .filter(s => s.patientId === patientId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return screenings.filter(s => s.patientId === patientId);
   }, [screenings]);
 
   // ---------- Facility operations ----------
@@ -140,20 +158,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  // ---------- Computed stats ----------
-
-  const stats = {
-    totalPatients: patients.length,
-    totalScreenings: screenings.length,
-    emergencyCases: screenings.filter(s => s.urgency === Urgency.EMERGENCY).length,
-    pendingReferrals: referrals.filter(r => r.status === ReferralStatus.PENDING).length,
-    totalFacilities: facilities.length,
-    totalICUAvailable: facilities.reduce((sum, f) => sum + (f.icuBeds - f.icuBedsUsed), 0),
-    totalGeneralAvailable: facilities.reduce((sum, f) => sum + (f.generalBeds - f.generalBedsUsed), 0),
-    totalPrivateRoomsAvailable: facilities.reduce((sum, f) => sum + (f.privateRooms - f.privateRoomsUsed), 0),
-  };
+  // Computed aggregate stats
+  const stats = useMemo(() => {
+    return {
+      totalPatients: patients.length,
+      totalScreenings: screenings.length,
+      emergencyCases: screenings.filter(s => s.urgency === "EMERGENCY").length,
+      pendingReferrals: referrals.filter(r => r.status === ReferralStatus.PENDING).length,
+      totalFacilities: facilities.length,
+      totalICUAvailable: facilities.reduce((sum, f) => sum + (f.icuBeds - f.icuBedsUsed), 0),
+      totalGeneralAvailable: facilities.reduce((sum, f) => sum + (f.generalBeds - f.generalBedsUsed), 0),
+      totalPrivateRoomsAvailable: facilities.reduce((sum, f) => sum + (f.privateRooms - f.privateRoomsUsed), 0),
+    };
+  }, [patients, screenings, referrals, facilities]);
 
   const value: StoreState = {
+    language,
+    setLanguage,
+    toggleLanguage,
+    t,
     role,
     setRole,
     isAuthenticated,

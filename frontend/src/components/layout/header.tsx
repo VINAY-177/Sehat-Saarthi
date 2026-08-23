@@ -18,7 +18,7 @@ interface HeaderProps {
 export function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout } = useStore();
+  const { currentUser, logout, language, setLanguage, t } = useStore();
 
   const handleLogout = () => {
     logout();
@@ -26,7 +26,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   };
   
   const getPageTitle = (path: string) => {
-    if (path === "/") return "Dashboard Overview";
+    if (path === "/") return t("dashboardOverview");
     const segment = path.split("/")[1];
     return segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, " ");
   };
@@ -47,7 +47,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             {getPageTitle(pathname)}
           </h1>
           <div className="flex items-center text-xs font-medium text-slate-400 gap-1.5">
-            <span>Sehat Saathi</span>
+            <span>{t("brandName")}</span>
             <span>/</span>
             <span className="text-teal-600">{getPageTitle(pathname)}</span>
           </div>
@@ -55,23 +55,51 @@ export function Header({ onMenuClick }: HeaderProps) {
         <div className="flex items-center gap-2.5 md:hidden ml-1">
           <Image src="/logo.png" alt="Sehat Saathi Logo" width={32} height={32} className="rounded-xl object-contain" />
           <span className="font-bold text-lg text-slate-800 tracking-tight">
-            Sehat Saathi
+            {t("brandName")}
           </span>
         </div>
       </div>
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Bilingual Language Switcher Toggle */}
+        <div className="flex items-center bg-slate-100/80 p-1 rounded-2xl border border-slate-200/80 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setLanguage("en")}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+              language === "en"
+                ? "bg-white text-teal-900 shadow-sm border border-slate-200/50"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            English
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("hi")}
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+              language === "hi"
+                ? "bg-teal-600 text-white shadow-sm"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            हिंदी
+          </button>
+        </div>
+
+        {/* Notifications */}
         <Button
           variant="outline"
           size="icon"
           onClick={() => router.push('/notifications')}
           className="relative text-slate-500 bg-white border-slate-200 hover:bg-slate-50 hover:text-teal-600 rounded-xl h-10 w-10 shadow-sm transition-colors"
+          title={t("notifications")}
         >
           <Bell className="h-5 w-5" />
           <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
         </Button>
 
-        <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
+        <div className="w-px h-6 bg-slate-200 mx-0.5 hidden sm:block"></div>
         
         {currentUser && (
           <DropdownMenu>
@@ -99,16 +127,16 @@ export function Header({ onMenuClick }: HeaderProps) {
               <DropdownMenuSeparator className="bg-slate-100 my-1" />
               <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer text-slate-600 font-medium p-2.5 rounded-lg focus:bg-slate-50 focus:text-slate-900">
                 <UserIcon className="mr-2.5 h-4 w-4 text-slate-400" />
-                <span>My Profile</span>
+                <span>{t("myProfile")}</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push('/login')} className="cursor-pointer text-slate-600 font-medium p-2.5 rounded-lg focus:bg-slate-50 focus:text-slate-900">
                 <UserIcon className="mr-2.5 h-4 w-4 text-slate-400" />
-                <span>Switch Account</span>
+                <span>{t("switchAccount")}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-slate-100 my-1" />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-rose-600 font-medium p-2.5 rounded-lg focus:bg-rose-50 focus:text-rose-700">
                 <LogOut className="mr-2.5 h-4 w-4" />
-                <span>Log out</span>
+                <span>{t("logout")}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

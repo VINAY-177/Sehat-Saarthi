@@ -7,113 +7,114 @@ import {
   LayoutDashboard,
   UserPlus,
   Users,
+  Calendar,
   Activity,
-  Hospital,
   Ambulance,
-  Siren,
+  Hospital,
   ShieldCheck,
   Fingerprint,
   UserCircle,
-  Calendar,
+  Siren,
   MessageSquare,
   Bell,
-  Bot,
+  Bot
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useStore } from "@/lib/store";
 import { Role } from "@/lib/types";
+import { useStore } from "@/lib/store";
 import { Badge } from "@/components/ui/badge";
-
-const getNavGroups = (role: Role) => {
-  const common = { href: '/', label: 'Dashboard', icon: LayoutDashboard };
-  const comms = [
-    { href: '/messages', label: 'Messages', icon: MessageSquare },
-    { href: '/notifications', label: 'Notifications', icon: Bell },
-  ];
-  
-  switch (role) {
-    case Role.CITIZEN:
-    case Role.PATIENT:
-      return [
-        {
-          label: "Overview",
-          items: [common, ...comms, { href: '/profile', label: 'My Profile', icon: UserCircle }]
-        },
-        {
-          label: "Health Services",
-          items: [
-            { href: '/chatbot', label: 'AI Booking Bot', icon: Bot },
-            { href: '/scheduling', label: 'Book Appointment', icon: Calendar },
-            { href: '/hospitals', label: 'Nearby Hospitals', icon: Hospital },
-            { href: '/ambulance', label: 'Ambulance 108', icon: Siren },
-            { href: '/assess', label: 'Symptom Checker', icon: Activity },
-          ]
-        },
-        {
-          label: "Benefits",
-          items: [
-            { href: '/schemes', label: 'Government Schemes', icon: ShieldCheck },
-            { href: '/abha', label: 'ABHA Health ID', icon: Fingerprint },
-          ]
-        }
-      ];
-    case Role.DOCTOR:
-      return [
-        {
-          label: "Overview",
-          items: [common, ...comms]
-        },
-        {
-          label: "Clinical",
-          items: [
-            { href: '/scheduling', label: 'Appointment Schedule', icon: Calendar },
-            { href: '/patients', label: 'Patient Records', icon: Users },
-            { href: '/assess', label: 'Risk Assessment', icon: Activity },
-            { href: '/referrals', label: 'Referrals', icon: Ambulance },
-          ]
-        },
-        {
-          label: "Management",
-          items: [
-            { href: '/facilities', label: 'Facilities & Beds', icon: Hospital },
-          ]
-        }
-      ];
-    case Role.HOSPITAL_STAFF:
-      return [
-        {
-          label: "Overview",
-          items: [common, ...comms]
-        },
-        {
-          label: "Operations",
-          items: [
-            { href: '/scheduling', label: 'Appointments & Roster', icon: Calendar },
-            { href: '/facilities', label: 'Facilities & Beds', icon: Hospital },
-            { href: '/referrals', label: 'Referral Mgmt', icon: Ambulance },
-            { href: '/ambulance', label: 'Ambulance Fleet', icon: Siren },
-          ]
-        },
-        {
-          label: "Registry",
-          items: [
-            { href: '/patients', label: 'Patient Records', icon: Users },
-            { href: '/register', label: 'Register Patient', icon: UserPlus },
-          ]
-        }
-      ];
-
-    default:
-      return [
-        { label: "Navigation", items: [common] }
-      ];
-  }
-};
+import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { role, currentUser } = useStore();
-  const navGroups = getNavGroups(role);
+  const { role, currentUser, t } = useStore();
+
+  const common = { href: '/', label: t("dashboard"), icon: LayoutDashboard };
+  const comms = [
+    { href: '/messages', label: t("messages"), icon: MessageSquare },
+    { href: '/notifications', label: t("notifications"), icon: Bell },
+  ];
+
+  const getNavGroups = () => {
+    switch (role) {
+      case Role.CITIZEN:
+      case Role.PATIENT:
+        return [
+          {
+            label: t("overview"),
+            items: [common, ...comms, { href: '/profile', label: t("myProfile"), icon: UserCircle }]
+          },
+          {
+            label: t("healthServices"),
+            items: [
+              { href: '/chatbot', label: t("aiBookingBot"), icon: Bot },
+              { href: '/scheduling', label: t("appointmentSchedule"), icon: Calendar },
+              { href: '/hospitals', label: t("findHospitals"), icon: Hospital },
+              { href: '/ambulance', label: t("emergencyAmbulance"), icon: Siren },
+              { href: '/assess', label: t("riskAssessment"), icon: Activity },
+            ]
+          },
+          {
+            label: t("management"),
+            items: [
+              { href: '/schemes', label: t("govSchemes"), icon: ShieldCheck },
+              { href: '/abha', label: t("abhaId"), icon: Fingerprint },
+            ]
+          }
+        ];
+      case Role.DOCTOR:
+        return [
+          {
+            label: t("overview"),
+            items: [common, ...comms]
+          },
+          {
+            label: t("clinical"),
+            items: [
+              { href: '/scheduling', label: t("appointmentSchedule"), icon: Calendar },
+              { href: '/patients', label: t("patientRecords"), icon: Users },
+              { href: '/assess', label: t("riskAssessment"), icon: Activity },
+              { href: '/referrals', label: t("referrals"), icon: Ambulance },
+            ]
+          },
+          {
+            label: t("management"),
+            items: [
+              { href: '/facilities', label: t("facilitiesBeds"), icon: Hospital },
+            ]
+          }
+        ];
+      case Role.HOSPITAL_STAFF:
+        return [
+          {
+            label: t("overview"),
+            items: [common, ...comms]
+          },
+          {
+            label: t("operations"),
+            items: [
+              { href: '/scheduling', label: t("appointmentSchedule"), icon: Calendar },
+              { href: '/facilities', label: t("facilitiesBeds"), icon: Hospital },
+              { href: '/referrals', label: t("referrals"), icon: Ambulance },
+              { href: '/ambulance', label: t("ambulanceFleetDispatch"), icon: Siren },
+            ]
+          },
+          {
+            label: t("registry"),
+            items: [
+              { href: '/patients', label: t("patientRecords"), icon: Users },
+              { href: '/register', label: t("registerPatient"), icon: UserPlus },
+            ]
+          }
+        ];
+
+      default:
+        return [
+          { label: t("overview"), items: [common] }
+        ];
+    }
+  };
+
+  const navGroups = getNavGroups();
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-50 to-white w-[280px] border-r border-slate-200/60 shadow-sm relative z-10">
@@ -129,8 +130,8 @@ export function Sidebar() {
           />
         </div>
         <div className="flex flex-col">
-          <span className="font-black text-lg tracking-tight text-slate-900 leading-tight">Sehat Saathi</span>
-          <span className="text-[10px] font-bold text-teal-600 tracking-tight">Saath Aapka, Sehat Hamari</span>
+          <span className="font-black text-lg tracking-tight text-slate-900 leading-tight">{t("brandName")}</span>
+          <span className="text-[10px] font-bold text-teal-600 tracking-tight">{t("tagline")}</span>
         </div>
       </Link>
       
