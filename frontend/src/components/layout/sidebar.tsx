@@ -15,6 +15,8 @@ import {
   Fingerprint,
   UserCircle,
   Calendar,
+  MessageSquare,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
@@ -23,6 +25,10 @@ import { Badge } from "@/components/ui/badge";
 
 const getNavGroups = (role: Role) => {
   const common = { href: '/', label: 'Dashboard', icon: LayoutDashboard };
+  const comms = [
+    { href: '/messages', label: 'Messages', icon: MessageSquare },
+    { href: '/notifications', label: 'Notifications', icon: Bell },
+  ];
   
   switch (role) {
     case Role.CITIZEN:
@@ -30,7 +36,7 @@ const getNavGroups = (role: Role) => {
       return [
         {
           label: "Overview",
-          items: [common, { href: '/profile', label: 'My Profile', icon: UserCircle }]
+          items: [common, ...comms, { href: '/profile', label: 'My Profile', icon: UserCircle }]
         },
         {
           label: "Health Services",
@@ -53,7 +59,7 @@ const getNavGroups = (role: Role) => {
       return [
         {
           label: "Overview",
-          items: [common]
+          items: [common, ...comms]
         },
         {
           label: "Clinical",
@@ -75,7 +81,7 @@ const getNavGroups = (role: Role) => {
       return [
         {
           label: "Overview",
-          items: [common]
+          items: [common, ...comms]
         },
         {
           label: "Operations",

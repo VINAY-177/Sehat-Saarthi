@@ -94,6 +94,7 @@ model Patient {
   insurance        Insurance[]
   appointments     Appointment[]
   referralsOut     Referral[]       @relation("PatientReferrals")
+  interactions     Interaction[]
 }
 
 model Doctor {
@@ -351,3 +352,48 @@ model Referral {
   patient         Patient  @relation("PatientReferrals", fields: [patientId], references: [id])
   toHospital      Hospital @relation(fields: [toHospitalId], references: [id])
 }
+
+model Message {
+  id             String   @id @default(uuid())
+  senderId       String
+  senderName     String
+  senderRole     String   // DOCTOR, PATIENT, HOSPITAL_STAFF
+  recipientId    String
+  recipientName  String
+  recipientRole  String
+  threadId       String
+  content        String
+  attachmentType String?  // PRESCRIPTION, LAB_REPORT, APPOINTMENT, DOCUMENT
+  attachmentId   String?
+  attachmentData String?  // JSON metadata
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model Interaction {
+  id           String   @id @default(uuid())
+  patientId    String
+  staffId      String?
+  staffName    String?
+  type         String   // PHONE_CALL, SMS, WHATSAPP, VIDEO, IN_PERSON
+  status       String   // CONNECTED, NO_ANSWER, CALLBACK_REQUESTED, COMPLETED
+  notes        String?
+  callbackDate String?
+  createdAt    DateTime @default(now())
+
+  patient      Patient  @relation(fields: [patientId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?
+  role      String   // PATIENT, DOCTOR, HOSPITAL_STAFF, ALL
+  category  String   // CLINICAL, APPOINTMENT, LAB, REFERRAL, EMERGENCY, SYSTEM
+  title     String
+  message   String
+  link      String?
+  urgency   String   @default("NORMAL") // NORMAL, HIGH, EMERGENCY
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+

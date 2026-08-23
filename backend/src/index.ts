@@ -652,7 +652,163 @@ app.post('/api/referrals', async (req, res) => {
 });
 
 // ============================================================
-// 6. Overall Stats Overview
+// 6. Messaging & Care Coordination System (Phase 3)
+// ============================================================
+
+// List messages / threads
+app.get('/api/messages', async (req, res) => {
+  try {
+    const { threadId, userId } = req.query;
+    const where: any = {};
+
+    if (threadId && typeof threadId === 'string') {
+      where.threadId = threadId;
+    } else if (userId && typeof userId === 'string') {
+      where.OR = [{ senderId: userId }, { recipientId: userId }];
+    }
+
+    const messages = await prisma.message.findMany({
+      where,
+      orderBy: { createdAt: 'asc' },
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// Send new message
+app.post('/api/messages', async (req, res) => {
+  try {
+    const data = req.body;
+    const message = await prisma.message.create({
+      data: {
+        ...data,
+        attachmentData: typeof data.attachmentData === 'object' ? JSON.stringify(data.attachmentData) : data.attachmentData,
+      },
+    });
+    res.status(201).json(message);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+// Mark messages in thread as read
+app.put('/api/messages/read', async (req, res) => {
+  try {
+    const { threadId, recipientId } = req.body;
+    await prisma.message.updateMany({
+      where: {
+        threadId,
+        recipientId,
+        read: false,
+      },
+      data: { read: true },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to mark messages as read' });
+  }
+});
+
+// ============================================================
+// 7. Interactions / Call History (Phase 3)
+// ============================================================
+
+app.get('/api/patients/:id/interactions', async (req, res) => {
+  try {
+    const interactions = await prisma.interaction.findMany({
+      where: { patientId: req.params.id },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(interactions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch interactions' });
+  }
+});
+
+app.post('/api/patients/:id/interactions', async (req, res) => {
+  try {
+    const interaction = await prisma.interaction.create({
+      data: {
+        ...req.body,
+        patientId: req.params.id,
+      },
+    });
+    res.status(201).json(interaction);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to log interaction' });
+  }
+});
+
+// ============================================================
+// 8. Notifications System (Phase 3)
+// ============================================================
+
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const { role, userId, unreadOnly } = req.query;
+    const where: any = {};
+
+    if (role && typeof role === 'string') {
+      where.OR = [{ role }, { role: 'ALL' }];
+    }
+    if (userId && typeof userId === 'string') {
+      where.userId = userId;
+    }
+    if (unreadOnly === 'true') {
+      where.read = false;
+    }
+
+    const notifications = await prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+app.post('/api/notifications', async (req, res) => {
+  try {
+    const notification = await prisma.notification.create({
+      data: req.body,
+    });
+    res.status(201).json(notification);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create notification' });
+  }
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+  try {
+    const notification = await prisma.notification.update({
+      where: { id: req.params.id },
+      data: { read: true },
+    });
+    res.json(notification);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update notification' });
+  }
+});
+
+app.put('/api/notifications/read-all', async (req, res) => {
+  try {
+    const { role } = req.body;
+    await prisma.notification.updateMany({
+      where: role ? { OR: [{ role }, { role: 'ALL' }] } : {},
+      data: { read: true },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to mark all notifications as read' });
+  }
+});
+
+// ============================================================
+// 9. Overall Stats Overview
 // ============================================================
 
 app.get('/api/stats', async (req, res) => {

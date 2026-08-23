@@ -426,12 +426,54 @@ export const BLOOD_GROUPS = [
 
 export type BloodGroup = (typeof BLOOD_GROUPS)[number];
 
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: string;
+  recipientId: string;
+  recipientName: string;
+  recipientRole: string;
+  threadId: string;
+  content: string;
+  attachmentType?: "PRESCRIPTION" | "LAB_REPORT" | "APPOINTMENT" | "DOCUMENT" | string | null;
+  attachmentId?: string | null;
+  attachmentData?: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface Interaction {
+  id: string;
+  patientId: string;
+  staffId?: string | null;
+  staffName?: string | null;
+  type: "PHONE_CALL" | "SMS" | "WHATSAPP" | "VIDEO" | "IN_PERSON" | string;
+  status: "CONNECTED" | "NO_ANSWER" | "CALLBACK_REQUESTED" | "COMPLETED" | string;
+  notes?: string | null;
+  callbackDate?: string | null;
+  createdAt: string;
+}
+
+export interface Notification {
+  id: string;
+  userId?: string | null;
+  role: string;
+  category: "CLINICAL" | "APPOINTMENT" | "LAB" | "REFERRAL" | "EMERGENCY" | "SYSTEM" | string;
+  title: string;
+  message: string;
+  link?: string | null;
+  urgency: "NORMAL" | "HIGH" | "EMERGENCY" | string;
+  read: boolean;
+  createdAt: string;
+}
+
 // ---------- Utility Types ----------
 
 export interface FacilityMatch {
   facility: Facility;
   score: number;
-  distance: number;      // in km
+  distance: number; // in km
   reasons: string[];
 }
 
@@ -448,3 +490,4 @@ export interface PatientRegistrationInput {
   symptoms: string[];
   comorbidities: Comorbidities;
 }
+

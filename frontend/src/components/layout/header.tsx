@@ -57,7 +57,12 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" className="relative text-slate-500 bg-white border-slate-200 hover:bg-slate-50 hover:text-teal-600 rounded-xl h-10 w-10 shadow-sm transition-colors">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => router.push('/notifications')}
+          className="relative text-slate-500 bg-white border-slate-200 hover:bg-slate-50 hover:text-teal-600 rounded-xl h-10 w-10 shadow-sm transition-colors"
+        >
           <Bell className="h-5 w-5" />
           <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
         </Button>
