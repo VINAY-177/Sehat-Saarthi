@@ -52,71 +52,78 @@ export default function AmbulancePage() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-10">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-white border shadow-sm p-8">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-600" />
-        <div className="flex items-center gap-4">
-          <div className="bg-red-50 p-3 rounded-xl text-red-500 shadow-sm border border-red-100">
-            <Siren size={32} strokeWidth={2.5} />
+    <div className="max-w-7xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-red-500 to-rose-600 text-white rounded-2xl shadow-sm">
+            <Siren className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Emergency Ambulance Dispatch</h1>
-            <p className="text-slate-500 mt-1">Integrated 108 Emergency Response Fleet Management</p>
+            <h1 className="text-2xl font-black text-slate-900">Emergency Ambulance Dispatch</h1>
+            <p className="text-xs text-slate-500 font-medium">
+              National 108 Emergency Response network &amp; live GPS fleet telemetry.
+            </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold px-3 py-1 text-xs gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            108 Response Unit Active
+          </Badge>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Fleet Status & Form Column */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="shadow-md hover:shadow-lg transition-all duration-300 border-slate-200/60 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-teal-500 to-emerald-500" />
-            <CardHeader className="bg-slate-50/50 pb-4 border-b">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Activity className="h-5 w-5 text-teal-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Dispatch Request & Logs (4.5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="bg-slate-50/50 pb-3.5 pt-4 px-5 border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <Activity className="h-4 w-4 text-teal-600" />
                 Request Emergency Unit
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2">
-                <Label>Pickup Location</Label>
+            <CardContent className="p-5 space-y-3.5">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Pickup Location</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <Input placeholder="Enter patient location..." className="pl-9" />
+                  <Input placeholder="Enter patient address / landmark..." className="pl-9 h-10 rounded-xl border-slate-200" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Emergency Type</Label>
-                <Input placeholder="e.g. Cardiac Arrest, Trauma..." />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Emergency Type</Label>
+                <Input placeholder="e.g. Cardiac Arrest, Trauma, Maternal..." className="h-10 rounded-xl border-slate-200" />
               </div>
-              <Button className="w-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-md">
-                Find Nearest Ambulance
+              <Button className="w-full h-11 text-xs font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-sm rounded-xl">
+                Locate Nearest 108 Ambulance
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="shadow-md border-slate-200/60">
-            <CardHeader className="pb-3 border-b bg-slate-50/50">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Navigation className="h-5 w-5 text-slate-500" />
-                Dispatch Log
+          <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="py-3.5 px-5 border-b border-slate-100 bg-slate-50/50">
+              <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Navigation className="h-4 w-4 text-slate-500" />
+                Live Dispatch Log
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="max-h-[300px] overflow-y-auto p-4">
+            <CardContent className="p-4">
+              <div className="max-h-[220px] overflow-y-auto pr-1">
                 {ambulances.length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 text-sm">
-                    No recent dispatches.
+                  <div className="text-center py-6 text-slate-400 text-xs font-medium">
+                    No active dispatches.
                   </div>
                 ) : (
-                  <div className="space-y-4 relative before:absolute before:inset-0 before:ml-4 before:h-full before:w-0.5 before:bg-slate-200">
+                  <div className="space-y-2.5 relative before:absolute before:inset-0 before:left-3 before:h-full before:w-0.5 before:bg-slate-200">
                     {ambulances.map((amb, idx) => (
-                      <div key={idx} className="relative pl-10">
-                        <div className="absolute left-[11px] top-1.5 h-3 w-3 rounded-full bg-teal-500 ring-4 ring-white" />
-                        <div className="bg-slate-50 rounded p-3 text-sm border border-slate-100">
-                          <p className="font-medium text-slate-900">{amb.vehicleNo}</p>
-                          <p className="text-slate-500 mt-0.5">{amb.status}</p>
+                      <div key={idx} className="relative pl-7 text-xs">
+                        <div className="absolute left-[9px] top-2 h-2.5 w-2.5 rounded-full bg-teal-500 ring-4 ring-white" />
+                        <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+                          <p className="font-bold text-slate-900">{amb.vehicleNo}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5 font-medium">{amb.status}</p>
                         </div>
                       </div>
                     ))}
@@ -127,8 +134,8 @@ export default function AmbulancePage() {
           </Card>
         </div>
 
-        {/* Fleet Grid & Map Column */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Right Column: Fleet Grid & Map (7.5 cols) */}
+        <div className="lg:col-span-7 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {ambulances.map(amb => (
               <Card 

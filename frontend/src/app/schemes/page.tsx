@@ -92,24 +92,38 @@ export default function SchemesPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pb-12 animate-in fade-in duration-500">
-      <div className="space-y-3">
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Government Schemes</h1>
-        <p className="text-slate-600 text-lg max-w-2xl">
-          Discover national and state-specific healthcare benefits. Enter your household details below to check potential eligibility.
-        </p>
+    <div className="max-w-5xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-sm">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">Government Health Schemes</h1>
+            <p className="text-xs text-slate-500 font-medium">
+              Discover national and state-specific healthcare benefits and check eligibility.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold px-3 py-1 text-xs gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            PM-JAY &amp; State Schemes Active
+          </Badge>
+        </div>
       </div>
 
-      <Card className="border-0 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden bg-white">
-        <div className="h-3 w-full bg-gradient-to-r from-teal-400 to-emerald-500" />
-        <CardHeader className="bg-slate-50 border-b border-slate-100 pb-6 pt-6">
-          <CardTitle className="text-xl text-slate-800">Citizen Demographic &amp; Household Profile</CardTitle>
-          <CardDescription className="text-slate-500 text-base">Enter household details to run the automated scheme qualification rules.</CardDescription>
+      <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+          <CardTitle className="text-lg font-bold text-slate-900">Citizen Demographic &amp; Household Profile</CardTitle>
+          <CardDescription className="text-xs text-slate-500 font-medium">Enter household details to run automated scheme qualification rules.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6 pt-6">
+        <CardContent className="space-y-6 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <div className="space-y-2">
-              <Label htmlFor="income" className="text-slate-700 font-medium">Income / Socio-Economic Category *</Label>
+              <Label htmlFor="income" className="text-xs font-semibold text-slate-700">Income / Socio-Economic Category *</Label>
               <Select value={incomeCategory} onValueChange={(val) => val && setIncomeCategory(val)}>
                 <SelectTrigger id="income" className="h-11 w-full rounded-lg border-slate-200 focus:ring-teal-500">
                   <SelectValue placeholder="Select income category" />
