@@ -177,76 +177,77 @@ export function StaffDashboard() {
         </Link>
       </div>
 
-      {/* Facility Appointment & Consultation Schedule Calendar */}
-      <AppointmentCalendarWidget role={Role.HOSPITAL_STAFF} userId={currentUser?.id} userName={currentUser?.name} />
-
-      {/* Incoming Referrals Table */}
-      <Card className="shadow-sm border-slate-200/80 rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="flex flex-row items-center justify-between py-4 px-6 bg-slate-50/50 border-b border-slate-100">
-          <div>
-            <CardTitle className="text-base font-bold text-slate-900">Incoming Clinical Referrals</CardTitle>
-            <CardDescription className="text-xs text-slate-500 font-medium">Emergency and priority triage incoming from PHCs/CHCs.</CardDescription>
-          </div>
-          <Link href="/referrals">
-            <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50">
-              View All Referrals
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="text-[11px] text-slate-400 uppercase bg-slate-50/80 border-b border-slate-100 font-bold">
-                <tr>
-                  <th className="px-5 py-3">Referral ID</th>
-                  <th className="px-4 py-3">Patient</th>
-                  <th className="px-4 py-3">Urgency</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-5 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {referrals && referrals.length > 0 ? (
-                  referrals.slice(0, 5).map(ref => {
-                    const patient = patients?.find(p => p.id === ref.patientId);
-                    return (
-                      <tr key={ref.id} className="hover:bg-slate-50/60 transition-colors">
-                        <td className="px-5 py-3.5 font-mono text-slate-400">{ref.id.substring(0, 8)}</td>
-                        <td className="px-4 py-3.5 font-bold text-slate-900">{patient?.name || ref.patientName || "Unknown Patient"}</td>
-                        <td className="px-4 py-3.5">
-                          <UrgencyBadge urgency={ref.urgency} size="sm" />
-                        </td>
-                        <td className="px-4 py-3.5">
-                          {ref.status === "PENDING" && <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold">PENDING</Badge>}
-                          {ref.status === "ACCEPTED" && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">ACCEPTED</Badge>}
-                          {["PENDING", "ACCEPTED"].indexOf(ref.status) === -1 && <Badge variant="outline" className="text-[10px]">{ref.status}</Badge>}
-                        </td>
-                        <td className="px-4 py-3.5 text-slate-500 font-mono text-[11px]">
-                          {ref.createdAt ? new Date(ref.createdAt).toLocaleDateString() : "Just now"}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <Link href={`/referrals/${ref.id}`}>
-                            <Button variant="ghost" size="sm" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
-                              View
-                            </Button>
-                          </Link>
+      {/* Split Section: Referrals on Left & Calendar on Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Incoming Referrals Table (7 cols) */}
+        <div className="lg:col-span-7">
+          <Card className="shadow-sm border-slate-200/80 rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="flex flex-row items-center justify-between py-4 px-6 bg-slate-50/50 border-b border-slate-100">
+              <div>
+                <CardTitle className="text-base font-bold text-slate-900">Incoming Clinical Referrals</CardTitle>
+                <CardDescription className="text-xs text-slate-500 font-medium">Emergency and priority triage incoming from PHCs/CHCs.</CardDescription>
+              </div>
+              <Link href="/referrals">
+                <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50">
+                  View All
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead className="text-[11px] text-slate-400 uppercase bg-slate-50/80 border-b border-slate-100 font-bold">
+                    <tr>
+                      <th className="px-5 py-3">Patient</th>
+                      <th className="px-3 py-3">Urgency</th>
+                      <th className="px-3 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {referrals && referrals.length > 0 ? (
+                      referrals.slice(0, 5).map(ref => {
+                        const patient = patients?.find(p => p.id === ref.patientId);
+                        return (
+                          <tr key={ref.id} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="px-5 py-3.5 font-bold text-slate-900">{patient?.name || ref.patientName || "Unknown Patient"}</td>
+                            <td className="px-3 py-3.5">
+                              <UrgencyBadge urgency={ref.urgency} size="sm" />
+                            </td>
+                            <td className="px-3 py-3.5">
+                              {ref.status === "PENDING" && <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold">PENDING</Badge>}
+                              {ref.status === "ACCEPTED" && <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">ACCEPTED</Badge>}
+                              {["PENDING", "ACCEPTED"].indexOf(ref.status) === -1 && <Badge variant="outline" className="text-[10px]">{ref.status}</Badge>}
+                            </td>
+                            <td className="px-4 py-3.5 text-right">
+                              <Link href={`/referrals`}>
+                                <Button variant="ghost" size="sm" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
+                                  View
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-5 py-10 text-center text-slate-400 text-xs font-medium">
+                          No incoming referrals. Patient transfers will appear here as they are created.
                         </td>
                       </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-slate-400 text-xs font-medium">
-                      No incoming referrals. Patient transfers will appear here as they are created.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Calendar on Right (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          <AppointmentCalendarWidget role={Role.HOSPITAL_STAFF} userId={currentUser?.id} userName={currentUser?.name} />
+        </div>
+      </div>
 
       {/* Bottom Row Stats */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

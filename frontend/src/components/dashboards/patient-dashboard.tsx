@@ -172,81 +172,82 @@ export function PatientDashboard() {
         </Link>
       </div>
 
-      {/* 4. Appointment Calendar Widget */}
-      <AppointmentCalendarWidget role={Role.PATIENT} userId={currentUser?.id} userName={currentUser?.name} />
-
-      {/* 5. Nearby Hospitals Preview */}
-      <div>
-        <div className="flex justify-between items-end mb-5">
-          <h2 className="text-2xl font-bold tracking-tight">Nearby Hospitals</h2>
-          <Link href="/hospitals">
-            <Button variant="ghost" className="text-primary hover:bg-primary/5 font-medium flex items-center gap-1">
-              View All <ChevronRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-        
-        {facilities.length > 0 ? (
-          <div className="grid md:grid-cols-3 gap-5">
-            {facilities.slice(0, 3).map((facility) => {
-              const availableBeds = (facility.generalBeds - facility.generalBedsUsed) + (facility.icuBeds - facility.icuBedsUsed);
-              return (
-                <Card key={facility.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-0">
-                    <div className="p-5 space-y-4">
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-start gap-3">
-                          <h3 className="font-bold text-base leading-tight line-clamp-2">{facility.name}</h3>
+      {/* 4. Bottom Split Layout: Left Info & Right Calendar */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (7 cols): Nearby Hospitals & Health Tips */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Nearby Hospitals Preview */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-end">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">Nearby Hospitals</h2>
+              <Link href="/hospitals">
+                <Button variant="ghost" size="sm" className="text-teal-700 hover:bg-teal-50 font-bold text-xs flex items-center gap-1">
+                  View All <ChevronRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+            
+            {facilities.length > 0 ? (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {facilities.slice(0, 4).map((facility) => {
+                  const availableBeds = (facility.generalBeds - facility.generalBedsUsed) + (facility.icuBeds - facility.icuBedsUsed);
+                  return (
+                    <Card key={facility.id} className="overflow-hidden hover:shadow-md transition-shadow rounded-2xl border-slate-200/80 bg-white">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="space-y-1">
+                          <h3 className="font-bold text-sm leading-tight text-slate-900 line-clamp-1">{facility.name}</h3>
+                          <Badge variant="secondary" className="font-bold text-[10px] bg-teal-50 text-teal-800 border-teal-200">
+                            {facility.type}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="font-medium bg-secondary/60">
-                          {facility.type}
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-start gap-2">
-                          <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground/70" /> 
-                          <span className="line-clamp-1">{facility.district}, {facility.state}</span>
+                        
+                        <div className="space-y-1.5 text-xs text-slate-500">
+                          <div className="flex items-start gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" /> 
+                            <span className="line-clamp-1">{facility.district}, {facility.state}</span>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="pt-3 border-t flex justify-between items-center">
-                        <div className="text-sm">
-                          <span className="font-semibold text-foreground">{availableBeds}</span>
-                          <span className="text-muted-foreground ml-1">Beds Available</span>
+                        
+                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
+                          <span className="text-slate-500">Available Beds:</span>
+                          <span className="font-extrabold text-emerald-700">{availableBeds}</span>
                         </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Card className="bg-slate-50/50 border-dashed rounded-2xl">
+                <CardContent className="p-6 flex flex-col items-center text-center space-y-2 text-slate-400">
+                  <Building2 className="h-8 w-8 opacity-30" />
+                  <p className="text-xs">No hospitals registered in the network yet.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
-        ) : (
-          <Card className="bg-muted/30 border-dashed">
-            <CardContent className="p-8 flex flex-col items-center text-center space-y-3 text-muted-foreground">
-              <Building2 className="h-10 w-10 opacity-20" />
-              <p>No hospitals registered in the network yet.</p>
+
+          {/* Health Tip Card */}
+          <Card className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200/80 rounded-3xl overflow-hidden relative shadow-sm">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div className="bg-teal-600 p-2.5 rounded-2xl shrink-0 text-white shadow-sm">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-extrabold text-teal-950">Daily Preventive Health Tip</h4>
+                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                  Stay hydrated — drink at least 8 glasses of water daily. Proper hydration supports your immune system and overall well-being.
+                </p>
+              </div>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </div>
 
-      {/* 5. Health Tip Card */}
-      <Card className="bg-primary/5 border-primary/10 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-        <CardContent className="p-5 flex items-start gap-4">
-          <div className="bg-primary/10 p-2.5 rounded-xl shrink-0 mt-0.5">
-            <Sparkles className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-foreground mb-1">Health Tip of the Day</h4>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Stay hydrated — drink at least 8 glasses of water daily. Proper hydration supports your immune system and overall well-being.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Right Column (5 cols): Appointments Calendar */}
+        <div className="lg:col-span-5 space-y-6">
+          <AppointmentCalendarWidget role={Role.PATIENT} userId={currentUser?.id} userName={currentUser?.name} />
+        </div>
+      </div>
     </div>
   );
 }

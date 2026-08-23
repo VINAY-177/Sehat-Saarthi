@@ -30,6 +30,7 @@ import { EncountersTab } from "@/components/patient-360/encounters-tab";
 import { PrescriptionsTab } from "@/components/patient-360/prescriptions-tab";
 import { LabReportsTab } from "@/components/patient-360/lab-reports-tab";
 import { InsuranceTab } from "@/components/patient-360/insurance-tab";
+import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -186,13 +187,31 @@ export default function PatientDetailPage() {
               value="overview"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Overview
+              General info
             </TabsTrigger>
             <TabsTrigger
               value="demographics"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
               Demographics
+            </TabsTrigger>
+            <TabsTrigger
+              value="appointments"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Appointments ({patient.appointments?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="prescriptions"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Prescriptions ({patient.prescriptions?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="lab-reports"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Medical tests ({patient.labReports?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="conditions"
@@ -207,40 +226,22 @@ export default function PatientDetailPage() {
               Allergies ({patient.allergies?.length || 0})
             </TabsTrigger>
             <TabsTrigger
-              value="medications"
-              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
-            >
-              Medications ({patient.medications?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger
               value="vitals"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
               Vitals ({patient.vitals?.length || 0})
             </TabsTrigger>
             <TabsTrigger
-              value="encounters"
-              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
-            >
-              Encounters ({patient.encounters?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger
-              value="prescriptions"
-              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
-            >
-              Prescriptions ({patient.prescriptions?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger
-              value="lab-reports"
-              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
-            >
-              Lab Reports ({patient.labReports?.length || 0})
-            </TabsTrigger>
-            <TabsTrigger
               value="insurance"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
               Insurance
+            </TabsTrigger>
+            <TabsTrigger
+              value="encounters"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Encounters ({patient.encounters?.length || 0})
             </TabsTrigger>
           </TabsList>
         </div>
@@ -252,6 +253,12 @@ export default function PatientDetailPage() {
 
         <TabsContent value="demographics" className="mt-0">
           <DemographicsTab patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="appointments" className="mt-0">
+          <div className="max-w-2xl mx-auto">
+            <AppointmentCalendarWidget patientName={patient.name} />
+          </div>
         </TabsContent>
 
         <TabsContent value="conditions" className="mt-0">

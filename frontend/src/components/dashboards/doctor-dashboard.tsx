@@ -177,6 +177,8 @@ export function DoctorDashboard() {
         
         {/* Right Sidebar (4 cols) */}
         <div className="lg:col-span-4 space-y-4">
+          <AppointmentCalendarWidget role={Role.DOCTOR} />
+
           <Card className="shadow-sm border-slate-200/80 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3.5 px-5">
               <CardTitle className="text-sm font-bold text-slate-900">Quick Clinical Actions</CardTitle>
