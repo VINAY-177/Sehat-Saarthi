@@ -304,9 +304,9 @@ export const translations: Record<Language, Translations> = {
     trustBadgeText: "ABDM Compliant · End-to-End Encrypted · HIPAA Ready",
 
     // Chatbot Flow
-    botTitle: "Sehat Saathi AI Voice & Chatbot",
-    botSubtitle: "Smart appointment booking with clinical symptom matching",
-    onlineAssistant: "AI Assistant Online",
+    botTitle: "Sehat Saathi AI",
+    botSubtitle: "Online · Voice & Chat",
+    onlineAssistant: "Online",
     resetChat: "Reset Flow",
     voiceOn: "Voice Readback On",
     voiceOff: "Voice Muted",
@@ -472,9 +472,9 @@ export const translations: Record<Language, Translations> = {
     trustBadgeText: "एबीडीएम प्रमाणित · 256-बिट एन्क्रिप्टेड · सुरक्षित डेटा",
 
     // Chatbot Flow
-    botTitle: "सेहत साथी एआई वॉयस एवं चैटबॉट",
-    botSubtitle: "स्मार्ट डॉक्टर अपॉइंटमेंट बुकिंग एवं लक्षण मिलान",
-    onlineAssistant: "एआई सहायक ऑनलाइन",
+    botTitle: "सेहत साथी AI",
+    botSubtitle: "ऑनलाइन · वॉयस एवं चैट",
+    onlineAssistant: "ऑनलाइन",
     resetChat: "रीसेट करें",
     voiceOn: "आवाज वाचन सक्रिय",
     voiceOff: "आवाज म्यूट",
