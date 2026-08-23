@@ -1,6 +1,5 @@
 // ============================================================
 // Sehat Saathi AI — Type Definitions
-// Mirrors the planned Prisma schema for future migration
 // ============================================================
 
 // ---------- Enums ----------
@@ -40,32 +39,218 @@ export enum AmbulanceStatus {
   EN_ROUTE = "EN_ROUTE",
 }
 
-// ---------- Models ----------
-
-export interface User {
-  id: string;
-  role: Role;
-  name: string;
-  phone: string;
-  createdAt: string;
-}
+// ---------- Extended Models (Phase 1) ----------
 
 export interface Patient {
   id: string;
+  mrn?: string;
   name: string;
+  dateOfBirth?: string;
   age: number;
   gender: string;
   bloodGroup: string | null;
-  village: string;
-  district: string;
-  state: string;
-  incomeCategory: string | null;
-  abhaLinked: boolean;
-  registeredById: string;
-  createdAt: string;
   phone?: string;
   email?: string;
-  abhaNumber?: string;
+  abhaId?: string;
+  abhaLinked: boolean;
+  registeredById?: string;
+  address?: string;
+  village?: string;
+  city?: string;
+  district: string;
+  state: string;
+  pincode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  riskLevel?: string;
+  incomeCategory?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Relations (optional when populated)
+  conditions?: MedicalCondition[];
+  allergies?: Allergy[];
+  medications?: Medication[];
+  prescriptions?: Prescription[];
+  labReports?: LabReport[];
+  documents?: MedicalDocument[];
+  insurance?: Insurance[];
+  appointments?: Appointment[];
+  encounters?: Encounter[];
+  vitals?: Vital[];
+  referralsOut?: Referral[];
+}
+
+export interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  department?: string;
+  licenseNumber?: string;
+  phone?: string;
+  email?: string;
+  facilityId?: string;
+  available: boolean;
+  experience?: string;
+  facility?: {
+    id: string;
+    name: string;
+    location?: string;
+  };
+}
+
+export interface Vital {
+  id: string;
+  patientId: string;
+  encounterId?: string | null;
+  temperature?: number | null;
+  bpSystolic?: number | null;
+  bpDiastolic?: number | null;
+  heartRate?: number | null;
+  respiratoryRate?: number | null;
+  spO2?: number | null;
+  height?: number | null;
+  weight?: number | null;
+  bmi?: number | null;
+  recordedAt: string;
+}
+
+export interface MedicalCondition {
+  id: string;
+  patientId: string;
+  name: string;
+  icdCode?: string | null;
+  onsetDate?: string | null;
+  status: "ACTIVE" | "RESOLVED" | "CHRONIC" | string;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+export interface Allergy {
+  id: string;
+  patientId: string;
+  allergen: string;
+  type: "DRUG" | "FOOD" | "ENVIRONMENTAL" | string;
+  reaction?: string | null;
+  severity: "MILD" | "MODERATE" | "SEVERE" | "LIFE_THREATENING" | string;
+  createdAt?: string;
+}
+
+export interface Medication {
+  id: string;
+  patientId: string;
+  prescribingDoctorId?: string | null;
+  name: string;
+  dosage: string;
+  frequency: string;
+  startDate: string;
+  endDate?: string | null;
+  status: "ACTIVE" | "COMPLETED" | "DISCONTINUED" | string;
+  notes?: string | null;
+  prescribingDoctor?: Doctor | null;
+}
+
+export interface PrescriptionItem {
+  id: string;
+  prescriptionId?: string;
+  medicationName: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions?: string | null;
+}
+
+export interface Prescription {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  encounterId?: string | null;
+  date: string;
+  notes?: string | null;
+  doctor?: Doctor;
+  items: PrescriptionItem[];
+}
+
+export interface LabReport {
+  id: string;
+  patientId: string;
+  encounterId?: string | null;
+  orderingDoctorId?: string | null;
+  testName: string;
+  category: string;
+  result?: string | null;
+  unit?: string | null;
+  referenceRange?: string | null;
+  status: "ORDERED" | "SAMPLE_COLLECTED" | "PROCESSING" | "COMPLETED" | string;
+  reportDate?: string | null;
+  notes?: string | null;
+  orderingDoctor?: Doctor | null;
+}
+
+export interface MedicalDocument {
+  id: string;
+  patientId: string;
+  fileName: string;
+  fileUrl?: string | null;
+  category: string;
+  notes?: string | null;
+  uploadDate: string;
+}
+
+export interface Insurance {
+  id: string;
+  patientId: string;
+  provider: string;
+  policyNumber?: string | null;
+  coverageType?: string | null;
+  validFrom?: string | null;
+  validTo?: string | null;
+  pmjayStatus?: string | null;
+  cghsStatus?: string | null;
+}
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  dateTime: string;
+  endTime?: string | null;
+  status: "REQUESTED" | "CONFIRMED" | "CHECKED_IN" | "IN_CONSULTATION" | "COMPLETED" | "DECLINED" | "CANCELLED" | string;
+  visitType: "NEW" | "FOLLOW_UP" | "EMERGENCY" | string;
+  reason?: string | null;
+  notes?: string | null;
+  cancelReason?: string | null;
+  patient?: Patient;
+  doctor?: Doctor;
+}
+
+export interface Encounter {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  appointmentId?: string | null;
+  chiefComplaint?: string | null;
+  symptoms?: string | null; // JSON or string
+  onset?: string | null;
+  severity?: string | null;
+  hpiNotes?: string | null;
+  diagnosis?: string | null;
+  diagnosisIcdCode?: string | null;
+  secondaryDiagnoses?: string | null;
+  clinicalNotes?: string | null;
+  treatmentPlan?: string | null;
+  riskScore?: number | null;
+  urgency?: string | null;
+  riskFactors?: string | null;
+  suggestedDepartment?: string | null;
+  followUpDate?: string | null;
+  status: string;
+  createdAt: string;
+  doctor?: Doctor;
+  vitals?: Vital[];
+  prescriptions?: Prescription[];
+  labOrders?: LabReport[];
 }
 
 export interface Vitals {
@@ -150,14 +335,21 @@ export interface Referral {
   id: string;
   patientId: string;
   patientName: string;
-  fromFacilityId: string | null;
-  toFacilityId: string;
-  toFacilityName: string;
+  fromFacilityId?: string | null;
+  fromHospitalId?: string | null;
+  toFacilityId?: string;
+  toFacilityName?: string;
+  toHospitalId?: string;
+  toHospitalName?: string;
+  doctorName?: string | null;
+  specialty?: string | null;
   status: ReferralStatus;
   urgency: Urgency;
-  ambulanceId: string | null;
+  ambulanceId?: string | null;
   reason: string;
+  notes?: string | null;
   createdAt: string;
+  toHospital?: Facility;
 }
 
 export interface Ambulance {
@@ -166,15 +358,6 @@ export interface Ambulance {
   lat: number;
   lng: number;
   status: AmbulanceStatus;
-}
-
-export interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  available: boolean;
-  experience: string;
-  phone: string;
 }
 
 export interface Equipment {

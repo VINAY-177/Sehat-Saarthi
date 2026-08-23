@@ -1,210 +1,289 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Patient, Urgency } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { MapPin, Droplet, Activity, ActivitySquare, AlertTriangle, ArrowLeft } from "lucide-react";
-import { useStore } from "@/lib/store";
+import {
+  ArrowLeft,
+  Stethoscope,
+  Fingerprint,
+  RefreshCw,
+  User,
+  MapPin,
+  Phone,
+} from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
+
+// Tab Components
+import { OverviewTab } from "@/components/patient-360/overview-tab";
+import { DemographicsTab } from "@/components/patient-360/demographics-tab";
+import { ConditionsTab } from "@/components/patient-360/conditions-tab";
+import { AllergiesTab } from "@/components/patient-360/allergies-tab";
+import { MedicationsTab } from "@/components/patient-360/medications-tab";
+import { VitalsTab } from "@/components/patient-360/vitals-tab";
+import { EncountersTab } from "@/components/patient-360/encounters-tab";
+import { PrescriptionsTab } from "@/components/patient-360/prescriptions-tab";
+import { LabReportsTab } from "@/components/patient-360/lab-reports-tab";
+import { InsuranceTab } from "@/components/patient-360/insurance-tab";
 
 export default function PatientDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const { patients, screenings, referrals } = useStore();
 
-  const patient = patients.find((p) => p.id === id);
-  const patientScreenings = screenings
-    .filter((s) => s.patientId === id)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const patientReferrals = referrals
-    .filter((r) => r.patientId === id)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const fetchPatient = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:5000/api/patients/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPatient(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch patient 360 data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) fetchPatient();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="py-32 flex flex-col items-center justify-center space-y-3">
+        <RefreshCw className="h-8 w-8 text-teal-600 animate-spin" />
+        <p className="text-slate-500 font-medium">Assembling Patient 360° Profile...</p>
+      </div>
+    );
+  }
 
   if (!patient) {
     return (
-      <div className="py-20 text-center space-y-4">
-        <h2 className="text-2xl font-bold">Patient not found</h2>
-        <p className="text-muted-foreground">The requested patient record could not be found.</p>
+      <div className="py-24 text-center space-y-4 max-w-md mx-auto">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+          <User className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900">Patient Profile Not Found</h2>
+        <p className="text-slate-500 text-sm">
+          The requested medical record could not be loaded or may have been archived.
+        </p>
         <Link href="/patients">
-          <Button><ArrowLeft className="mr-2 h-4 w-4" /> Back to Patients</Button>
+          <Button className="bg-teal-600 hover:bg-teal-700 font-bold rounded-xl mt-2">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Return to Patient Registry
+          </Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 max-w-5xl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/patients">
-            <Button variant="outline" size="icon" className="h-9 w-9">
-              <ArrowLeft className="h-4 w-4" />
+    <div className="space-y-6 max-w-7xl mx-auto pb-20 animate-in fade-in duration-300">
+      {/* Top Breadcrumb & Nav */}
+      <div className="flex items-center justify-between">
+        <Link
+          href="/patients"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Patient Registry</span>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <Link href={`/patients/${patient.id}/encounter`}>
+            <Button className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl h-11 px-5 shadow-sm gap-2">
+              <Stethoscope className="w-4 h-4" />
+              <span>Start Clinical Encounter</span>
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">{patient.name}</h1>
-            <p className="text-muted-foreground">Patient Profile &amp; Clinical History</p>
-          </div>
         </div>
-        <Link href="/register">
-          <Button className="flex items-center gap-1.5">
-            <ActivitySquare className="h-4 w-4" /> New Screening
-          </Button>
-        </Link>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="space-y-1 lg:col-span-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold">{patient.name}</h2>
-                <Badge variant={patient.abhaLinked ? "default" : "secondary"} className="text-xs">
-                  ABHA: {patient.abhaLinked ? "Linked" : "Not Linked"}
-                </Badge>
+      {/* Patient Header 360 Card */}
+      <Card className="border-0 shadow-md bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white rounded-3xl overflow-hidden">
+        <CardContent className="p-6 sm:p-8">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            {/* Left: Avatar & Basic Info */}
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-slate-950 text-3xl font-black shadow-lg shadow-teal-500/20 shrink-0">
+                {patient.name.charAt(0).toUpperCase()}
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground mt-1 text-sm">
-                <span>{patient.age} yrs</span> • 
-                <span>{patient.gender}</span> • 
-                <span className="font-semibold text-foreground">Income: {patient.incomeCategory || "APL"}</span>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-4">
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Droplet className="h-3 w-3 text-rose-500" /> Blood Group: {patient.bloodGroup || "Unknown"}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  ID: {patient.id}
-                </Badge>
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-3xl font-extrabold tracking-tight">{patient.name}</h1>
+                  <Badge variant="outline" className="bg-white/10 text-white border-white/20 font-mono text-xs">
+                    {patient.mrn || `MRN-${patient.id.slice(0, 6)}`}
+                  </Badge>
+                  <UrgencyBadge
+                    urgency={(patient.riskLevel?.toUpperCase() as Urgency) || Urgency.LOW}
+                    size="sm"
+                  />
+                </div>
+
+                <p className="text-slate-300 text-sm flex flex-wrap items-center gap-2">
+                  <span>{patient.age} yrs</span> •
+                  <span className="capitalize">{patient.gender}</span> •
+                  <span className="text-rose-300 font-semibold">Blood: {patient.bloodGroup || "Unknown"}</span> •
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-teal-400" />
+                    {patient.district}, {patient.state}
+                  </span>
+                </p>
+
+                {patient.phone && (
+                  <p className="text-xs text-slate-400 flex items-center gap-1.5 pt-0.5">
+                    <Phone className="w-3.5 h-3.5" />
+                    {patient.phone}
+                  </p>
+                )}
               </div>
             </div>
-            
-            <div className="space-y-2 lg:col-span-2 border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-6">
-              <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Location / Village</h3>
-              <div className="flex items-start gap-2">
-                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+
+            {/* Right: ABHA & Quick Badges */}
+            <div className="flex flex-wrap lg:flex-col items-start lg:items-end gap-3 w-full lg:w-auto border-t lg:border-t-0 border-white/10 pt-4 lg:pt-0">
+              <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/10 flex items-center gap-3">
+                <Fingerprint className="w-5 h-5 text-teal-400" />
                 <div>
-                  <p className="font-medium">{patient.village || "N/A"}</p>
-                  <p className="text-sm text-muted-foreground">{patient.district}, {patient.state}</p>
+                  <span className="text-[10px] text-slate-400 font-mono block">ABHA HEALTH ID</span>
+                  <span className="text-xs font-mono font-bold text-white">
+                    {patient.abhaId || "Not Linked"}
+                  </span>
                 </div>
+                <Badge
+                  className={`text-[10px] font-bold ${
+                    patient.abhaLinked ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-300"
+                  }`}
+                >
+                  {patient.abhaLinked ? "VERIFIED" : "UNLINKED"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium">Income Tier:</span>
+                <Badge variant="outline" className="bg-white/5 border-white/20 text-teal-200 text-xs">
+                  {patient.incomeCategory || "General (APL)"}
+                </Badge>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="screenings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="screenings">Screenings ({patientScreenings.length})</TabsTrigger>
-          <TabsTrigger value="referrals">Referrals ({patientReferrals.length})</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="screenings" className="space-y-4 mt-6">
-          {patientScreenings.length === 0 ? (
-            <div className="text-center py-10 border rounded-lg bg-card">
-              <Activity className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No screenings recorded for this patient yet.</p>
-              <Link href="/register" className="mt-3 inline-block">
-                <Button size="sm">Perform First Screening</Button>
-              </Link>
-            </div>
-          ) : (
-            patientScreenings.map((screening) => (
-              <Card key={screening.id}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <div>
-                    <CardTitle className="text-base">{new Date(screening.createdAt).toLocaleString()}</CardTitle>
-                    <CardDescription>AI Risk Evaluation</CardDescription>
-                  </div>
-                  <UrgencyBadge urgency={screening.urgency} />
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="col-span-1 flex flex-col justify-center items-center p-4 border rounded-lg bg-muted/20">
-                      <div className="text-4xl font-bold mb-2">{screening.riskScore}</div>
-                      <Progress value={screening.riskScore} className="h-2 w-full max-w-[150px]" />
-                      <span className="text-xs text-muted-foreground mt-2">Risk Score (out of 100)</span>
-                    </div>
-                    
-                    <div className="col-span-2 space-y-4">
-                      {screening.riskSummary && (
-                        <div className="p-3 bg-secondary/50 rounded text-sm text-foreground">
-                          {screening.riskSummary}
-                        </div>
-                      )}
+      {/* Tabbed Clinical Workspace */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="bg-white p-1.5 rounded-2xl border border-slate-200/80 shadow-sm inline-flex h-auto gap-1">
+            <TabsTrigger
+              value="overview"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="demographics"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Demographics
+            </TabsTrigger>
+            <TabsTrigger
+              value="conditions"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Conditions ({patient.conditions?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="allergies"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Allergies ({patient.allergies?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="medications"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Medications ({patient.medications?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="vitals"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Vitals ({patient.vitals?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="encounters"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Encounters ({patient.encounters?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="prescriptions"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Prescriptions ({patient.prescriptions?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="lab-reports"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Lab Reports ({patient.labReports?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger
+              value="insurance"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              Insurance
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-                      {screening.symptoms && screening.symptoms.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Reported Symptoms</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {screening.symptoms.map((sym) => (
-                              <Badge key={sym} variant="secondary" className="text-xs">{sym}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {screening.riskFactors && screening.riskFactors.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                            Primary Contributing Factors
-                          </h4>
-                          <ul className="space-y-1 text-xs text-muted-foreground">
-                            {screening.riskFactors.map((rf, idx) => (
-                              <li key={idx} className="flex items-start gap-1">
-                                <span className="font-semibold text-foreground">• {rf.factor} (+{rf.contribution}):</span>
-                                <span>{rf.detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="pt-2 border-t text-xs text-muted-foreground flex flex-wrap gap-4">
-                        <span>BP: {screening.vitals.bpSystolic}/{screening.vitals.bpDiastolic} mmHg</span>
-                        <span>Pulse: {screening.vitals.pulse} bpm</span>
-                        <span>SpO2: {screening.vitals.spO2}%</span>
-                        <span>Temp: {screening.vitals.temperature}°C</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+        {/* Tab Contents */}
+        <TabsContent value="overview" className="mt-0">
+          <OverviewTab patient={patient} onTabChange={setActiveTab} />
         </TabsContent>
-        
-        <TabsContent value="referrals" className="space-y-4 mt-6">
-          {patientReferrals.length === 0 ? (
-            <div className="text-center py-10 border rounded-lg bg-card">
-              <p className="text-muted-foreground">No referrals recorded for this patient.</p>
-            </div>
-          ) : (
-            patientReferrals.map((referral) => (
-              <Card key={referral.id}>
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-lg">{referral.toFacilityName}</h4>
-                        <Badge variant="outline">{referral.status}</Badge>
-                        <UrgencyBadge urgency={referral.urgency} size="sm" />
-                      </div>
-                      <p className="text-xs text-muted-foreground">{new Date(referral.createdAt).toLocaleString()}</p>
-                      <p className="text-sm"><span className="font-medium">Reason:</span> {referral.reason}</p>
-                    </div>
-                    <Link href={`/facilities/${referral.toFacilityId}`}>
-                      <Button variant="outline" size="sm">View Facility</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+
+        <TabsContent value="demographics" className="mt-0">
+          <DemographicsTab patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="conditions" className="mt-0">
+          <ConditionsTab patient={patient} onConditionAdded={fetchPatient} />
+        </TabsContent>
+
+        <TabsContent value="allergies" className="mt-0">
+          <AllergiesTab patient={patient} onAllergyAdded={fetchPatient} />
+        </TabsContent>
+
+        <TabsContent value="medications" className="mt-0">
+          <MedicationsTab patient={patient} onMedicationAdded={fetchPatient} />
+        </TabsContent>
+
+        <TabsContent value="vitals" className="mt-0">
+          <VitalsTab patient={patient} onVitalRecorded={fetchPatient} />
+        </TabsContent>
+
+        <TabsContent value="encounters" className="mt-0">
+          <EncountersTab patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="prescriptions" className="mt-0">
+          <PrescriptionsTab patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="lab-reports" className="mt-0">
+          <LabReportsTab patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="insurance" className="mt-0">
+          <InsuranceTab patient={patient} />
         </TabsContent>
       </Tabs>
     </div>
