@@ -8,6 +8,7 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Toaster } from "@/components/ui/sonner";
+import { FloatingChatbotWidget } from "@/components/floating-chatbot-widget";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -61,6 +62,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      <FloatingChatbotWidget />
       <Toaster position="top-right" richColors />
     </div>
   );

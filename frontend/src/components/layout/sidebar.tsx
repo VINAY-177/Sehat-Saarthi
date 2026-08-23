@@ -17,6 +17,7 @@ import {
   Calendar,
   MessageSquare,
   Bell,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
@@ -41,6 +42,7 @@ const getNavGroups = (role: Role) => {
         {
           label: "Health Services",
           items: [
+            { href: '/chatbot', label: 'AI Booking Bot', icon: Bot },
             { href: '/scheduling', label: 'Book Appointment', icon: Calendar },
             { href: '/hospitals', label: 'Nearby Hospitals', icon: Hospital },
             { href: '/ambulance', label: 'Ambulance 108', icon: Siren },
@@ -64,6 +66,7 @@ const getNavGroups = (role: Role) => {
         {
           label: "Clinical",
           items: [
+            { href: '/chatbot', label: 'AI Booking Bot', icon: Bot },
             { href: '/scheduling', label: 'Appointment Schedule', icon: Calendar },
             { href: '/patients', label: 'Patient Records', icon: Users },
             { href: '/assess', label: 'Risk Assessment', icon: Activity },

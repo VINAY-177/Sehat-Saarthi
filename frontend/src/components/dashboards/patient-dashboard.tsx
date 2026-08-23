@@ -13,7 +13,10 @@ import {
   HeartPulse,
   ChevronRight,
   MapPin,
-  Sparkles
+  Sparkles,
+  Bot,
+  Mic,
+  ArrowRight
 } from "lucide-react";
 import { Role } from "@/lib/types";
 import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
@@ -80,6 +83,38 @@ export function PatientDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* Voice & Chat AI Booking Assistant Promo */}
+      <Link href="/chatbot" className="block group">
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden border border-blue-500/20">
+          <div className="absolute -right-6 -bottom-6 opacity-10">
+            <Bot className="w-44 h-44 text-white" />
+          </div>
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-2xl text-slate-950 font-black shadow-lg shrink-0 group-hover:scale-105 transition-transform">
+                <Bot className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-teal-400">Conversational AI</span>
+                  <Badge className="bg-teal-400/20 text-teal-300 border-teal-400/30 text-[10px] font-bold">Voice Enabled</Badge>
+                </div>
+                <h3 className="text-xl font-black text-white">Book Doctor Consultation in 60 Seconds</h3>
+                <p className="text-xs text-slate-300 max-w-xl">
+                  Talk or chat with Sehat Saathi to match your symptoms with the right specialist and get instant OPD tokens.
+                </p>
+              </div>
+            </div>
+
+            <Button className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold text-xs h-11 px-5 rounded-2xl shadow-md gap-1.5 shrink-0 group-hover:translate-x-0.5 transition-transform">
+              <Mic className="w-4 h-4 text-slate-950" />
+              Talk to AI Saathi
+              <ArrowRight className="w-4 h-4 ml-0.5" />
+            </Button>
+          </div>
+        </div>
+      </Link>
 
       {/* 3. 4-Portal Service Command Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
