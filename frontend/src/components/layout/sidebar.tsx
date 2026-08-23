@@ -66,7 +66,6 @@ const getNavGroups = (role: Role) => {
         {
           label: "Clinical",
           items: [
-            { href: '/chatbot', label: 'AI Booking Bot', icon: Bot },
             { href: '/scheduling', label: 'Appointment Schedule', icon: Calendar },
             { href: '/patients', label: 'Patient Records', icon: Users },
             { href: '/assess', label: 'Risk Assessment', icon: Activity },
