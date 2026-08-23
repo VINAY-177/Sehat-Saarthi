@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
+import { useStore } from "@/lib/store";
+import { Role } from "@/lib/types";
 import { BookingChatbot } from "@/components/booking-chatbot";
 import { Bot, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,8 +11,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export function FloatingChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { role } = useStore();
 
-  // Don't show floating button if already on the dedicated /chatbot page or auth pages
+  // The appointment booking assistant is strictly for Patients / Citizens.
+  // Hide completely for Doctor and Hospital Staff, as well as on auth and chatbot pages.
+  if (
+    role !== Role.PATIENT &&
+    role !== Role.CITIZEN
+  ) {
+    return null;
+  }
+
   if (pathname === "/chatbot" || pathname === "/login" || pathname === "/signup") {
     return null;
   }
