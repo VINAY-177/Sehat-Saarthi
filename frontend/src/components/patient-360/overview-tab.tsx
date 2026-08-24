@@ -31,7 +31,7 @@ export function OverviewTab({ patient, onTabChange }: Props) {
   const allergiesList = patient.allergies || [];
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-300 max-w-4xl">
+    <div className="space-y-6 animate-in fade-in duration-300 w-full">
 
       {/* ━━ Patient Identity & Contact Card ━━ */}
       <Card className="border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden bg-white">
