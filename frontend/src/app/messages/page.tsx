@@ -522,25 +522,26 @@ export default function MessagesPage() {
       return [
         { key: "ALL", label: "All Messages" },
         { key: "PATIENTS", label: "Patients" },
-        { key: "COLLEAGUES", label: "Colleagues & Specialists" },
-        { key: "STAFF", label: "Hospital Ops" },
+        { key: "COLLEAGUES", label: "Colleagues" },
+        { key: "STAFF", label: "Specialists" },
+        { key: "AMBULANCE", label: "Ops" },
       ];
     }
     if (isStaff) {
       return [
         { key: "ALL", label: "All Communications" },
-        { key: "AMBULANCE", label: "108 Fleet Dispatch" },
-        { key: "STAFF", label: "Doctor Requests" },
-        { key: "HELPDESK", label: "OPD & Admissions" },
-        { key: "PATIENTS", label: "Patient Inquiries" },
+        { key: "PATIENTS", label: "Patients" },
+        { key: "STAFF", label: "Colleagues" },
+        { key: "HELPDESK", label: "Specialists" },
+        { key: "AMBULANCE", label: "Ops" },
       ];
     }
     // Patient / Citizen
     return [
       { key: "ALL", label: "All Chats" },
       { key: "DOCTORS", label: "My Doctors" },
-      { key: "HELPDESK", label: "Hospital & OPD Desk" },
-      { key: "AMBULANCE", label: "108 Emergency" },
+      { key: "HELPDESK", label: "Hospital Helpdesk" },
+      { key: "AMBULANCE", label: "Emergency Ops" },
     ];
   }, [isDoctor, isStaff]);
 

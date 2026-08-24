@@ -48,6 +48,51 @@ app.get('/api/doctors', async (req, res) => {
   }
 });
 
+app.post('/api/doctors', async (req, res) => {
+  try {
+    const { name, specialty, phone, email, facilityId, department, licenseNumber, experience } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    if (phone || email) {
+      const existing = await prisma.doctor.findFirst({
+        where: {
+          OR: [
+            ...(phone ? [{ phone }] : []),
+            ...(email ? [{ email }] : []),
+          ],
+        },
+      });
+      if (existing) {
+        return res.json(existing);
+      }
+    }
+
+    const hospital = facilityId
+      ? await prisma.hospital.findUnique({ where: { id: facilityId } })
+      : await prisma.hospital.findFirst();
+
+    const doctor = await prisma.doctor.create({
+      data: {
+        name,
+        specialty: specialty || 'General Medicine',
+        phone: phone || null,
+        email: email || null,
+        department: department || specialty || 'General Medicine',
+        licenseNumber: licenseNumber || null,
+        experience: experience || null,
+        facilityId: hospital?.id || null,
+        available: true,
+      },
+    });
+    res.status(201).json(doctor);
+  } catch (error) {
+    console.error('Error creating doctor:', error);
+    res.status(500).json({ error: 'Failed to create doctor' });
+  }
+});
+
 // ============================================================
 // 2. Patient Management & Search (Registry)
 // ============================================================
@@ -180,17 +225,52 @@ app.get('/api/patients/:id', async (req, res) => {
   }
 });
 
-// Create new patient
+function pickPatientFields(data: any) {
+  const age = Number(data.age);
+  return {
+    name: String(data.name || '').trim(),
+    age: Number.isFinite(age) && age > 0 ? Math.round(age) : 30,
+    gender: data.gender || 'Other',
+    bloodGroup: data.bloodGroup || null,
+    phone: data.phone || null,
+    email: data.email || null,
+    dateOfBirth: data.dateOfBirth || null,
+    address: data.address || null,
+    village: data.village || null,
+    city: data.city || data.district || null,
+    district: data.district || 'New Delhi',
+    state: data.state || 'Delhi',
+    pincode: data.pincode || null,
+    emergencyContactName: data.emergencyContactName || null,
+    emergencyContactPhone: data.emergencyContactPhone || null,
+    emergencyContactRelation: data.emergencyContactRelation || null,
+    riskLevel: data.riskLevel || 'LOW',
+    incomeCategory: data.incomeCategory || null,
+  };
+}
+
+// Create new patient (also used when staff intake or citizen signup)
 app.post('/api/patients', async (req, res) => {
   try {
-    const data = req.body;
+    const data = pickPatientFields(req.body);
+    if (!data.name) {
+      return res.status(400).json({ error: 'Patient name is required' });
+    }
+
+    if (data.phone) {
+      const existing = await prisma.patient.findFirst({ where: { phone: data.phone } });
+      if (existing) {
+        return res.json(existing);
+      }
+    }
+
     const count = await prisma.patient.count();
-    const mrn = `MRN-2025-${String(count + 1).padStart(4, '0')}`;
+    const mrn = req.body.mrn || `MRN-2026-${String(count + 1).padStart(4, '0')}`;
 
     const newPatient = await prisma.patient.create({
       data: {
         ...data,
-        mrn: data.mrn || mrn,
+        mrn,
       },
     });
 
@@ -603,11 +683,68 @@ app.get('/api/appointments', async (req, res) => {
 
 app.post('/api/appointments', async (req, res) => {
   try {
+    let { patientId, doctorId, dateTime, status, visitType, reason, notes, patientName, phone, specialty } = req.body;
+
+    let patient = patientId
+      ? await prisma.patient.findUnique({ where: { id: patientId } })
+      : null;
+
+    if (!patient && phone) {
+      patient = await prisma.patient.findFirst({ where: { phone: String(phone) } });
+    }
+
+    if (!patient && (patientName || phone)) {
+      const count = await prisma.patient.count();
+      patient = await prisma.patient.create({
+        data: {
+          mrn: `MRN-2026-${String(count + 1).padStart(4, '0')}`,
+          name: patientName || 'Walk-in Patient',
+          age: 30,
+          gender: 'Other',
+          phone: phone || null,
+          district: 'New Delhi',
+          state: 'Delhi',
+        },
+      });
+    }
+
+    if (!patient) {
+      return res.status(400).json({ error: 'A registered patient is required to book an appointment' });
+    }
+
+    let doctor = doctorId
+      ? await prisma.doctor.findUnique({ where: { id: doctorId } })
+      : null;
+
+    if (!doctor && specialty) {
+      doctor = await prisma.doctor.findFirst({
+        where: { specialty: { contains: String(specialty) } },
+      });
+    }
+
+    if (!doctor) {
+      doctor = await prisma.doctor.findFirst();
+    }
+
+    if (!doctor) {
+      return res.status(400).json({ error: 'No clinician is available for booking' });
+    }
+
     const appt = await prisma.appointment.create({
-      data: req.body,
+      data: {
+        patientId: patient.id,
+        doctorId: doctor.id,
+        dateTime: dateTime || new Date(Date.now() + 86400000).toISOString(),
+        status: status || 'CONFIRMED',
+        visitType: visitType || 'NEW',
+        reason: reason || null,
+        notes: notes || null,
+      },
+      include: { patient: true, doctor: true },
     });
     res.status(201).json(appt);
   } catch (error) {
+    console.error('Error creating appointment:', error);
     res.status(500).json({ error: 'Failed to create appointment' });
   }
 });

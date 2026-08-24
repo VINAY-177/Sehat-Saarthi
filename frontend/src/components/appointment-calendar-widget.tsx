@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Role, Appointment, Patient, Doctor } from "@/lib/types";
+import { Role, Appointment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Calendar as CalendarIcon, ChevronLeft, ChevronRight, 
-  Clock, ShieldCheck, Edit3, Paperclip
+  Clock, Edit3
 } from "lucide-react";
 
 import { useStore } from "@/lib/store";
@@ -52,79 +52,12 @@ export function AppointmentCalendarWidget({
   const dayNames = language === "hi" ? DAY_NAMES_HI : DAY_NAMES_EN;
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/appointments")
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    fetch(`${API}/api/appointments`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data: Appointment[]) => {
-        if (data && data.length > 0) {
+        if (Array.isArray(data) && data.length > 0) {
           setAppointments(data);
-        } else {
-          // Pre-seed realistic dates for calendar
-          const now = new Date();
-          const y = now.getFullYear();
-          const m = now.getMonth();
-
-          setAppointments([
-            {
-              id: "appt-1",
-              patientId: "p-1",
-              doctorId: "doc-1",
-              dateTime: new Date(y, m, 6, 9, 0).toISOString(),
-              status: "CONFIRMED",
-              visitType: "FOLLOW_UP",
-              reason: "9:00 AM Follow-up Appointment",
-              notes: "Cardiology telemetry follow-up and BP review.",
-              patient: { id: "p-1", name: patientName, mrn: "MRN-2025-0001" } as Patient,
-              doctor: { id: "doc-1", name: "Dr. Priya Sharma", specialty: "Cardiology" } as Doctor,
-            },
-            {
-              id: "appt-2",
-              patientId: "p-1",
-              doctorId: "doc-2",
-              dateTime: new Date(y, m, 9, 11, 30).toISOString(),
-              status: "CONFIRMED",
-              visitType: "NEW",
-              reason: "11:30 AM Routine Clinical Checkup",
-              notes: "Fasting lipid profile & blood glucose evaluation.",
-              patient: { id: "p-1", name: patientName, mrn: "MRN-2025-0001" } as Patient,
-              doctor: { id: "doc-2", name: "Dr. Rajesh Kumar", specialty: "General Medicine" } as Doctor,
-            },
-            {
-              id: "appt-3",
-              patientId: "p-1",
-              doctorId: "doc-3",
-              dateTime: new Date(y, m, 11, 14, 0).toISOString(),
-              status: "CHECKED_IN",
-              visitType: "FOLLOW_UP",
-              reason: "02:00 PM Orthopedic Consultation",
-              notes: "Knee replacement post-op mobility review.",
-              patient: { id: "p-1", name: patientName, mrn: "MRN-2025-0001" } as Patient,
-              doctor: { id: "doc-3", name: "Dr. Vikram Sethi", specialty: "Orthopedics" } as Doctor,
-            },
-            {
-              id: "appt-4",
-              patientId: "p-1",
-              doctorId: "doc-1",
-              dateTime: new Date(y, m, 20, 10, 0).toISOString(),
-              status: "CONFIRMED",
-              visitType: "FOLLOW_UP",
-              reason: "10:00 AM Medication Review",
-              notes: "Atorvastatin & Metoprolol titration check.",
-              patient: { id: "p-1", name: patientName, mrn: "MRN-2025-0001" } as Patient,
-              doctor: { id: "doc-1", name: "Dr. Priya Sharma", specialty: "Cardiology" } as Doctor,
-            },
-            {
-              id: "appt-5",
-              patientId: "p-1",
-              doctorId: "doc-2",
-              dateTime: new Date(y, m, 28, 16, 30).toISOString(),
-              status: "REQUESTED",
-              visitType: "FOLLOW_UP",
-              reason: "04:30 PM Diet & Lifestyle Counseling",
-              notes: "Ayurvedic and dietary regimen review.",
-              patient: { id: "p-1", name: patientName, mrn: "MRN-2025-0001" } as Patient,
-              doctor: { id: "doc-2", name: "Dr. Rajesh Kumar", specialty: "General Medicine" } as Doctor,
-            },
-          ]);
         }
       })
       .catch((err) => {
@@ -173,110 +106,166 @@ export function AppointmentCalendarWidget({
     return map;
   }, [appointments, currentYear, currentMonth]);
 
-  // Appointments for the currently selected day
-  const selectedDayAppointments = appointmentDays.get(selectedDay) || [];
+  // Selected Day Appointments
+  const selectedDayAppointments = useMemo(() => {
+    return appointmentDays.get(selectedDay) || [];
+  }, [appointmentDays, selectedDay]);
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return (
+      today.getDate() === day &&
+      today.getMonth() === currentMonth &&
+      today.getFullYear() === currentYear
+    );
+  };
 
   return (
     <div className="space-y-6">
-      {/* ── Appointments Calendar Box ── */}
+      {/* ── Main Calendar Card ── */}
       <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
+        {/* Month / Year Header */}
         <CardHeader className="py-4 px-6 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-teal-50 text-teal-700 rounded-xl border border-teal-100">
-              <CalendarIcon className="h-4 w-4" />
-            </div>
-            <CardTitle className="text-base font-extrabold text-slate-900">
-              {t("appointments")}
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-teal-600" />
+            <CardTitle className="text-sm font-extrabold tracking-wider text-slate-900">
+              {monthNames[currentMonth]} {currentYear}
             </CardTitle>
           </div>
 
-          {/* Month Stepper Controls */}
-          <div className="flex items-center gap-1 text-slate-500">
-            <button
-              type="button"
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
-              title="Previous Month"
+              className="h-8 w-8 rounded-full hover:bg-slate-200 text-slate-600"
+              aria-label="Previous Month"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
-              title="Next Month"
+              className="h-8 w-8 rounded-full hover:bg-slate-200 text-slate-600"
+              aria-label="Next Month"
             >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </CardHeader>
 
-        <CardContent className="p-5 space-y-4">
-          {/* Month & Year Label */}
-          <div className="text-center font-bold text-xs tracking-wider text-slate-700 uppercase">
-            {monthNames[currentMonth]} {currentYear}
-          </div>
-
-          {/* Days of Week Header */}
-          <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400">
-            {dayNames.map((d) => (
-              <div key={d} className="py-1">
+        <CardContent className="p-5 space-y-5">
+          {/* Day Names (SUN, MON, ...) */}
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {dayNames.map((d, i) => (
+              <span
+                key={i}
+                className="text-[11px] font-bold text-slate-400 uppercase py-1"
+              >
                 {d}
-              </div>
+              </span>
             ))}
           </div>
 
-          {/* Monthly Dates Grid */}
-          <div className="grid grid-cols-7 gap-1 text-center text-xs">
-            {calendarCells.map((day, idx) => {
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-1.5 text-center">
+            {calendarCells.map((day, index) => {
               if (day === null) {
-                return <div key={`blank-${idx}`} className="h-8 w-8" />;
+                return <div key={`empty-${index}`} className="h-9 w-full" />;
               }
 
               const hasAppt = appointmentDays.has(day);
+              const appts = appointmentDays.get(day) || [];
               const isSelected = selectedDay === day;
+              const today = isToday(day);
 
               return (
                 <button
                   key={`day-${day}`}
                   type="button"
                   onClick={() => setSelectedDay(day)}
-                  className={`h-8 w-8 mx-auto flex items-center justify-center rounded-xl font-bold transition-all text-xs ${
-                    isSelected
-                      ? "bg-teal-600 text-white shadow-md shadow-teal-600/25 ring-2 ring-teal-400/40"
-                      : hasAppt
-                      ? "bg-amber-100 text-amber-900 border border-amber-300 font-extrabold hover:bg-amber-200"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                  className={`
+                    relative h-9 w-full rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center
+                    ${
+                      isSelected
+                        ? "bg-teal-600 text-white shadow-md shadow-teal-600/30 scale-105 z-10"
+                        : today
+                        ? "bg-teal-50 text-teal-700 border border-teal-200"
+                        : "hover:bg-slate-100 text-slate-700"
+                    }
+                  `}
                 >
-                  {day}
+                  <span>{day}</span>
+
+                  {/* Indicator Dots for Appointments */}
+                  {hasAppt && (
+                    <div className="flex gap-0.5 mt-0.5">
+                      {appts.slice(0, 3).map((_, dotIdx) => (
+                        <span
+                          key={dotIdx}
+                          className={`w-1 h-1 rounded-full ${
+                            isSelected ? "bg-white" : "bg-teal-500"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          {/* Selected Date Appointments Banner */}
-          <div className="pt-2 border-t border-slate-100 space-y-2">
+          {/* Selected Date Summary Section */}
+          <div className="pt-3 border-t border-slate-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                {language === "hi" ? "चयनित तिथि की नियुक्तियां" : "Appointments on"} {selectedDay} {monthNames[currentMonth]}
+              </span>
+              <span className="text-xs font-extrabold text-teal-700">
+                {selectedDayAppointments.length} {language === "hi" ? "दर्ज" : "Booked"}
+              </span>
+            </div>
+
             {selectedDayAppointments.length > 0 ? (
-              selectedDayAppointments.map((appt) => (
-                <div
-                  key={appt.id}
-                  className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs flex items-center justify-between shadow-xs"
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-950">
-                      <Clock className="w-3.5 h-3.5 text-amber-700" />
-                      <span>{appt.reason}</span>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {selectedDayAppointments.map((appt) => {
+                  const d = new Date(appt.dateTime);
+                  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  return (
+                    <div
+                      key={appt.id}
+                      className="p-3 rounded-2xl bg-teal-50/60 border border-teal-100 flex items-start justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                          <span className="font-extrabold text-teal-900">{timeStr}</span>
+                          <Badge variant="outline" className="text-[10px] bg-white border-teal-200 text-teal-700 font-bold px-1.5 py-0">
+                            {appt.visitType}
+                          </Badge>
+                        </div>
+                        <p className="font-bold text-slate-900 truncate">
+                          {appt.doctor?.name || "Consulting Specialist"}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {appt.reason || appt.doctor?.specialty || "Clinical OPD Consultation"}
+                        </p>
+                      </div>
+
+                      <Badge 
+                        className={`shrink-0 text-[10px] font-bold ${
+                          appt.status === "CONFIRMED" 
+                            ? "bg-emerald-100 text-emerald-800 border-0" 
+                            : "bg-amber-100 text-amber-800 border-0"
+                        }`}
+                      >
+                        {appt.status}
+                      </Badge>
                     </div>
-                    {appt.notes && (
-                      <p className="text-[11px] text-amber-800/80 font-medium pl-5">{appt.notes}</p>
-                    )}
-                  </div>
-                  <Badge variant="outline" className="bg-white/80 text-[10px] border-amber-300 text-amber-900 font-bold">
-                    {appt.status}
-                  </Badge>
-                </div>
-              ))
+                  );
+                })}
+              </div>
             ) : (
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 text-slate-500 text-xs flex items-center justify-between">
                 <span>{language === "hi" ? `${selectedDay} ${monthNames[currentMonth]} को कोई अपॉइंटमेंट नहीं है` : `No appointments for ${monthNames[currentMonth].slice(0, 3)} ${selectedDay}`}</span>
@@ -308,66 +297,6 @@ export function AppointmentCalendarWidget({
                 {t("addAppointmentNote")}
               </Button>
             </Link>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Insurance Summary Card (Matching the Reference Image) ── */}
-      <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="py-3.5 px-6 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-teal-600" />
-            {t("insuranceSummary")}
-          </CardTitle>
-          <Badge className="bg-emerald-100 text-emerald-800 text-[10px] font-bold border-0">
-            {t("activeCover")}
-          </Badge>
-        </CardHeader>
-
-        <CardContent className="p-5 space-y-3.5 text-xs">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-              {language === "hi" ? "बीमा प्रोफ़ाइल" : "INSURANCE PROFILE"}
-            </span>
-            <span className="font-extrabold text-slate-800">
-              Ayushman Bharat PM-JAY / Medicare
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-              {language === "hi" ? "सदस्य संख्या" : "MEMBER NUMBER"}
-            </span>
-            <span className="font-mono font-extrabold text-slate-800">
-              57 478911 B
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-            <span className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-              {language === "hi" ? "लाभार्थी नाम" : "RESPONSIBLE PARTY"}
-            </span>
-            <span className="font-bold text-slate-800">
-              {patientName}
-            </span>
-          </div>
-
-          {/* Attached policy file preview */}
-          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-rose-100 text-rose-700 rounded-lg">
-                <Paperclip className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <span className="font-bold text-slate-800 text-xs block">insurance.pdf</span>
-                <span className="text-[10px] text-slate-400 block">
-                  {language === "hi" ? "22 जनवरी 2026 को सत्यापित" : "Uploaded on 22 Jan 2026"}
-                </span>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-[10px] bg-white text-slate-600">
-              {language === "hi" ? "सत्यापित" : "Verified"}
-            </Badge>
           </div>
         </CardContent>
       </Card>

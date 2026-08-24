@@ -5,22 +5,45 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding Sehat Saathi database...\n');
 
+  await prisma.prescriptionItem.deleteMany();
+  await prisma.prescription.deleteMany();
+  await prisma.labReport.deleteMany();
+  await prisma.vital.deleteMany();
+  await prisma.encounter.deleteMany();
+  await prisma.appointment.deleteMany();
+  await prisma.medication.deleteMany();
+  await prisma.allergy.deleteMany();
+  await prisma.medicalCondition.deleteMany();
+  await prisma.medicalDocument.deleteMany();
+  await prisma.insurance.deleteMany();
+  await prisma.referral.deleteMany();
+  await prisma.interaction.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.doctor.deleteMany();
+  await prisma.patient.deleteMany();
+  await prisma.governmentScheme.deleteMany();
+  await prisma.hospital.deleteMany();
+
   // ============================================================
-  // 1. Hospitals (existing — keep)
+  // 1. Delhi Government Hospitals
   // ============================================================
-  console.log('🏥 Seeding Hospitals...');
+  console.log('🏥 Seeding Delhi Government Hospitals...');
   const hospitals = await Promise.all([
     prisma.hospital.create({
       data: {
-        name: 'AIIMS, New Delhi',
+        name: 'AIIMS New Delhi',
         type: 'Government',
-        district: 'New Delhi',
+        district: 'South Delhi',
         state: 'Delhi',
-        location: 'Ansari Nagar, New Delhi',
-        totalBeds: 2500,
-        availableBeds: 120,
+        location: 'Ansari Nagar, New Delhi 110029',
+        phone: '011-26588500',
+        lat: 28.5672,
+        lng: 77.2100,
+        totalBeds: 2478,
+        availableBeds: 186,
         icuBeds: 250,
-        availableIcu: 15,
+        availableIcu: 18,
         specialties: 'Cardiology,Neurology,Oncology,Trauma,Orthopaedics,Nephrology',
       },
     }),
@@ -30,58 +53,189 @@ async function main() {
         type: 'Government',
         district: 'South Delhi',
         state: 'Delhi',
-        location: 'Ring Road, New Delhi',
-        totalBeds: 1530,
-        availableBeds: 45,
+        location: 'Ansari Nagar West, Ring Road, New Delhi 110029',
+        phone: '011-26707444',
+        lat: 28.5684,
+        lng: 77.2066,
+        totalBeds: 1531,
+        availableBeds: 92,
         icuBeds: 150,
-        availableIcu: 5,
-        specialties: 'Orthopaedics,Burns,Surgery,General Medicine',
+        availableIcu: 9,
+        specialties: 'Orthopaedics,Burns,Surgery,General Medicine,Emergency',
       },
     }),
     prisma.hospital.create({
       data: {
-        name: 'Fortis Memorial Research Institute',
-        type: 'Private',
-        district: 'Gurugram',
-        state: 'NCR',
-        location: 'Sector 44, Gurugram',
-        totalBeds: 1000,
-        availableBeds: 210,
-        icuBeds: 100,
-        availableIcu: 25,
-        specialties: 'Oncology,Neurology,Cardiology,Transplants',
-      },
-    }),
-    prisma.hospital.create({
-      data: {
-        name: 'Max Super Speciality Hospital',
-        type: 'Private',
-        district: 'South Delhi',
+        name: 'Dr. Ram Manohar Lohia Hospital',
+        type: 'Government',
+        district: 'New Delhi',
         state: 'Delhi',
-        location: 'Saket, New Delhi',
-        totalBeds: 500,
-        availableBeds: 50,
-        icuBeds: 75,
-        availableIcu: 10,
-        specialties: 'Cardiac Sciences,Orthopaedics,Oncology',
+        location: 'Baba Kharak Singh Marg, New Delhi 110001',
+        phone: '011-23404440',
+        lat: 28.6254,
+        lng: 77.2015,
+        totalBeds: 1420,
+        availableBeds: 110,
+        icuBeds: 120,
+        availableIcu: 14,
+        specialties: 'Cardiology,General Medicine,Surgery,Paediatrics,Neurology',
       },
     }),
     prisma.hospital.create({
       data: {
-        name: 'Lok Nayak Jai Prakash Narayan Hospital (LNJP)',
+        name: 'Lok Nayak Hospital (LNJP)',
         type: 'Government',
         district: 'Central Delhi',
         state: 'Delhi',
-        location: 'Jawaharlal Nehru Marg, New Delhi',
+        location: 'Jawaharlal Nehru Marg, New Delhi 110002',
+        phone: '011-23236000',
+        lat: 28.6384,
+        lng: 77.2394,
         totalBeds: 2000,
-        availableBeds: 300,
-        icuBeds: 200,
-        availableIcu: 18,
-        specialties: 'General Medicine,Surgery,Paediatrics,Dermatology',
+        availableBeds: 240,
+        icuBeds: 180,
+        availableIcu: 16,
+        specialties: 'General Medicine,Surgery,Paediatrics,Dermatology,Emergency',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Guru Teg Bahadur Hospital',
+        type: 'Government',
+        district: 'Shahdara',
+        state: 'Delhi',
+        location: 'Dilshad Garden, Delhi 110095',
+        phone: '011-22586262',
+        lat: 28.6810,
+        lng: 77.3136,
+        totalBeds: 1512,
+        availableBeds: 128,
+        icuBeds: 90,
+        availableIcu: 11,
+        specialties: 'Orthopaedics,General Medicine,Obstetrics,Trauma,Nephrology',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Lady Hardinge Medical College & SSKH',
+        type: 'Government',
+        district: 'New Delhi',
+        state: 'Delhi',
+        location: 'Shaheed Bhagat Singh Marg, New Delhi 110001',
+        phone: '011-23363728',
+        lat: 28.6346,
+        lng: 77.2104,
+        totalBeds: 877,
+        availableBeds: 64,
+        icuBeds: 70,
+        availableIcu: 8,
+        specialties: 'Obstetrics,Gynaecology,Paediatrics,General Medicine',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Deen Dayal Upadhyay Hospital',
+        type: 'Government',
+        district: 'West Delhi',
+        state: 'Delhi',
+        location: 'Hari Nagar, New Delhi 110064',
+        phone: '011-25494402',
+        lat: 28.6279,
+        lng: 77.1108,
+        totalBeds: 640,
+        availableBeds: 71,
+        icuBeds: 48,
+        availableIcu: 6,
+        specialties: 'General Medicine,Surgery,Orthopaedics,Emergency',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Guru Gobind Singh Government Hospital',
+        type: 'Government',
+        district: 'West Delhi',
+        state: 'Delhi',
+        location: 'Raghubir Nagar, New Delhi 110027',
+        phone: '011-25988000',
+        lat: 28.6685,
+        lng: 77.1085,
+        totalBeds: 272,
+        availableBeds: 38,
+        icuBeds: 20,
+        availableIcu: 4,
+        specialties: 'General Medicine,Surgery,Paediatrics,Orthopaedics',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Chacha Nehru Bal Chikitsalaya',
+        type: 'Government',
+        district: 'East Delhi',
+        state: 'Delhi',
+        location: 'Geeta Colony, Delhi 110031',
+        phone: '011-21210221',
+        lat: 28.6550,
+        lng: 77.2760,
+        totalBeds: 221,
+        availableBeds: 29,
+        icuBeds: 32,
+        availableIcu: 5,
+        specialties: 'Paediatrics,Neonatology,Paediatric Surgery',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Rajiv Gandhi Super Speciality Hospital',
+        type: 'Government',
+        district: 'North East Delhi',
+        state: 'Delhi',
+        location: 'Tahirpur, Delhi 110093',
+        phone: '011-22813821',
+        lat: 28.6890,
+        lng: 77.3150,
+        totalBeds: 650,
+        availableBeds: 84,
+        icuBeds: 80,
+        availableIcu: 12,
+        specialties: 'Cardiology,Gastroenterology,Nephrology,Oncology',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'G.B. Pant Institute of Postgraduate Medical Education (GIPMER)',
+        type: 'Government',
+        district: 'Central Delhi',
+        state: 'Delhi',
+        location: 'Jawaharlal Nehru Marg, New Delhi 110002',
+        phone: '011-23234242',
+        lat: 28.6380,
+        lng: 77.2360,
+        totalBeds: 735,
+        availableBeds: 52,
+        icuBeds: 90,
+        availableIcu: 7,
+        specialties: 'Cardiology,Neurology,Gastroenterology,Psychiatry',
+      },
+    }),
+    prisma.hospital.create({
+      data: {
+        name: 'Rao Tula Ram Memorial Hospital',
+        type: 'Government',
+        district: 'South West Delhi',
+        state: 'Delhi',
+        location: 'Jaffarpur Kalan, New Delhi 110073',
+        phone: '011-25318444',
+        lat: 28.5900,
+        lng: 76.9200,
+        totalBeds: 200,
+        availableBeds: 41,
+        icuBeds: 16,
+        availableIcu: 3,
+        specialties: 'General Medicine,Surgery,Obstetrics,Emergency',
       },
     }),
   ]);
-  console.log(`  ✅ ${hospitals.length} hospitals created`);
+  console.log(`  ✅ ${hospitals.length} Delhi government hospitals created`);
 
   // ============================================================
   // 2. Government Schemes (existing — keep)
@@ -164,7 +318,7 @@ async function main() {
         licenseNumber: 'DMC-2017-28903',
         phone: '9876501003',
         email: 'anita.verma@maxhealthcare.com',
-        facilityId: hospitals[3].id,
+        facilityId: hospitals[4].id,
         experience: '10 years',
         available: true,
       },
@@ -552,7 +706,7 @@ async function main() {
   await prisma.referral.createMany({
     data: [
       { patientId: patients[2].id, patientName: 'Ramesh Yadav', toHospitalId: hospitals[0].id, toHospitalName: 'AIIMS, New Delhi', doctorName: 'Dr. Priya Sharma', specialty: 'Cardiology', status: 'ACCEPTED', urgency: 'EMERGENCY', reason: 'Suspected ACS with COPD exacerbation. Requires ICU and cardiac intervention capability.' },
-      { patientId: patients[3].id, patientName: 'Suman Devi', toHospitalId: hospitals[3].id, toHospitalName: 'Max Super Speciality Hospital', doctorName: 'Dr. Anita Verma', specialty: 'Orthopaedics', status: 'PENDING', urgency: 'MODERATE', reason: 'Worsening joint deformity in hands. Needs surgical evaluation for possible joint replacement.' },
+      { patientId: patients[3].id, patientName: 'Suman Devi', toHospitalId: hospitals[4].id, toHospitalName: 'Guru Teg Bahadur Hospital', doctorName: 'Dr. Anita Verma', specialty: 'Orthopaedics', status: 'PENDING', urgency: 'MODERATE', reason: 'Worsening joint deformity in hands. Needs surgical evaluation for possible joint replacement.' },
     ],
   });
   console.log('  ✅ 2 referrals created');

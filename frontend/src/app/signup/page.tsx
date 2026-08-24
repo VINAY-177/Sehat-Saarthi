@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight,
-  Heart, Shield, Cpu, User, Phone, Award
+  Heart, Shield, Cpu, User, Phone, Award, Siren
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -326,6 +326,18 @@ export default function SignupPage() {
                   </Link>
                 </p>
               </div>
+
+              {/* Emergency SOS — accessible without login */}
+              <Link href="/emergency" className="block pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-10 rounded-xl border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 font-bold text-xs gap-2 transition-all"
+                >
+                  <Siren className="w-4 h-4 animate-pulse" />
+                  {language === "hi" ? "🚨 आपातकालीन SOS — 108" : "🚨 Emergency SOS — 108"}
+                </Button>
+              </Link>
 
             </CardContent>
           </Card>

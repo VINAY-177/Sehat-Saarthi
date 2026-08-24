@@ -57,6 +57,7 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     if (id) fetchPatient();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (loading) {

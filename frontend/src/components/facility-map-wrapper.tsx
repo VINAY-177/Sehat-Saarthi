@@ -2,10 +2,10 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { Facility } from '@/lib/types';
+import type { FacilityMapItem } from './facility-map';
 
 interface FacilityMapProps {
-  facilities: Facility[];
+  facilities: FacilityMapItem[];
   onFacilityClick?: (id: string) => void;
   selectedFacilityId?: string;
   className?: string;

@@ -16,7 +16,7 @@ import { UserPlus } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { addPatient, addScreening } = useStore();
+  const { addPatient, addScreening, currentUser } = useStore();
   const [isLoading, setIsLoading] = useState(false);
   const [resultDialog, setResultDialog] = useState<{
     isOpen: boolean;
@@ -27,6 +27,29 @@ export default function RegisterPage() {
   const handleSubmit = async (data: PatientRegistrationInput) => {
     setIsLoading(true);
     try {
+      // POST to backend first for database persistence
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      try {
+        await fetch(`${API}/api/patients`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            age: data.age,
+            gender: data.gender,
+            bloodGroup: data.bloodGroup,
+            phone: data.phone || undefined,
+            village: data.village,
+            district: data.district,
+            state: data.state,
+            incomeCategory: data.incomeCategory,
+          }),
+        });
+      } catch (err) {
+        console.warn("Backend unavailable, saving to local store only:", err);
+      }
+
+      // Add to frontend store (use backend ID if available)
       const patient = addPatient({
         name: data.name,
         age: data.age,
@@ -37,7 +60,7 @@ export default function RegisterPage() {
         state: data.state,
         incomeCategory: data.incomeCategory,
         abhaLinked: false,
-        registeredById: "current-user",
+        registeredById: currentUser?.id || "current-user",
       });
 
       const riskResult = calculateRiskScore({

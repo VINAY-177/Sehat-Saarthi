@@ -373,7 +373,10 @@ export interface AuthUser {
   phone: string;
   email: string;
   facilityId?: string;
+  facilityName?: string;
   specialty?: string;
+  patientId?: string;
+  doctorId?: string;
 }
 
 export interface SchemeEligibilityCheck {
@@ -482,6 +485,7 @@ export interface PatientRegistrationInput {
   age: number;
   gender: string;
   bloodGroup: string;
+  phone?: string;
   village: string;
   district: string;
   state: string;

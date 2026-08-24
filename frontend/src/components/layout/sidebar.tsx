@@ -12,7 +12,6 @@ import {
   Ambulance,
   Hospital,
   ShieldCheck,
-  Fingerprint,
   UserCircle,
   Siren,
   MessageSquare,
@@ -49,7 +48,7 @@ export function Sidebar() {
               { href: '/chatbot', label: t("aiBookingBot"), icon: Bot },
               { href: '/scheduling', label: t("appointmentSchedule"), icon: Calendar },
               { href: '/hospitals', label: t("findHospitals"), icon: Hospital },
-              { href: '/ambulance', label: t("emergencyAmbulance"), icon: Siren },
+              { href: '/emergency', label: 'Emergency SOS', icon: Siren },
               { href: '/assess', label: t("riskAssessment"), icon: Activity },
             ]
           },
@@ -57,7 +56,6 @@ export function Sidebar() {
             label: t("management"),
             items: [
               { href: '/schemes', label: t("govSchemes"), icon: ShieldCheck },
-              { href: '/abha', label: t("abhaId"), icon: Fingerprint },
             ]
           }
         ];

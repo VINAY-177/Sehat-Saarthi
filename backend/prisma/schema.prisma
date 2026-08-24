@@ -21,6 +21,9 @@ model Hospital {
   district      String
   state         String
   location      String
+  phone         String?
+  lat           Float    @default(28.6139)
+  lng           Float    @default(77.2090)
   totalBeds     Int
   availableBeds Int
   icuBeds       Int

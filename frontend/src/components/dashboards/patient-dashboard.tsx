@@ -10,7 +10,6 @@ import {
   Building2,
   Activity,
   ShieldCheck,
-  HeartPulse,
   ChevronRight,
   MapPin,
   Sparkles,
@@ -57,35 +56,6 @@ export function PatientDashboard() {
             {t("emergency108")}
           </Button>
         </a>
-      </div>
-
-      {/* 2. ABHA Digital Health Card */}
-      <div className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 opacity-10">
-          <HeartPulse className="w-48 h-48" />
-        </div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-teal-50">
-              <HeartPulse className="h-5 w-5" />
-              <span className="font-medium tracking-wide uppercase text-sm">{t("brandName")} Health Pass</span>
-            </div>
-            <h2 className="text-2xl font-bold">{currentUser?.name || (language === "hi" ? "नागरिक" : "Citizen")}</h2>
-            <p className="text-teal-50/90 text-sm max-w-md">
-              {language === "hi"
-                ? "आभा स्थिति: एकीकृत स्वास्थ्य रिकॉर्ड और पूरे भारत में डिजिटल स्वास्थ्य सेवाओं के लिए अपनी आभा आईडी लिंक करें।"
-                : "ABHA Status: Link your ABHA ID for unified records and seamless access to healthcare services across India."}
-            </p>
-          </div>
-          <Link href="/abha">
-            <Button 
-              variant="outline" 
-              className="bg-transparent border-white/40 text-white hover:bg-white/10 hover:text-white shrink-0 self-start md:self-center"
-            >
-              {language === "hi" ? "आभा लिंक करें" : "Link ABHA"}
-            </Button>
-          </Link>
-        </div>
       </div>
 
       {/* Voice & Chat AI Booking Assistant Promo */}

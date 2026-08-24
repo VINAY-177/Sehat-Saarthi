@@ -40,7 +40,8 @@ export default function PatientsPage() {
       if (filterDistrict !== "ALL") params.append("district", filterDistrict);
       if (filterGender !== "ALL") params.append("gender", filterGender);
 
-      const res = await fetch(`http://localhost:5000/api/patients?${params.toString()}`);
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/patients?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setPatients(data);
@@ -57,6 +58,7 @@ export default function PatientsPage() {
       fetchPatients();
     }, 250);
     return () => clearTimeout(delayDebounce);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, filterRisk, filterDistrict, filterGender]);
 
   const clearAllFilters = () => {
@@ -69,7 +71,7 @@ export default function PatientsPage() {
   // Metrics
   const totalCount = patients.length;
   const emergencyCount = patients.filter((p) => p.riskLevel === "EMERGENCY" || p.riskLevel === "HIGH").length;
-  const abhaLinkedCount = patients.filter((p) => p.abhaLinked).length;
+  const stableCount = patients.filter((p) => p.riskLevel === "LOW" || p.riskLevel === "MODERATE" || !p.riskLevel).length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-16">
@@ -87,7 +89,7 @@ export default function PatientsPage() {
               </Badge>
             </div>
             <p className="text-slate-500 mt-1 font-medium">
-              Centralized clinical intake, risk stratification & longitudinal records.
+              Centralized clinical intake, risk stratification &amp; longitudinal records.
             </p>
           </div>
         </div>
@@ -128,7 +130,7 @@ export default function PatientsPage() {
         <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-rose-50/40 border border-rose-100/60 rounded-2xl">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">High Risk & Emergency</p>
+              <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">High Risk &amp; Emergency</p>
               <p className="text-3xl font-black text-rose-600 mt-1">{emergencyCount}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
@@ -140,13 +142,13 @@ export default function PatientsPage() {
         <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-blue-50/40 border border-blue-100/60 rounded-2xl">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-blue-500 uppercase tracking-wider">ABHA ID Linked</p>
-              <p className="text-3xl font-black text-blue-600 mt-1">
-                {abhaLinkedCount} <span className="text-sm font-normal text-slate-400">({totalCount > 0 ? Math.round((abhaLinkedCount / totalCount) * 100) : 0}%)</span>
+              <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Stable &amp; Regular Care</p>
+              <p className="text-3xl font-black text-emerald-700 mt-1">
+                {stableCount} <span className="text-sm font-normal text-slate-400">({totalCount > 0 ? Math.round((stableCount / totalCount) * 100) : 0}%)</span>
               </p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-              <Fingerprint className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <Stethoscope className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>

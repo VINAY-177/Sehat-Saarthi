@@ -175,7 +175,7 @@ export const translations: Record<Language, Translations> = {
   en: {
     // Brand
     brandName: "Sehat Saathi",
-    tagline: "Saath Aapka, Sehat Hamari",
+    tagline: "Saath Humara, Sehat Aapki",
     subTagline: "AI-Powered Healthcare Navigation for India",
 
     // Header & User Actions
@@ -343,7 +343,7 @@ export const translations: Record<Language, Translations> = {
   hi: {
     // Brand
     brandName: "सेहत साथी",
-    tagline: "साथ आपका, सेहत हमारी",
+    tagline: "साथ हमारा, सेहत आपकी",
     subTagline: "भारत के लिए एआई-संचालित स्वास्थ्य सेवा नेविगेशन",
 
     // Header & User Actions

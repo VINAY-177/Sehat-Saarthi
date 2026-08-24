@@ -88,6 +88,7 @@ export default function SchedulingPage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Filtered Appointments

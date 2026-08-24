@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Users, Stethoscope, Building2, Mail, Lock, Eye, EyeOff,
-  ArrowRight, Shield
+  ArrowRight, Shield, Siren
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -292,6 +292,18 @@ export default function LoginPage() {
                 {t("createOne")}
               </Link>
             </p>
+            {/* Emergency SOS — accessible without login */}
+            <Link href="/emergency" className="block">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 rounded-xl border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 font-bold text-[13px] gap-2 transition-all"
+              >
+                <Siren className="w-4 h-4 animate-pulse" />
+                {language === "hi" ? "🚨 आपातकालीन SOS — 108" : "🚨 Emergency SOS — 108"}
+              </Button>
+            </Link>
+
           </form>
 
           {/* Mobile trust badge */}
