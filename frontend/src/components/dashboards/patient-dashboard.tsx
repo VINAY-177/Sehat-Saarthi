@@ -36,9 +36,17 @@ export function PatientDashboard() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-10">
-      {/* 1. Personalized Header Section */}
-      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between mt-4">
+    <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden">
+      {/* Ambient Healthcare Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-[0.14] pointer-events-none -z-10 mix-blend-multiply"
+        style={{ backgroundImage: "url('/patient-bg.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-teal-50/50 via-background/80 to-background pointer-events-none -z-10" />
+
+      <div className="relative space-y-8 max-w-5xl mx-auto pb-10 z-10">
+        {/* 1. Personalized Header Section */}
+        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between mt-4">
         <div className="space-y-1.5">
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
             {greeting}, {currentUser?.name || (language === "hi" ? "नागरिक" : "Citizen")}!
@@ -237,5 +245,6 @@ export function PatientDashboard() {
         </div>
       </div>
     </div>
+  </div>
   );
 }

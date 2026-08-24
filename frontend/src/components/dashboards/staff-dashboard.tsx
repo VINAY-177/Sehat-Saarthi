@@ -19,9 +19,17 @@ export function StaffDashboard() {
     : null;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 animate-in fade-in duration-300">
-      {/* Operations Command Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-5">
+    <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden">
+      {/* Ambient Hospital Command Center Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-[0.11] pointer-events-none -z-10 mix-blend-multiply"
+        style={{ backgroundImage: "url('/staff-bg.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 via-background/85 to-background pointer-events-none -z-10" />
+
+      <div className="relative max-w-7xl mx-auto space-y-8 pb-16 animate-in fade-in duration-300 z-10">
+        {/* Operations Command Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-5">
         <div className="flex items-center gap-3.5">
           <div className="p-3.5 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl shadow-sm">
             <Building2 className="h-6 w-6" />
@@ -277,5 +285,6 @@ export function StaffDashboard() {
         />
       </div>
     </div>
+  </div>
   );
 }

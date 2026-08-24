@@ -28,9 +28,17 @@ export function DoctorDashboard() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300">
-      {/* Clinical Command Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4">
+    <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden">
+      {/* Ambient Clinical ECG Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-[0.12] pointer-events-none -z-10 mix-blend-multiply"
+        style={{ backgroundImage: "url('/doctor-bg.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 via-background/85 to-background pointer-events-none -z-10" />
+
+      <div className="relative max-w-7xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300 z-10">
+        {/* Clinical Command Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-sm">
             <Activity className="h-6 w-6" />
@@ -247,5 +255,6 @@ export function DoctorDashboard() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
