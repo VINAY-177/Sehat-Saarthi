@@ -22,10 +22,10 @@ export function OverviewTab({ patient, onTabChange }: Props) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* 3-Column Patient 360 Workspace Matching Reference Design */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6 items-start">
         
-        {/* ── COLUMN 1: Patient Profile & Contact Info (3.5 Cols) ── */}
-        <div className="lg:col-span-3.5 space-y-6">
+        {/* ── COLUMN 1: Patient Profile & Contact Info ── */}
+        <div className="col-span-1 md:col-span-1 xl:col-span-4 space-y-6 min-w-0">
           <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white p-2">
             <CardContent className="p-5 space-y-5">
               {/* Photo Avatar */}
@@ -69,18 +69,18 @@ export function OverviewTab({ patient, onTabChange }: Props) {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                   EMERGENCY CONTACT
                 </span>
-                <p className="font-bold text-slate-800">James (Husband)</p>
+                <p className="font-bold text-slate-800">{patient.emergencyContactName || "Family Contact"}</p>
                 <div className="flex items-center gap-2 text-slate-600">
                   <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span>(012) 432-5576</span>
+                  <span>{patient.emergencyContactPhone || "(012) 432-5576"}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* ── COLUMN 2: Medical History & Clinical Summary (4.5 Cols) ── */}
-        <div className="lg:col-span-4.5 space-y-6">
+        {/* ── COLUMN 2: Medical History & Clinical Summary ── */}
+        <div className="col-span-1 md:col-span-1 xl:col-span-4 space-y-6 min-w-0">
           <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
             <CardHeader className="py-4 px-6 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center gap-2.5">
               <FolderOpen className="w-4 h-4 text-teal-700" />
@@ -147,8 +147,8 @@ export function OverviewTab({ patient, onTabChange }: Props) {
           </Card>
         </div>
 
-        {/* ── COLUMN 3: Appointments Calendar & Insurance Summary on Right (4 Cols) ── */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* ── COLUMN 3: Appointments Calendar & Insurance Summary on Right ── */}
+        <div className="col-span-1 md:col-span-2 xl:col-span-4 space-y-6 min-w-0">
           <AppointmentCalendarWidget 
             patientName={patient.name} 
             onScheduleClick={() => onTabChange("appointments")}

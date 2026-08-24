@@ -121,9 +121,9 @@ export function AppointmentCalendarWidget({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-[280px]">
       {/* ── Main Calendar Card ── */}
-      <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
+      <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white min-w-[280px]">
         {/* Month / Year Header */}
         <CardHeader className="py-4 px-6 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
