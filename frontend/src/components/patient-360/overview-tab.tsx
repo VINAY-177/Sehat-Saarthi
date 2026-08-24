@@ -33,11 +33,11 @@ export function OverviewTab({ patient, onTabChange }: Props) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       
-      {/* 2-Column Responsive Clinical Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Responsive Clinical Workspace — stacks on mobile, 2-col on xl+ */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
         {/* ── LEFT COLUMN: Patient Identity & Contact Record (5 Cols) ── */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="xl:col-span-5 space-y-6">
           
           {/* Identity & Demographics Card */}
           <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
@@ -126,7 +126,7 @@ export function OverviewTab({ patient, onTabChange }: Props) {
         </div>
 
         {/* ── RIGHT COLUMN: Clinical Summary, Vitals & Longitudinal History (7 Cols) ── */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="xl:col-span-7 space-y-6">
           
           {/* Latest Vitals Telemetry Card */}
           <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
@@ -149,7 +149,7 @@ export function OverviewTab({ patient, onTabChange }: Props) {
 
             <CardContent className="p-6">
               {latestVital ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                   <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Blood Pressure</span>
                     <span className="text-lg font-black text-slate-900 mt-0.5 block">
@@ -199,7 +199,7 @@ export function OverviewTab({ patient, onTabChange }: Props) {
           </Card>
 
           {/* Active Diagnoses & Allergies Card */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Medical Conditions */}
             <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
               <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-3 px-5 flex flex-row items-center justify-between">
