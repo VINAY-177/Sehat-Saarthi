@@ -20,7 +20,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isPublicRoute = pathname === '/login' || pathname === '/signup';
+  const isPublicRoute = pathname === '/login' || pathname === '/signup' || pathname === '/emergency';
 
   useEffect(() => {
     if (!isAuthenticated && !isPublicRoute) {

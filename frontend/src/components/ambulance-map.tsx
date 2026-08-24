@@ -39,9 +39,9 @@ interface AmbulanceMapProps {
 
 export default function AmbulanceMap({ ambulances }: AmbulanceMapProps) {
   return (
-    <div className="h-[400px] w-full rounded-md border overflow-hidden">
+    <div className="h-[400px] w-full rounded-2xl border border-slate-200 overflow-hidden shadow-inner">
       <MapContainer
-        center={[25.3176, 82.9739]} // Varanasi center
+        center={[28.6139, 77.2090]} // Delhi center
         zoom={12}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={true}
