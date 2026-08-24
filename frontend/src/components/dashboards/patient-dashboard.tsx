@@ -71,7 +71,9 @@ export function PatientDashboard() {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-teal-400">{language === "hi" ? "संवादात्मक एआई" : "Conversational AI"}</span>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-teal-400">
+                    {language === "hi" ? "सेहत साथी एआई" : "SEHAT SAATHI AI"}
+                  </span>
                   <Badge className="bg-teal-400/20 text-teal-300 border-teal-400/30 text-[10px] font-bold">{t("voiceAndChat")}</Badge>
                 </div>
                 <h3 className="text-xl font-black text-white">{t("bookDoctor60Sec")}</h3>
