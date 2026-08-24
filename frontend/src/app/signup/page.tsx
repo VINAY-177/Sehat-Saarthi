@@ -66,30 +66,44 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 lg:p-8 font-sans relative">
       
-      {/* Top Floating Language Switcher */}
-      <div className="absolute top-6 right-6 z-30 flex items-center bg-white/90 backdrop-blur-md p-1 rounded-2xl border border-slate-200 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setLanguage("en")}
-          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-            language === "en"
-              ? "bg-[#1e3a5f] text-white shadow-xs"
-              : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          English
-        </button>
-        <button
-          type="button"
-          onClick={() => setLanguage("hi")}
-          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-            language === "hi"
-              ? "bg-[#0d9488] text-white shadow-xs"
-              : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          हिंदी
-        </button>
+      {/* Top Floating Action Bar (Emergency SOS + Language Switcher) */}
+      <div className="absolute top-5 right-5 sm:top-6 sm:right-6 z-30 flex items-center gap-3">
+        {/* Pinned 108 Emergency SOS Button */}
+        <Link href="/emergency">
+          <Button
+            type="button"
+            className="h-9 sm:h-10 px-3.5 sm:px-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md shadow-red-600/25 gap-2 transition-all hover:scale-105 border border-red-500"
+          >
+            <Siren className="w-4 h-4 animate-pulse text-white" />
+            <span>{language === "hi" ? "आपातकालीन 108" : "Emergency 108"}</span>
+          </Button>
+        </Link>
+
+        {/* Language Switcher */}
+        <div className="flex items-center bg-white/90 backdrop-blur-md p-1 rounded-2xl border border-slate-200 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setLanguage("en")}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              language === "en"
+                ? "bg-[#1e3a5f] text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            English
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("hi")}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+              language === "hi"
+                ? "bg-[#0d9488] text-white shadow-xs"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            हिंदी
+          </button>
+        </div>
       </div>
 
       <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
@@ -326,19 +340,6 @@ export default function SignupPage() {
                   </Link>
                 </p>
               </div>
-
-              {/* Emergency SOS — accessible without login */}
-              <Link href="/emergency" className="block pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-10 rounded-xl border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 font-bold text-xs gap-2 transition-all"
-                >
-                  <Siren className="w-4 h-4 animate-pulse" />
-                  {language === "hi" ? "🚨 आपातकालीन SOS — 108" : "🚨 Emergency SOS — 108"}
-                </Button>
-              </Link>
-
             </CardContent>
           </Card>
         </div>

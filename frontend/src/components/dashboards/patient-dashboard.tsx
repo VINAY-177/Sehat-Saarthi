@@ -47,15 +47,15 @@ export function PatientDashboard() {
             {t("companionReady")}
           </p>
         </div>
-        <a href="tel:108" className="inline-block shrink-0">
+        <Link href="/emergency" className="inline-block shrink-0">
           <Button 
             size="lg" 
-            className="rounded-full font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all flex items-center gap-2.5 text-base px-6 h-14"
+            className="rounded-2xl font-bold bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all flex items-center gap-2.5 text-base px-6 h-13"
           >
-            <Siren className="h-6 w-6 animate-pulse" />
+            <Siren className="h-5 w-5 animate-pulse" />
             {t("emergency108")}
           </Button>
-        </a>
+        </Link>
       </div>
 
       {/* Voice & Chat AI Booking Assistant Promo */}
@@ -109,7 +109,7 @@ export function PatientDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link href="/ambulance" className="block group">
+        <Link href="/emergency" className="block group">
           <Card className="h-full transition-all duration-300 hover:scale-[1.02] hover:shadow-lg cursor-pointer border-transparent bg-red-50/80 dark:bg-red-950/20 hover:border-red-200">
             <CardContent className="p-6 flex flex-col items-start space-y-4">
               <div className="p-3.5 bg-red-100 dark:bg-red-900/50 rounded-2xl group-hover:bg-red-200 dark:group-hover:bg-red-800/60 transition-colors">
