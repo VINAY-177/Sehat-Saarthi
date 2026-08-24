@@ -68,7 +68,7 @@ export function PrescriptionsTab({ patient }: Props) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {rx.items.map((item, idx) => (
+                      {(rx.items || []).map((item, idx) => (
                         <tr key={item.id} className="hover:bg-slate-50/50">
                           <td className="py-3 px-4 font-bold text-slate-400 text-xs">{idx + 1}</td>
                           <td className="py-3 px-4">

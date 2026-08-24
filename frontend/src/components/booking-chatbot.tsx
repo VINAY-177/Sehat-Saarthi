@@ -574,7 +574,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     setCurrentStep(ChatStep.CONFIRMED);
 
     // Save appointment to backend API
-    fetch("http://localhost:5000/api/appointments", {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    fetch(`${API}/api/appointments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

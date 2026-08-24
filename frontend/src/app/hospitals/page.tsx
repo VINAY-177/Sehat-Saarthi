@@ -59,7 +59,8 @@ export default function HospitalsPage() {
   const [showMap, setShowMap] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/hospitals")
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    fetch(`${API}/api/hospitals`)
       .then(res => res.json())
       .then(data => {
         setFacilities(data);

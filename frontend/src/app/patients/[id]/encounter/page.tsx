@@ -52,15 +52,25 @@ const COMMON_LABS = [
   "Chest X-Ray (PA View)",
 ];
 
+import { useStore } from "@/lib/store";
+
 export default function ClinicalEncounterPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const rawId = params.id as string;
+  const id = rawId ? decodeURIComponent(rawId) : "";
 
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const { patients: storePatients, getPatient } = useStore();
+  const [patient, setPatient] = useState<Patient | null>(() => {
+    return getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id) || null;
+  });
+  const [doctors, setDoctors] = useState<Doctor[]>([
+    { id: "doc-1", name: "Dr. Rajesh Kumar", specialty: "General Medicine", available: true },
+    { id: "doc-2", name: "Dr. Priya Sharma", specialty: "Cardiology", available: true },
+    { id: "doc-3", name: "Dr. Sunita Verma", specialty: "Obstetrics & Gynecology", available: true },
+  ]);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("doc-1");
+  const [loading, setLoading] = useState(!patient);
   const [submitting, setSubmitting] = useState(false);
 
   // Section 1: HPI
@@ -98,28 +108,38 @@ export default function ClinicalEncounterPage() {
   // Fetch initial patient and doctor records
   useEffect(() => {
     async function loadData() {
+      if (!id) return;
       try {
+        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
         const [pRes, dRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/patients/${id}`),
-          fetch("http://localhost:5000/api/doctors"),
+          fetch(`${API}/api/patients/${id}`),
+          fetch(`${API}/api/doctors`),
         ]);
         if (pRes.ok) {
           const pData = await pRes.json();
           setPatient(pData);
+        } else {
+          const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
+          if (fallback) setPatient(fallback);
         }
         if (dRes.ok) {
           const dData = await dRes.json();
-          setDoctors(dData);
-          if (dData.length > 0) setSelectedDoctorId(dData[0].id);
+          if (Array.isArray(dData) && dData.length > 0) {
+            setDoctors(dData);
+            setSelectedDoctorId(dData[0].id);
+          }
         }
       } catch (err) {
         console.error("Error loading encounter initial data:", err);
+        const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
+        if (fallback) setPatient(fallback);
       } finally {
         setLoading(false);
       }
     }
-    if (id) loadData();
-  }, [id]);
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, storePatients]);
 
   // Derive comorbidities from patient conditions
   const comorbidities: Comorbidities = useMemo(() => {
@@ -228,7 +248,8 @@ export default function ClinicalEncounterPage() {
         labOrders: selectedLabs,
       };
 
-      const res = await fetch(`http://localhost:5000/api/patients/${id}/encounters`, {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/patients/${id}/encounters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

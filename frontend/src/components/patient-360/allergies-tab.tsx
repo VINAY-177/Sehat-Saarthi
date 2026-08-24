@@ -25,9 +25,9 @@ export function AllergiesTab({ patient, onAllergyAdded }: Props) {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allergen.trim()) return;
-    setSaving(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/patients/${patient.id}/allergies`, {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/patients/${patient.id}/allergies`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ allergen, type, reaction, severity }),

@@ -40,7 +40,8 @@ export function VitalsTab({ patient, onVitalRecorded }: Props) {
       if (height) payload.height = parseFloat(height);
       if (weight) payload.weight = parseFloat(weight);
 
-      const res = await fetch(`http://localhost:5000/api/patients/${patient.id}/vitals`, {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/patients/${patient.id}/vitals`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

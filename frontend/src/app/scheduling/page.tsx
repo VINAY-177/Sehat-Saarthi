@@ -62,10 +62,11 @@ export default function SchedulingPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const [apptsRes, docsRes, patsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/appointments"),
-        fetch("http://localhost:5000/api/doctors"),
-        fetch("http://localhost:5000/api/patients"),
+        fetch(`${API}/api/appointments`),
+        fetch(`${API}/api/doctors`),
+        fetch(`${API}/api/patients`),
       ]);
 
       if (apptsRes.ok) setAppointments(await apptsRes.json());
@@ -109,7 +110,8 @@ export default function SchedulingPage() {
   // Update Status Action
   const handleUpdateStatus = async (appointmentId: string, newStatus: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/appointments/${appointmentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -136,7 +138,8 @@ export default function SchedulingPage() {
 
     setBooking(true);
     try {
-      const res = await fetch("http://localhost:5000/api/appointments", {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/appointments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

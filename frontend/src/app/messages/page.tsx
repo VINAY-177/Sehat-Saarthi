@@ -56,7 +56,8 @@ export default function MessagesPage() {
   useEffect(() => {
     async function loadPatients() {
       try {
-        const pRes = await fetch("http://localhost:5000/api/patients");
+        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const pRes = await fetch(`${API}/api/patients`);
         if (pRes.ok) setPatients(await pRes.json());
       } catch (err) {
         console.warn("Could not fetch patients for messages context:", err);

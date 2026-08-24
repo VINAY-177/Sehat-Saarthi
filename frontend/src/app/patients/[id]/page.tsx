@@ -27,6 +27,7 @@ import { AllergiesTab } from "@/components/patient-360/allergies-tab";
 import { MedicationsTab } from "@/components/patient-360/medications-tab";
 import { VitalsTab } from "@/components/patient-360/vitals-tab";
 import { EncountersTab } from "@/components/patient-360/encounters-tab";
+import { useStore } from "@/lib/store";
 import { PrescriptionsTab } from "@/components/patient-360/prescriptions-tab";
 import { LabReportsTab } from "@/components/patient-360/lab-reports-tab";
 import { InsuranceTab } from "@/components/patient-360/insurance-tab";
@@ -34,22 +35,33 @@ import { AppointmentCalendarWidget } from "@/components/appointment-calendar-wid
 
 export default function PatientDetailPage() {
   const params = useParams();
-  const id = params.id as string;
+  const rawId = params.id as string;
+  const id = rawId ? decodeURIComponent(rawId) : "";
 
-  const [patient, setPatient] = useState<Patient | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { patients: storePatients, getPatient } = useStore();
+  const [patient, setPatient] = useState<Patient | null>(() => {
+    return getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id) || null;
+  });
+  const [loading, setLoading] = useState(!patient);
   const [activeTab, setActiveTab] = useState("overview");
 
   const fetchPatient = async () => {
-    setLoading(true);
+    if (!id) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/patients/${id}`);
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/patients/${id}`);
       if (res.ok) {
         const data = await res.json();
         setPatient(data);
+      } else {
+        // Fallback to store
+        const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
+        if (fallback) setPatient(fallback);
       }
     } catch (err) {
       console.error("Failed to fetch patient 360 data:", err);
+      const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
+      if (fallback) setPatient(fallback);
     } finally {
       setLoading(false);
     }
@@ -58,7 +70,7 @@ export default function PatientDetailPage() {
   useEffect(() => {
     if (id) fetchPatient();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, storePatients]);
 
   if (loading) {
     return (
