@@ -37,6 +37,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         <Button 
           variant="ghost" 
           size="icon" 
+          aria-label="Open navigation menu"
           className="md:hidden text-slate-500 hover:bg-slate-100 rounded-xl" 
           onClick={onMenuClick}
         >
@@ -91,6 +92,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         <Button
           variant="outline"
           size="icon"
+          aria-label="View notifications"
           onClick={() => router.push('/notifications')}
           className="relative text-slate-500 bg-white border-slate-200 hover:bg-slate-50 hover:text-teal-600 rounded-xl h-10 w-10 shadow-sm transition-colors"
           title={t("notifications")}

@@ -21,7 +21,11 @@ export function StatCard({ title, value, icon, description, trend, className }: 
   };
 
   return (
-    <Card className={cn("bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-sm transition-all overflow-hidden", className)}>
+    <Card className={cn(
+      "bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover overflow-hidden",
+      "animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both",
+      className
+    )}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between space-y-0 pb-2">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">

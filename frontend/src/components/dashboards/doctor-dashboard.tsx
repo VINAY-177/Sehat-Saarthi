@@ -2,276 +2,332 @@
 
 import Link from "next/link";
 import { useStore } from "@/lib/store";
-import { Urgency, Role } from "@/lib/types";
+import { Urgency } from "@/lib/types";
 import { StatCard } from "@/components/stat-card";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, AlertTriangle, Ambulance, Bed, Activity, ArrowRight, Stethoscope } from "lucide-react";
-import { AppointmentCalendarWidget } from "@/components/appointment-calendar-widget";
+import { 
+  Users, 
+  AlertTriangle, 
+  Ambulance, 
+  Calendar, 
+  Activity, 
+  ArrowRight, 
+  Clock, 
+  Building2,
+} from "lucide-react";
 
 export function DoctorDashboard() {
-  const { patients, screenings, referrals, stats, currentUser } = useStore();
+  const { patients, screenings, referrals, currentUser, language } = useStore();
 
   const emergencyScreenings = screenings.filter((s) => s.urgency === Urgency.EMERGENCY);
   const pendingReferrals = referrals.filter((r) => r.status === "PENDING");
 
-  const sortedScreenings = [...screenings].sort((a, b) => {
-    const urgencyWeight: Record<string, number> = {
-      [Urgency.EMERGENCY]: 3,
-      [Urgency.HIGH]: 2,
-      "MEDIUM": 1,
-      [Urgency.LOW]: 0,
-    };
-    return (urgencyWeight[b.urgency] || 0) - (urgencyWeight[a.urgency] || 0);
-  });
+  const currentHour = new Date().getHours();
+  let greeting = "Good evening";
+  if (currentHour >= 5 && currentHour < 12) {
+    greeting = "Good morning";
+  } else if (currentHour >= 12 && currentHour < 17) {
+    greeting = "Good afternoon";
+  } else if (currentHour >= 17 && currentHour < 22) {
+    greeting = "Good evening";
+  } else {
+    greeting = "Good night";
+  }
+
+  // Interconnected SIH Demo Appointments Schedule for Dr. Priya Mehta
+  const todayAppointments = [
+    {
+      id: "appt-001",
+      time: "10:30 AM",
+      patientName: "Aarav Sharma",
+      patientId: "pat-aarav-001",
+      age: "28M",
+      type: "General Consultation",
+      reason: "Hypertension Review & BP Monitoring",
+      status: "CONFIRMED",
+      statusColor: "emerald",
+    },
+    {
+      id: "appt-002",
+      time: "11:45 AM",
+      patientName: "Sunita Verma",
+      patientId: "pat-sunita-002",
+      age: "45F",
+      type: "Follow-up",
+      reason: "Routine Diabetes Checkup",
+      status: "WAITING",
+      statusColor: "amber",
+    },
+    {
+      id: "appt-003",
+      time: "02:00 PM",
+      patientName: "Rajesh Gupta",
+      patientId: "pat-rajesh-003",
+      age: "52M",
+      type: "Clinical Review",
+      reason: "Post-discharge Medication Adjustment",
+      status: "UPCOMING",
+      statusColor: "slate",
+    },
+  ];
 
   return (
-    <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden">
-      {/* Ultra-subtle Ambient Clinical Background Watermark */}
+    <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
+      
+      {/* Ultra-subtle Ambient Clinical Background Accents */}
       <div 
-        className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-[0.04] pointer-events-none -z-10 mix-blend-multiply"
-        style={{ backgroundImage: "url('/doctor-bg.jpg')" }}
+        className="absolute top-0 right-0 w-96 h-96 bg-radial from-sky-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-50/40 via-background/90 to-background pointer-events-none -z-10" />
+      <div 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-radial from-teal-600/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+      />
 
-      <div className="relative max-w-7xl mx-auto space-y-6 pb-16 animate-in fade-in duration-300 z-10">
+      <div className="relative max-w-7xl mx-auto space-y-6 pb-12 z-10">
         
-        {/* Clinical Command Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4 mt-2">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-sm">
-              <Stethoscope className="h-6 w-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-700">Clinical Command Center</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-                Clinical Triage &amp; Encounters
-              </h1>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Real-time priority triage queues, live AI risk stratification, and hospital referrals.
-              </p>
-            </div>
+        {/* 1. Header Section — Doctor Greeting & On-Duty Status */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              {greeting}, {currentUser?.name || "Dr. Priya Mehta"} 👋
+            </h1>
+            <p className="text-slate-500 text-sm font-medium">
+              {language === "hi" 
+                ? "आज आपके पास 3 अपॉइंटमेंट निर्धारित हैं।" 
+                : "You have 3 appointments scheduled for today."}
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-2.5 bg-white px-4 py-2 rounded-2xl border border-slate-200/80 shadow-xs text-xs">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-700">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-bold text-slate-800">{currentUser?.name || "Dr. Sarah Chen"}</span>
+              <span>On Duty</span>
               <span className="text-slate-300">•</span>
               <span className="text-slate-500 font-medium">{currentUser?.specialty || "General Medicine"}</span>
             </div>
+
+            <Link href="/assess">
+              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all">
+                <Activity className="w-3.5 h-3.5" />
+                {language === "hi" ? "नया क्लिनिकल ट्राइएज" : "New AI Triage"}
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* 4 Key Metric Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 2. Doctor Statistics — 4 Compact Metrics */}
+        <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Active Patients"
-            value={patients.length}
-            icon={<Users className="h-4 w-4 text-blue-600" />}
-            description="Currently registered in EHR"
+            title={language === "hi" ? "आज के अपॉइंटमेंट्स" : "Today's Appointments"}
+            value="3"
+            icon={<Calendar className="h-4 w-4 text-sky-700" />}
+            description="1 Confirmed, 1 Waiting, 1 Upcoming"
+            className="stagger-1"
           />
           <StatCard
-            title="Emergency Red-Alerts"
-            value={emergencyScreenings.length}
-            icon={<AlertTriangle className="h-4 w-4 text-rose-600" />}
-            description="Requires immediate clinical review"
-            className={emergencyScreenings.length > 0 ? "border-rose-300 bg-rose-50/20" : ""}
+            title={language === "hi" ? "लंबित समीक्षाएं" : "Pending Reviews"}
+            value={emergencyScreenings.length > 0 ? emergencyScreenings.length : "1"}
+            icon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
+            description="Clinical triage cases"
+            className="stagger-2"
           />
           <StatCard
-            title="Pending Referrals"
-            value={pendingReferrals.length}
-            icon={<Ambulance className="h-4 w-4 text-amber-600" />}
-            description="Awaiting inter-hospital dispatch"
+            title={language === "hi" ? "रेफरल केस" : "Outbound Referrals"}
+            value={pendingReferrals.length > 0 ? pendingReferrals.length : "1"}
+            icon={<Ambulance className="h-4 w-4 text-teal-700" />}
+            description="AIIMS Cardiology dispatch"
+            className="stagger-3"
           />
           <StatCard
-            title="ICU Beds Available"
-            value={stats.totalICUAvailable || 18}
-            icon={<Bed className="h-4 w-4 text-emerald-600" />}
-            description="Live available in network"
+            title={language === "hi" ? "कुल पंजीकृत मरीज" : "Total Patients"}
+            value={patients.length > 0 ? patients.length : "1"}
+            icon={<Users className="h-4 w-4 text-slate-700" />}
+            description="Under primary care"
+            className="stagger-4"
           />
         </div>
 
-        {/* Main Clinical Grid: Left Triage Table (8 cols) & Right Actions (4 cols) */}
+        {/* 3. Main Clinical Layout: Today's Schedule & Patient Queue (7 cols) & Clinical Actions (5 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* Priority Triage Queue (8 cols) */}
-          <div className="lg:col-span-8 space-y-4">
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden">
-              <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-4 px-6 flex flex-row items-center justify-between">
+          {/* Today's Schedule & Patient Queue (7 cols) */}
+          <div className="lg:col-span-7 space-y-4">
+            
+            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
+              <CardHeader className="py-3.5 px-5 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-bold text-slate-900">Priority Triage Queue</CardTitle>
-                  <CardDescription className="text-xs text-slate-500 font-medium">Patients stratified by AI risk engine, ordered by clinical urgency.</CardDescription>
+                  <CardTitle className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    {language === "hi" ? "आज का अपॉइंटमेंट शेड्यूल" : "Today's Schedule & Queue"}
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-500 font-medium">
+                    Chronological consultation queue for {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </CardDescription>
                 </div>
-                <Badge variant="outline" className="text-[11px] bg-blue-50 text-blue-700 border-blue-200 font-bold px-2.5 py-0.5">
-                  {sortedScreenings.length} Active Cases
+                <Badge variant="outline" className="text-[11px] bg-sky-50 text-sky-800 border-sky-200 font-bold px-2.5 py-0.5">
+                  3 Patients Scheduled
                 </Badge>
               </CardHeader>
 
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="text-[11px] text-slate-400 uppercase bg-slate-50/50 border-b border-slate-100 font-bold">
-                      <tr>
-                        <th className="px-5 py-3">Patient</th>
-                        <th className="px-4 py-3">Risk Score</th>
-                        <th className="px-4 py-3">Urgency</th>
-                        <th className="px-4 py-3">Key Symptoms</th>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-5 py-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {sortedScreenings.map((screening) => {
-                        const patient = patients.find((p) => p.id === screening.patientId);
-                        return (
-                          <tr key={screening.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="px-5 py-3.5 font-bold text-slate-900">
-                              {patient?.name || "Patient Record"}
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <span className={`inline-flex items-center justify-center font-black text-xs ${
-                                screening.urgency === Urgency.EMERGENCY ? "text-rose-600" :
-                                screening.urgency === Urgency.HIGH ? "text-amber-600" : "text-emerald-700"
-                              }`}>
-                                {screening.riskScore}/100
-                              </span>
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <UrgencyBadge urgency={screening.urgency} size="sm" />
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <div className="flex gap-1.5 flex-wrap">
-                                {screening.symptoms.slice(0, 2).map((sym, i) => (
-                                  <Badge key={i} variant="outline" className="font-medium text-[10px] px-1.5 py-0 bg-slate-50 text-slate-700 border-slate-200">
-                                    {sym}
-                                  </Badge>
-                                ))}
-                                {screening.symptoms.length > 2 && (
-                                  <span className="text-[10px] text-slate-400 font-medium">
-                                    +{screening.symptoms.length - 2}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3.5 text-xs text-slate-500 whitespace-nowrap">
-                              {new Date(screening.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                            </td>
-                            <td className="px-5 py-3.5 text-right">
-                              <Link href={`/patients/${screening.patientId}`}>
-                                <Button 
-                                  size="sm" 
-                                  className={`h-8 text-xs font-bold rounded-xl ${
-                                    screening.urgency === Urgency.EMERGENCY 
-                                      ? "bg-rose-600 hover:bg-rose-700 text-white" 
-                                      : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
-                                  }`}
-                                >
-                                  Review
-                                </Button>
-                              </Link>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {sortedScreenings.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                            <div className="flex flex-col items-center gap-2">
-                              <Activity className="h-8 w-8 text-slate-300" />
-                              <p className="font-semibold text-slate-600 text-sm">No patients in triage queue.</p>
-                              <p className="text-xs">Cases will appear here as screenings are submitted.</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                <div className="divide-y divide-slate-100">
+                  {todayAppointments.map((appt) => (
+                    <div key={appt.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors">
+                      <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 bg-slate-100 rounded-xl text-slate-700 font-bold text-xs shrink-0 flex flex-col items-center justify-center min-w-[65px]">
+                          <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-500" />
+                          <span>{appt.time}</span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-sm text-slate-900">{appt.patientName}</span>
+                            <span className="text-[11px] text-slate-400 font-medium">({appt.age})</span>
+                            
+                            {/* Status Indicators: Green=Completed, Amber=Waiting, Slate=Upcoming */}
+                            {appt.status === "CONFIRMED" && (
+                              <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0">
+                                Confirmed
+                              </Badge>
+                            )}
+                            {appt.status === "WAITING" && (
+                              <Badge className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold py-0">
+                                Waiting
+                              </Badge>
+                            )}
+                            {appt.status === "UPCOMING" && (
+                              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] font-medium py-0">
+                                Upcoming
+                              </Badge>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-slate-600 font-medium">
+                            <span className="font-semibold text-slate-700">{appt.type}:</span> {appt.reason}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 sm:self-center shrink-0">
+                        <Link href={`/patients/${appt.patientId}`}>
+                          <Button 
+                            size="sm" 
+                            className="h-8 text-xs font-bold rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 shadow-xs"
+                          >
+                            View Patient
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          </div>
-          
-          {/* Right Sidebar: Quick Clinical Actions & Recent Referrals (4 cols) */}
-          <div className="lg:col-span-4 space-y-5">
-            
-            {/* Quick Clinical Actions */}
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden">
-              <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-3.5 px-5">
-                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">Quick Clinical Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-2.5">
-                <Link href="/assess" className="block">
-                  <Button className="w-full justify-start gap-2 h-10 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs">
-                    <Activity className="h-4 w-4" />
-                    New AI Clinical Triage
-                  </Button>
-                </Link>
-                <Link href="/patients" className="block">
-                  <Button className="w-full justify-start gap-2 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700" variant="outline">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    Patient Records (360° EHR)
-                  </Button>
-                </Link>
-                <Link href="/referrals" className="block">
-                  <Button className="w-full justify-start gap-2 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700" variant="outline">
-                    <Ambulance className="h-4 w-4 text-amber-600" />
-                    Initiate Patient Referral
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
 
-            {/* Doctor Appointment Calendar */}
-            <AppointmentCalendarWidget role={Role.DOCTOR} userId={currentUser?.id} userName={currentUser?.name} />
-
-            {/* Recent Referrals */}
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between py-3 px-5 bg-slate-50/70 border-b border-slate-100">
-                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">Recent Referrals</CardTitle>
-                <Link href="/referrals">
-                  <Button variant="ghost" size="sm" className="text-blue-700 text-xs px-2 h-7 gap-1 font-bold">
-                    All <ArrowRight className="h-3 w-3" />
+            {/* Priority Triage Cases Preview */}
+            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
+              <CardHeader className="py-3 px-5 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  AI Triage & Clinical Risk Cases
+                </CardTitle>
+                <Link href="/assess">
+                  <Button variant="ghost" size="sm" className="text-teal-700 text-xs px-2 h-7 gap-1 font-bold">
+                    View All <ArrowRight className="h-3 w-3" />
                   </Button>
                 </Link>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="space-y-2.5">
-                  {referrals.slice(0, 3).map((ref) => (
-                    <div key={ref.id} className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 space-y-1.5">
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-bold text-xs text-slate-900 truncate">{ref.patientName}</span>
-                        <UrgencyBadge urgency={ref.urgency} size="sm" />
-                      </div>
-                      <div className="flex items-center justify-between pt-0.5">
-                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 truncate max-w-[140px]">
-                          <Ambulance className="h-3 w-3 shrink-0 text-slate-400" /> 
-                          <span className="truncate">{ref.toFacilityName}</span>
-                        </div>
-                        <Badge variant="outline" className="text-[9px] h-5 px-1.5 bg-white border border-slate-200 font-semibold text-slate-600">
-                          {ref.status}
-                        </Badge>
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        {new Date(ref.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-slate-900">Aarav Sharma</span>
+                      <UrgencyBadge urgency={Urgency.MODERATE} size="sm" />
                     </div>
-                  ))}
-                  {referrals.length === 0 && (
-                    <div className="text-center py-6 text-slate-400 text-xs font-medium">
-                      No active referrals.
-                    </div>
-                  )}
+                    <p className="text-[11px] text-slate-500">
+                      Hypertension mild (BP 138/88 mmHg) • Score: 45/100
+                    </p>
+                  </div>
+                  <Link href="/patients/pat-aarav-001">
+                    <Button size="sm" variant="ghost" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
+                      Review
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
+
+          </div>
+          
+          {/* Right Sidebar: Quick Clinical Actions & Recent Referrals (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
+            
+            {/* Quick Clinical Actions */}
+            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
+              <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-3 px-5">
+                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">Clinical Tools</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-2.5">
+                <Link href="/assess" className="block">
+                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-xs">
+                    <Activity className="h-4 w-4" />
+                    New AI Clinical Assessment
+                  </Button>
+                </Link>
+                <Link href="/patients" className="block">
+                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700" variant="outline">
+                    <Users className="h-4 w-4 text-sky-700" />
+                    Patient Records (360° EHR)
+                  </Button>
+                </Link>
+                <Link href="/referrals" className="block">
+                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700" variant="outline">
+                    <Ambulance className="h-4 w-4 text-amber-600" />
+                    Initiate Tertiary Referral
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Outbound Tertiary Referral Spotlight */}
+            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
+              <CardHeader className="flex flex-row items-center justify-between py-3 px-5 bg-slate-50/70 border-b border-slate-100">
+                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">Active Referrals</CardTitle>
+                <Link href="/referrals">
+                  <Button variant="ghost" size="sm" className="text-teal-700 text-xs px-2 h-7 gap-1 font-bold">
+                    All <ArrowRight className="h-3 w-3" />
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 space-y-2">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-xs text-slate-900">Aarav Sharma</span>
+                    <UrgencyBadge urgency={Urgency.MODERATE} size="sm" />
+                  </div>
+                  
+                  <div className="text-[11px] text-slate-600 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" /> 
+                    <span className="font-medium">To: AIIMS New Delhi (Cardiology)</span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500">
+                    Reason: Further 24h ambulatory BP monitoring & cardio review
+                  </p>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
+                    <span className="text-slate-400 font-mono">Status: PENDING</span>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[9px] font-bold">
+                      Awaiting Intake
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
           </div>
         </div>
+
       </div>
     </div>
   );
