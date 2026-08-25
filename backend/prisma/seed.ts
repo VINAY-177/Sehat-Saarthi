@@ -33,12 +33,51 @@ async function main() {
   const demoPasswordHash = await bcrypt.hash('Demo@1234', 10);
 
   // ============================================================
-  // 1. Delhi Hospitals Network
+  // 1. 15 Major Delhi Government Hospitals Network
   // ============================================================
-  console.log('🏥 Seeding Delhi Hospitals...');
+  console.log('🏥 Seeding 15 Major Delhi Government Hospitals...');
+
+  const aiims = await prisma.hospital.create({
+    data: {
+      id: 'hosp-aiims-delhi',
+      name: 'AIIMS New Delhi',
+      type: 'Tertiary',
+      district: 'South Delhi',
+      state: 'Delhi',
+      location: 'Sri Aurobindo Marg, Ansari Nagar, New Delhi 110029',
+      phone: '011-26588500',
+      lat: 28.5672,
+      lng: 77.2100,
+      totalBeds: 2478,
+      availableBeds: 186,
+      icuBeds: 250,
+      availableIcu: 18,
+      specialties: 'Cardiology,Neurology,Oncology,Trauma,Nephrology,Gastroenterology,Pulmonology',
+    },
+  });
+
+  const safdarjung = await prisma.hospital.create({
+    data: {
+      id: 'hosp-safdarjung-delhi',
+      name: 'Safdarjung Hospital & VMMC',
+      type: 'Tertiary',
+      district: 'South Delhi',
+      state: 'Delhi',
+      location: 'Ring Road, Opposite AIIMS, New Delhi 110029',
+      phone: '011-26707444',
+      lat: 28.5684,
+      lng: 77.2066,
+      totalBeds: 1531,
+      availableBeds: 92,
+      icuBeds: 150,
+      availableIcu: 9,
+      specialties: 'Burns,Orthopaedics,General Surgery,Paediatrics,Pulmonary Medicine,Emergency',
+    },
+  });
 
   const gghDelhi = await prisma.hospital.create({
     data: {
+      id: 'hosp-ggh-delhi',
       name: 'Government General Hospital — Delhi',
       type: 'Government',
       district: 'Central Delhi',
@@ -55,39 +94,250 @@ async function main() {
     },
   });
 
-  const aiims = await prisma.hospital.create({
+  const lnjp = await prisma.hospital.create({
     data: {
-      name: 'AIIMS New Delhi',
+      id: 'hosp-lnjp-delhi',
+      name: 'Lok Nayak Hospital (LNJP)',
       type: 'Government',
-      district: 'South Delhi',
+      district: 'Central Delhi',
       state: 'Delhi',
-      location: 'Ansari Nagar, New Delhi 110029',
-      phone: '011-26588500',
-      lat: 28.5672,
-      lng: 77.2100,
-      totalBeds: 2478,
-      availableBeds: 186,
-      icuBeds: 250,
-      availableIcu: 18,
-      specialties: 'Cardiology,Neurology,Oncology,Trauma,Orthopaedics,Nephrology',
+      location: 'Jawaharlal Nehru Marg, Delhi Gate, New Delhi 110002',
+      phone: '011-23236000',
+      lat: 28.6369,
+      lng: 77.2410,
+      totalBeds: 2000,
+      availableBeds: 145,
+      icuBeds: 180,
+      availableIcu: 14,
+      specialties: 'Infectious Diseases,Trauma,General Medicine,Neonatology,Surgery,Orthopaedics',
     },
   });
 
-  const safdarjung = await prisma.hospital.create({
+  const rml = await prisma.hospital.create({
     data: {
-      name: 'Safdarjung Hospital',
-      type: 'Government',
-      district: 'South Delhi',
+      id: 'hosp-rml-delhi',
+      name: 'Dr. Ram Manohar Lohia Hospital (RML)',
+      type: 'Tertiary',
+      district: 'New Delhi',
       state: 'Delhi',
-      location: 'Ansari Nagar West, Ring Road, New Delhi 110029',
-      phone: '011-26707444',
-      lat: 28.5684,
-      lng: 77.2066,
-      totalBeds: 1531,
-      availableBeds: 92,
-      icuBeds: 150,
-      availableIcu: 9,
-      specialties: 'Orthopaedics,Burns,Surgery,General Medicine,Emergency',
+      location: 'Baba Kharak Singh Marg, Connaught Place, New Delhi 110001',
+      phone: '011-23365525',
+      lat: 28.6258,
+      lng: 77.2016,
+      totalBeds: 1420,
+      availableBeds: 110,
+      icuBeds: 120,
+      availableIcu: 11,
+      specialties: 'Cardiology,Critical Care,Neurology,Toxicology,General Medicine,Emergency',
+    },
+  });
+
+  const gtb = await prisma.hospital.create({
+    data: {
+      id: 'hosp-gtb-delhi',
+      name: 'Guru Teg Bahadur Hospital (GTB)',
+      type: 'Government',
+      district: 'East Delhi',
+      state: 'Delhi',
+      location: 'Tahirpur Road, Dilshad Garden, Shahdara, Delhi 110095',
+      phone: '011-22586262',
+      lat: 28.6835,
+      lng: 77.3094,
+      totalBeds: 1700,
+      availableBeds: 130,
+      icuBeds: 140,
+      availableIcu: 12,
+      specialties: 'Trauma,Orthopaedics,Neurosurgery,Paediatrics,General Medicine,Emergency',
+    },
+  });
+
+  const gbpant = await prisma.hospital.create({
+    data: {
+      id: 'hosp-gbpant-delhi',
+      name: 'Govind Ballabh Pant Hospital (G.B. Pant)',
+      type: 'Specialized',
+      district: 'Central Delhi',
+      state: 'Delhi',
+      location: '1, Jawaharlal Nehru Marg, Raj Ghat, New Delhi 110002',
+      phone: '011-23234242',
+      lat: 28.6385,
+      lng: 77.2398,
+      totalBeds: 750,
+      availableBeds: 62,
+      icuBeds: 90,
+      availableIcu: 8,
+      specialties: 'Cardiology,Neurology,Gastroenterology,GI Surgery,Cardiothoracic Surgery',
+    },
+  });
+
+  const ddu = await prisma.hospital.create({
+    data: {
+      id: 'hosp-ddu-delhi',
+      name: 'Deen Dayal Upadhyay Hospital (DDU)',
+      type: 'District',
+      district: 'West Delhi',
+      state: 'Delhi',
+      location: 'Clock Tower, Hari Nagar, New Delhi 110064',
+      phone: '011-25494401',
+      lat: 28.6276,
+      lng: 77.1054,
+      totalBeds: 640,
+      availableBeds: 54,
+      icuBeds: 50,
+      availableIcu: 6,
+      specialties: 'Emergency Care,General Surgery,Orthopaedics,Obstetrics & Gynaecology,Paediatrics',
+    },
+  });
+
+  const sskh = await prisma.hospital.create({
+    data: {
+      id: 'hosp-sskh-delhi',
+      name: 'Lady Hardinge & Sucheta Kriplani Hospital',
+      type: 'Government',
+      district: 'New Delhi',
+      state: 'Delhi',
+      location: 'Shaheed Bhagat Singh Marg, Connaught Place, New Delhi 110001',
+      phone: '011-23363728',
+      lat: 28.6329,
+      lng: 77.2144,
+      totalBeds: 877,
+      availableBeds: 78,
+      icuBeds: 70,
+      availableIcu: 7,
+      specialties: 'Obstetrics & Gynaecology,Paediatrics,Neonatology,General Medicine,Surgery',
+    },
+  });
+
+  const sgm = await prisma.hospital.create({
+    data: {
+      id: 'hosp-sgm-delhi',
+      name: 'Sanjay Gandhi Memorial Hospital',
+      type: 'District',
+      district: 'North West Delhi',
+      state: 'Delhi',
+      location: 'S-Block, Mangolpuri, New Delhi 110083',
+      phone: '011-27900100',
+      lat: 28.6946,
+      lng: 77.0864,
+      totalBeds: 300,
+      availableBeds: 38,
+      icuBeds: 30,
+      availableIcu: 4,
+      specialties: 'Trauma,Emergency,General Medicine,Paediatrics,Orthopaedics',
+    },
+  });
+
+  const bsa = await prisma.hospital.create({
+    data: {
+      id: 'hosp-bsa-delhi',
+      name: 'Dr. Baba Saheb Ambedkar Hospital',
+      type: 'Government',
+      district: 'North West Delhi',
+      state: 'Delhi',
+      location: 'Sector 6, Rohini, New Delhi 110085',
+      phone: '011-27055585',
+      lat: 28.7118,
+      lng: 77.1166,
+      totalBeds: 500,
+      availableBeds: 48,
+      icuBeds: 45,
+      availableIcu: 5,
+      specialties: 'General Surgery,Dialysis,Cardiology,Orthopaedics,Emergency,Paediatrics',
+    },
+  });
+
+  const asb = await prisma.hospital.create({
+    data: {
+      id: 'hosp-asb-delhi',
+      name: 'Acharya Shree Bhikshu Government Hospital',
+      type: 'District',
+      district: 'West Delhi',
+      state: 'Delhi',
+      location: 'Moti Nagar, New Delhi 110015',
+      phone: '011-25458000',
+      lat: 28.6565,
+      lng: 77.1432,
+      totalBeds: 150,
+      availableBeds: 22,
+      icuBeds: 15,
+      availableIcu: 3,
+      specialties: 'General Medicine,Paediatrics,ENT,Ophthalmology,Emergency',
+    },
+  });
+
+  const lbs = await prisma.hospital.create({
+    data: {
+      id: 'hosp-lbs-delhi',
+      name: 'Lal Bahadur Shastri Hospital (LBS)',
+      type: 'District',
+      district: 'East Delhi',
+      state: 'Delhi',
+      location: 'Khichripur, Mayur Vihar Phase 2, Delhi 110091',
+      phone: '011-22774145',
+      lat: 28.6186,
+      lng: 77.3075,
+      totalBeds: 300,
+      availableBeds: 35,
+      icuBeds: 25,
+      availableIcu: 4,
+      specialties: 'Emergency Medicine,Orthopaedics,Paediatrics,General Surgery,General Medicine',
+    },
+  });
+
+  const valmiki = await prisma.hospital.create({
+    data: {
+      id: 'hosp-valmiki-delhi',
+      name: 'Maharishi Valmiki Hospital',
+      type: 'District',
+      district: 'North Delhi',
+      state: 'Delhi',
+      location: 'Pooth Khurd, Bawana Road, Delhi 110039',
+      phone: '011-27761521',
+      lat: 28.7845,
+      lng: 77.0628,
+      totalBeds: 150,
+      availableBeds: 28,
+      icuBeds: 15,
+      availableIcu: 2,
+      specialties: 'General Medicine,Maternal & Child Health,Emergency,Surgery',
+    },
+  });
+
+  const cnbc = await prisma.hospital.create({
+    data: {
+      id: 'hosp-cnbc-delhi',
+      name: 'Chacha Nehru Bal Chikitsalaya (CNBC)',
+      type: 'Specialized',
+      district: 'East Delhi',
+      state: 'Delhi',
+      location: 'Geeta Colony, Delhi 110031',
+      phone: '011-22026130',
+      lat: 28.6542,
+      lng: 77.2725,
+      totalBeds: 220,
+      availableBeds: 30,
+      icuBeds: 40,
+      availableIcu: 6,
+      specialties: 'Super-Specialty Paediatrics,Paediatric Surgery,Neonatal ICU,Paediatric Cardiology',
+    },
+  });
+
+  const rgssh = await prisma.hospital.create({
+    data: {
+      id: 'hosp-rgssh-delhi',
+      name: 'Rajiv Gandhi Super Speciality Hospital',
+      type: 'Specialized',
+      district: 'Shahdara',
+      state: 'Delhi',
+      location: 'Tahirpur, Dilshad Garden, Delhi 110093',
+      phone: '011-22890600',
+      lat: 28.6812,
+      lng: 77.3168,
+      totalBeds: 650,
+      availableBeds: 74,
+      icuBeds: 80,
+      availableIcu: 10,
+      specialties: 'Cardiology,Pulmonology,Gastroenterology,Urology,Critical Care,GI Surgery',
     },
   });
 

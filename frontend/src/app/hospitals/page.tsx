@@ -9,6 +9,7 @@ import { MapPin, ShieldCheck, Search, Activity, Stethoscope, Building2, Phone, M
 import { Badge } from "@/components/ui/badge";
 import FacilityMapWrapper from "@/components/facility-map-wrapper";
 import type { FacilityMapItem } from "@/components/facility-map";
+import { DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
 
 interface HospitalDb extends FacilityMapItem {
   id: string;
@@ -51,8 +52,24 @@ function ProgressBar({ available, total, type }: { available: number, total: num
 }
 
 export default function HospitalsPage() {
-  const [facilities, setFacilities] = useState<HospitalDb[]>([]);
-  const [loading, setLoading] = useState(true);
+  const fallbackHospitals: HospitalDb[] = DEFAULT_DELHI_HOSPITALS.map(f => ({
+    id: f.id,
+    name: f.name,
+    type: f.type,
+    district: f.district,
+    state: f.state,
+    location: `${f.district}, Delhi`,
+    phone: f.phone,
+    lat: f.lat,
+    lng: f.lng,
+    totalBeds: f.generalBeds + f.icuBeds,
+    availableBeds: f.generalBeds - f.generalBedsUsed,
+    icuBeds: f.icuBeds,
+    availableIcu: f.icuBeds - f.icuBedsUsed,
+    specialties: f.specialists.join(", "),
+  }));
+
+  const [facilities, setFacilities] = useState<HospitalDb[]>(fallbackHospitals);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | undefined>();
@@ -61,15 +78,13 @@ export default function HospitalsPage() {
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     fetch(`${API}/api/hospitals`)
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
-        setFacilities(data);
-        setLoading(false);
+        if (Array.isArray(data) && data.length > 0) {
+          setFacilities(data);
+        }
       })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+      .catch(() => {});
   }, []);
 
   const filteredFacilities = facilities.filter(facility => {
@@ -137,7 +152,7 @@ export default function HospitalsPage() {
       </Card>
 
       {/* Interactive Map Section */}
-      {showMap && !loading && (
+      {showMap && (
         <Card className="shadow-sm rounded-3xl border-slate-200/80 overflow-hidden bg-white">
           <CardHeader className="py-4 px-6 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
@@ -158,13 +173,7 @@ export default function HospitalsPage() {
       )}
 
       {/* Hospital Cards Grid */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20 text-teal-600">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-          <span className="ml-3 font-semibold">Loading facilities from database...</span>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFacilities.map((facility) => {
             const specialists = facility.specialties ? facility.specialties.split(',') : [];
             const isSelected = selectedFacilityId === facility.id;
@@ -266,7 +275,7 @@ export default function HospitalsPage() {
             );
           })}
           
-          {filteredFacilities.length === 0 && !loading && (
+          {filteredFacilities.length === 0 && (
             <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-200/80 border-dashed">
               <Building2 className="mx-auto h-12 w-12 text-slate-300 mb-3" />
               <h3 className="text-lg font-bold text-slate-900">No facilities match your search</h3>
@@ -274,7 +283,6 @@ export default function HospitalsPage() {
             </div>
           )}
         </div>
-      )}
     </div>
   );
 }

@@ -24,6 +24,9 @@ export enum FacilityType {
   PHC = "PHC",
   CHC = "CHC",
   DISTRICT_HOSPITAL = "DISTRICT_HOSPITAL",
+  TERTIARY = "TERTIARY",
+  GOVERNMENT = "GOVERNMENT",
+  SPECIALIZED = "SPECIALIZED",
 }
 
 export enum ReferralStatus {
@@ -312,7 +315,7 @@ export interface BloodStock {
 export interface Facility {
   id: string;
   name: string;
-  type: FacilityType;
+  type: FacilityType | string;
   district: string;
   state: string;
   lat: number;

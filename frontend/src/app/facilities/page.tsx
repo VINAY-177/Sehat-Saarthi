@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
-import { FacilityType } from '@/lib/types';
 import FacilityMapWrapper from '@/components/facility-map-wrapper';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -65,10 +64,12 @@ export default function FacilitiesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Types</SelectItem>
-                <SelectItem value={FacilityType.SEHAT_MANDIR}>SEHAT Mandir</SelectItem>
-                <SelectItem value={FacilityType.PHC}>PHC</SelectItem>
-                <SelectItem value={FacilityType.CHC}>CHC</SelectItem>
-                <SelectItem value={FacilityType.DISTRICT_HOSPITAL}>District Hospital</SelectItem>
+                <SelectItem value="Tertiary">Tertiary / Super-Specialty</SelectItem>
+                <SelectItem value="Government">Government General</SelectItem>
+                <SelectItem value="District">District Hospital</SelectItem>
+                <SelectItem value="Specialized">Specialized Hospital</SelectItem>
+                <SelectItem value="PHC">PHC / Dispensary</SelectItem>
+                <SelectItem value="CHC">CHC / Sub-district</SelectItem>
               </SelectContent>
             </Select>
           </div>

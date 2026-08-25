@@ -277,12 +277,21 @@ export default function ReferralsPage() {
                 <SelectTrigger className="bg-white border-slate-200 shadow-sm h-11">
                   <SelectValue placeholder="Choose hospital or CHC" />
                 </SelectTrigger>
-                <SelectContent>
-                  {facilities.map(f => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.name} ({f.district})
-                    </SelectItem>
-                  ))}
+                <SelectContent className="max-h-72">
+                  {facilities.map(f => {
+                    const icuFree = Math.max(0, f.icuBeds - f.icuBedsUsed);
+                    const genFree = Math.max(0, f.generalBeds - f.generalBedsUsed);
+                    return (
+                      <SelectItem key={f.id} value={f.id}>
+                        <div className="flex flex-col text-left py-0.5">
+                          <span className="font-semibold text-slate-900 leading-snug">{f.name}</span>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            {f.district} • ICU: {icuFree} beds free • Gen: {genFree} beds free
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
