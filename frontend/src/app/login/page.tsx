@@ -3,36 +3,98 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { Role } from "@/lib/types";
+import { Role, AuthUser } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Users, Stethoscope, Building2, Mail, Lock, Eye, EyeOff,
-  ArrowRight, Shield, Siren
+  ArrowRight, Shield, Siren, Loader2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, language, setLanguage, t } = useStore();
   const [selectedRole, setSelectedRole] = useState<Role>(Role.PATIENT);
-  const [emailOrMobile, setEmailOrMobile] = useState("");
-  const [password, setPassword] = useState("");
+  const [emailOrMobile, setEmailOrMobile] = useState("9876543230");
+  const [password, setPassword] = useState("SehatSaathi@2026");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Quick Demo Auto-fill Helper for SIH Presentation
+  const handleRoleSelect = (role: Role) => {
+    setSelectedRole(role);
+    if (role === Role.DOCTOR) {
+      setEmailOrMobile("9876543210");
+      setPassword("SehatSaathi@2026");
+    } else if (role === Role.HOSPITAL_STAFF) {
+      setEmailOrMobile("9876543220");
+      setPassword("SehatSaathi@2026");
+    } else {
+      setEmailOrMobile("9876543230");
+      setPassword("SehatSaathi@2026");
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    login({
-      id: "1",
-      name: selectedRole === Role.DOCTOR ? "Dr. Rajesh Kumar" : selectedRole === Role.HOSPITAL_STAFF ? "Sunita Sharma (Nurse)" : "Citizen Demo",
-      email: emailOrMobile || "demo@example.com",
-      role: selectedRole,
-      phone: emailOrMobile || "9876543210",
-      specialty: selectedRole === Role.DOCTOR ? "General Medicine" : undefined,
-    });
-    router.push("/");
+    setLoading(true);
+
+    try {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          emailOrMobile: emailOrMobile.trim(),
+          password,
+          role: selectedRole,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Login failed. Please check your credentials.");
+        setLoading(false);
+        return;
+      }
+
+      // Successful DB authentication
+      const user: AuthUser = {
+        id: data.user.userId,
+        name: data.user.name,
+        role: data.user.role as Role, // From database authority
+        phone: data.user.phone,
+        email: data.user.email || `${data.user.phone}@sehatsaathi.in`,
+        patientId: data.user.patientId,
+        doctorId: data.user.doctorId,
+        staffId: data.user.staffId,
+        facilityId: data.user.facilityId,
+        specialty: data.user.role === Role.DOCTOR ? "Cardiology" : undefined,
+      };
+
+      login(user, data.token);
+      toast.success(language === "hi" ? `स्वागत है, ${user.name}!` : `Welcome, ${user.name}!`);
+      router.push("/");
+    } catch (err) {
+      console.error("Login network error:", err);
+      // Fallback for offline presentation if server unreachable
+      login({
+        id: "demo-user",
+        name: selectedRole === Role.DOCTOR ? "Dr. Rajesh Kumar" : selectedRole === Role.HOSPITAL_STAFF ? "Sunita Sharma (Nurse)" : "Ramesh Kumar",
+        email: emailOrMobile || "demo@sehatsaathi.in",
+        role: selectedRole,
+        phone: emailOrMobile || "9876543210",
+        specialty: selectedRole === Role.DOCTOR ? "Cardiology" : undefined,
+      });
+      router.push("/");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const roles = [
@@ -125,45 +187,27 @@ export default function LoginPage() {
             {t("heroSubtext")}
           </p>
 
-          {/* Flat vector hospital illustration */}
-          <div className="pt-4">
-            <svg viewBox="0 0 520 220" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-[480px] opacity-90">
-              <rect x="0" y="195" width="520" height="25" rx="6" fill="#f1f5f9" />
-              <rect x="140" y="60" width="180" height="135" rx="4" fill="#e2e8f0" />
-              <rect x="145" y="65" width="170" height="125" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
-              <rect x="218" y="78" width="24" height="8" rx="2" fill="#0d9488" opacity="0.7" />
-              <rect x="226" y="70" width="8" height="24" rx="2" fill="#0d9488" opacity="0.7" />
-              <rect x="160" y="105" width="22" height="22" rx="3" fill="#e0f2fe" stroke="#bae6fd" strokeWidth="0.5" />
-              <rect x="195" y="105" width="22" height="22" rx="3" fill="#e0f2fe" stroke="#bae6fd" strokeWidth="0.5" />
-              <rect x="245" y="105" width="22" height="22" rx="3" fill="#e0f2fe" stroke="#bae6fd" strokeWidth="0.5" />
-              <rect x="280" y="105" width="22" height="22" rx="3" fill="#e0f2fe" stroke="#bae6fd" strokeWidth="0.5" />
-              <rect x="160" y="140" width="22" height="22" rx="3" fill="#e0f2fe" stroke="#bae6fd" strokeWidth="0.5" />
-              <rect x="280" y="140" width="22" height="22" rx="3" fill="#e0f2fe" stroke="#bae6fd" strokeWidth="0.5" />
-              <rect x="210" y="145" width="40" height="45" rx="2" fill="#0d9488" opacity="0.85" />
-              <rect x="215" y="150" width="13" height="35" rx="1" fill="#ccfbf1" opacity="0.6" />
-              <rect x="232" y="150" width="13" height="35" rx="1" fill="#ccfbf1" opacity="0.6" />
-              <rect x="50" y="100" width="90" height="95" rx="4" fill="#cbd5e1" opacity="0.6" />
-              <rect x="55" y="105" width="80" height="85" rx="3" fill="#f1f5f9" />
-              <rect x="70" y="125" width="18" height="18" rx="2" fill="#e0f2fe" />
-              <rect x="100" y="125" width="18" height="18" rx="2" fill="#e0f2fe" />
-              <rect x="70" y="155" width="18" height="18" rx="2" fill="#e0f2fe" />
-              <rect x="100" y="155" width="18" height="18" rx="2" fill="#e0f2fe" />
-              <rect x="320" y="110" width="100" height="85" rx="4" fill="#cbd5e1" opacity="0.6" />
-              <rect x="325" y="115" width="90" height="75" rx="3" fill="#f1f5f9" />
-              <rect x="345" y="130" width="18" height="18" rx="2" fill="#e0f2fe" />
-              <rect x="380" y="130" width="18" height="18" rx="2" fill="#e0f2fe" />
-              <rect x="365" y="155" width="25" height="35" rx="2" fill="#94a3b8" opacity="0.5" />
-              <rect x="390" y="160" width="60" height="35" rx="4" fill="#ffffff" stroke="#e2e8f0" strokeWidth="1" />
-              <rect x="428" y="167" width="20" height="18" rx="2" fill="#e0f2fe" />
-              <circle cx="403" cy="195" r="5" fill="#475569" />
-              <circle cx="437" cy="195" r="5" fill="#475569" />
-              <rect x="408" y="172" width="10" height="3" rx="0.5" fill="#ef4444" />
-              <rect x="411.5" y="168.5" width="3" height="10" rx="0.5" fill="#ef4444" />
-              <circle cx="28" cy="175" r="14" fill="#a7f3d0" opacity="0.7" />
-              <rect x="26" y="178" width="4" height="18" rx="2" fill="#94a3b8" />
-              <circle cx="490" cy="178" r="11" fill="#a7f3d0" opacity="0.7" />
-              <rect x="488" y="180" width="4" height="16" rx="2" fill="#94a3b8" />
-            </svg>
+          {/* Quick Demo Info Pill */}
+          <div className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+              <Shield className="w-4 h-4 text-teal-600" />
+              <span>SIH Demo Credentials (Select role above):</span>
+            </div>
+            <div className="text-[11px] text-slate-600 grid grid-cols-3 gap-2">
+              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <p className="font-bold text-slate-900">Doctor</p>
+                <p className="font-mono text-[10px] text-slate-500">9876543210</p>
+              </div>
+              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <p className="font-bold text-slate-900">Staff</p>
+                <p className="font-mono text-[10px] text-slate-500">9876543220</p>
+              </div>
+              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                <p className="font-bold text-slate-900">Patient</p>
+                <p className="font-mono text-[10px] text-slate-500">9876543230</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium text-center">Password: <span className="font-mono font-bold text-slate-700">SehatSaathi@2026</span></p>
           </div>
         </div>
 
@@ -212,9 +256,9 @@ export default function LoginPage() {
                     <button
                       key={value}
                       type="button"
-                      onClick={() => setSelectedRole(value)}
+                      onClick={() => handleRoleSelect(value)}
                       className={`
-                        relative flex flex-col items-center gap-2 py-3.5 px-2.5 rounded-2xl
+                        relative flex flex-col items-center gap-2 py-3 px-2 rounded-2xl
                         border transition-all duration-200 cursor-pointer
                         ${isActive
                           ? "border-[#1e3a5f] bg-[#1e3a5f] text-white shadow-md shadow-[#1e3a5f]/15"
@@ -244,7 +288,7 @@ export default function LoginPage() {
                   placeholder={language === "hi" ? "मोबाइल नंबर या ईमेल दर्ज करें" : "you@example.com / 9876543210"}
                   value={emailOrMobile}
                   onChange={(e) => setEmailOrMobile(e.target.value)}
-                  className="pl-11 h-12 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] transition-colors"
+                  className="pl-11 h-12 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] transition-colors font-medium"
                   required
                 />
               </div>
@@ -256,9 +300,6 @@ export default function LoginPage() {
                 <Label className="text-[13px] font-bold text-[#475569]">
                   {t("password")}
                 </Label>
-                <a href="#" className="text-[12px] font-bold text-[#0d9488] hover:text-[#0f766e] transition-colors">
-                  {t("forgotPassword")}
-                </a>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" />
@@ -283,10 +324,20 @@ export default function LoginPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all duration-200 group"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all duration-200 group gap-2"
             >
-              {t("continueBtn")}
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-0.5 transition-transform" />
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Verifying Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <span>{t("continueBtn")}</span>
+                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
             </Button>
 
             {/* Divider */}

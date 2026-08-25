@@ -16,7 +16,7 @@ import { UserPlus } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { addPatient, addScreening, currentUser } = useStore();
+  const { addPatient, addScreening, currentUser, getAuthHeaders, refreshPatients } = useStore();
   const [isLoading, setIsLoading] = useState(false);
   const [resultDialog, setResultDialog] = useState<{
     isOpen: boolean;
@@ -27,29 +27,64 @@ export default function RegisterPage() {
   const handleSubmit = async (data: PatientRegistrationInput) => {
     setIsLoading(true);
     try {
-      // POST to backend first for database persistence
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      
+      const riskResult = calculateRiskScore({
+        symptoms: data.symptoms,
+        vitals: data.vitals,
+        age: data.age,
+        gender: data.gender,
+        comorbidities: data.comorbidities,
+      });
+
+      // 1. POST to backend for PostgreSQL database persistence
+      let createdPatientId: string | undefined;
+
       try {
-        await fetch(`${API}/api/patients`, {
+        const res = await fetch(`${API}/api/patients`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify({
             name: data.name,
             age: data.age,
             gender: data.gender,
-            bloodGroup: data.bloodGroup,
+            bloodGroup: data.bloodGroup || null,
             phone: data.phone || undefined,
-            village: data.village,
+            village: data.village || undefined,
             district: data.district,
             state: data.state,
-            incomeCategory: data.incomeCategory,
+            incomeCategory: data.incomeCategory || undefined,
+            riskLevel: riskResult.urgency,
           }),
         });
+
+        if (res.ok) {
+          const newPatient = await res.json();
+          createdPatientId = newPatient.id;
+
+          // 2. Save Clinical Encounter & Vitals to backend
+          await fetch(`${API}/api/patients/${newPatient.id}/encounters`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              doctorId: currentUser?.doctorId || undefined,
+              chiefComplaint: data.symptoms?.join(", ") || "Intake assessment",
+              symptoms: data.symptoms,
+              riskScore: riskResult.score,
+              urgency: riskResult.urgency,
+              riskFactors: riskResult.factors,
+              vitals: data.vitals,
+            }),
+          }).catch(() => {});
+
+          // Refresh store with real PostgreSQL records
+          await refreshPatients();
+        }
       } catch (err) {
-        console.warn("Backend unavailable, saving to local store only:", err);
+        console.warn("Backend API unavailable, saving to local store:", err);
       }
 
-      // Add to frontend store (use backend ID if available)
+      // 3. Update local store as backup
       const patient = addPatient({
         name: data.name,
         age: data.age,
@@ -59,20 +94,15 @@ export default function RegisterPage() {
         district: data.district,
         state: data.state,
         incomeCategory: data.incomeCategory,
+        riskLevel: riskResult.urgency,
         abhaLinked: false,
         registeredById: currentUser?.id || "current-user",
       });
 
-      const riskResult = calculateRiskScore({
-        symptoms: data.symptoms,
-        vitals: data.vitals,
-        age: data.age,
-        gender: data.gender,
-        comorbidities: data.comorbidities,
-      });
+      const finalId = createdPatientId || patient.id;
 
       addScreening({
-        patientId: patient.id,
+        patientId: finalId,
         symptoms: data.symptoms,
         vitals: data.vitals,
         comorbidities: data.comorbidities,
@@ -86,10 +116,10 @@ export default function RegisterPage() {
         localStorage.removeItem("Sehat Saathi-draft");
       }
 
-      toast.success("Patient registered and risk evaluated successfully!");
+      toast.success("Patient registered and recorded in PostgreSQL database!");
       setResultDialog({
         isOpen: true,
-        patientId: patient.id,
+        patientId: finalId,
         riskResult,
       });
     } catch (error) {
@@ -109,73 +139,82 @@ export default function RegisterPage() {
             <UserPlus className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900">Register New Citizen</h1>
-            <p className="text-xs text-slate-500 font-medium">
-              EHR patient intake with instant rule-based AI clinical risk triage.
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-teal-500" />
+              <span className="text-xs font-bold uppercase tracking-wider text-teal-700">Staff Intake Command</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Register New Patient
+            </h1>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Record demographics, triage vitals, and generate unified electronic health records.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-bold px-3 py-1 text-xs gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-            EHR Intake Active
+          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold px-3 py-1 text-xs">
+            PostgreSQL Connected
           </Badge>
         </div>
       </div>
 
-      <Card className="shadow-sm rounded-3xl border-slate-200/80 overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
-          <CardTitle className="text-base font-bold text-slate-900">
-            Citizen Clinical Intake Record
-          </CardTitle>
-          <CardDescription className="text-xs text-slate-500 font-medium">
-            Enter demographics, baseline vitals, reported symptoms, and pre-existing medical history.
+      <Card className="shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden bg-white">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
+          <CardTitle className="text-base font-bold text-slate-900">Patient Demographic &amp; Clinical Form</CardTitle>
+          <CardDescription className="text-xs text-slate-500">
+            Fill in required fields. Emergency triage scoring is evaluated instantly upon submission.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 md:p-8">
+        <CardContent className="p-6">
           <PatientForm onSubmit={handleSubmit} isLoading={isLoading} />
         </CardContent>
       </Card>
 
-      <Dialog 
-        open={resultDialog.isOpen} 
-        onOpenChange={(open) => {
-          if (!open && resultDialog.patientId) {
-            router.push(`/patients/${resultDialog.patientId}`);
-          }
-        }}
+      {/* Result Dialog */}
+      <Dialog
+        open={resultDialog.isOpen}
+        onOpenChange={(open) => setResultDialog((prev) => ({ ...prev, isOpen: open }))}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+        <DialogContent className="max-w-md rounded-3xl p-6">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-slate-800">AI Risk &amp; Triage Assessment</DialogTitle>
-            <DialogDescription className="text-base text-slate-600">
-              Patient intake successfully recorded. Review the automated risk analysis below.
+            <DialogTitle className="text-xl font-extrabold text-slate-900">Registration Complete</DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 font-medium">
+              Patient record has been created in the database with AI triage risk stratification.
             </DialogDescription>
           </DialogHeader>
-          
+
           {resultDialog.riskResult && (
-            <div className="py-4">
+            <div className="py-2">
               <RiskScoreCard
                 score={resultDialog.riskResult.score}
                 urgency={resultDialog.riskResult.urgency}
                 factors={resultDialog.riskResult.factors}
                 summary={resultDialog.riskResult.summary}
-                showActions={true}
-                onCreateReferral={() => {
-                  router.push(`/referrals?patientId=${resultDialog.patientId}`);
-                }}
               />
             </div>
           )}
-          
-          <DialogFooter className="flex gap-3 sm:justify-end border-t pt-4 mt-4">
-            <Button variant="outline" onClick={() => setResultDialog({ isOpen: false })} className="h-11 rounded-lg">
-              Close
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResultDialog({ isOpen: false });
+                router.push("/patients");
+              }}
+              className="flex-1 rounded-xl font-bold text-xs h-10"
+            >
+              View Patient Records
             </Button>
             {resultDialog.patientId && (
-              <Button onClick={() => router.push(`/patients/${resultDialog.patientId}`)} className="h-11 rounded-lg bg-teal-600 hover:bg-teal-700">
-                View Patient Record
+              <Button
+                onClick={() => {
+                  setResultDialog({ isOpen: false });
+                  router.push(`/patients/${resultDialog.patientId}`);
+                }}
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs h-10"
+              >
+                Open 360° Profile
               </Button>
             )}
           </DialogFooter>

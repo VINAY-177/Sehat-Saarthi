@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
@@ -31,7 +32,35 @@ import {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { currentUser, patients, screenings, referrals, logout, role } = useStore();
+  const { currentUser, patients, screenings, referrals, logout, role, token, login } = useStore();
+
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("sehat-saathi-token") : null);
+    if (activeToken) {
+      fetch(`${API}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && data.name) {
+            login({
+              id: data.id,
+              name: data.name,
+              role: data.role,
+              phone: data.phone,
+              email: data.email || `${data.phone}@sehatsaathi.in`,
+              patientId: data.patientId,
+              doctorId: data.doctorId,
+              staffId: data.staffId,
+              facilityId: data.facilityId,
+              specialty: data.doctor?.specialty,
+            }, activeToken);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [token, login]);
 
   if (!currentUser) {
     return (

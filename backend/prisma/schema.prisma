@@ -1,62 +1,110 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma schema for Sehat Saathi Healthcare Platform
+// Production Database: PostgreSQL
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // ============================================================
-// Existing Models
+// 1. Authentication & User Management
+// ============================================================
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  phone        String    @unique
+  email        String?   @unique
+  passwordHash String
+  role         String    // PATIENT, DOCTOR, HOSPITAL_STAFF, ADMIN
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  patient      Patient?
+  doctor       Doctor?
+  staff        Staff?
+}
+
+// ============================================================
+// 2. Facilities & Staff Operations
 // ============================================================
 
 model Hospital {
   id            String   @id @default(uuid())
   name          String
-  type          String
+  type          String   // Government, Tertiary, District, CHC, PHC
   district      String
   state         String
   location      String
   phone         String?
   lat           Float    @default(28.6139)
   lng           Float    @default(77.2090)
-  totalBeds     Int
-  availableBeds Int
-  icuBeds       Int
-  availableIcu  Int
-  specialties   String
+  totalBeds     Int      @default(500)
+  availableBeds Int      @default(50)
+  icuBeds       Int      @default(50)
+  availableIcu  Int      @default(5)
+  specialties   String   // Comma-separated
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  doctors    Doctor[]
-  referrals  Referral[]
+  doctors       Doctor[]
+  staff         Staff[]
+  referrals     Referral[]
 }
 
-model GovernmentScheme {
+model Staff {
+  id          String   @id @default(uuid())
+  userId      String?  @unique
+  name        String
+  role        String   @default("NURSE") // NURSE, RECEPTIONIST, WARD_LEAD, ADMIN
+  phone       String?
+  email       String?
+  facilityId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User?     @relation(fields: [userId], references: [id])
+  facility    Hospital? @relation(fields: [facilityId], references: [id])
+}
+
+// ============================================================
+// 3. Clinical Staff & Patients
+// ============================================================
+
+model Doctor {
   id              String   @id @default(uuid())
-  schemeName      String
-  description     String
-  eligibility     String
-  coverageAmount  String
-  officialLink    String
-  stateApplicable String
+  userId          String?  @unique
+  name            String
+  specialty       String
+  department      String?
+  licenseNumber   String?
+  phone           String?
+  email           String?
+  facilityId      String?
+  available       Boolean  @default(true)
+  experience      String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-}
 
-// ============================================================
-// Phase 1 — New Models
-// ============================================================
+  user            User?           @relation(fields: [userId], references: [id])
+  facility        Hospital?       @relation(fields: [facilityId], references: [id])
+  appointments    Appointment[]
+  encounters      Encounter[]
+  prescriptions   Prescription[]
+  medicationsPrescribed Medication[] @relation("PrescribingDoctor")
+  labReportsOrdered    LabReport[]  @relation("OrderingDoctor")
+}
 
 model Patient {
   id               String    @id @default(uuid())
+  userId           String?   @unique
   mrn              String    @unique // Medical Record Number
   name             String
-  dateOfBirth      String    // ISO date string
+  dateOfBirth      String?   // ISO date string
   age              Int
   gender           String    // Male, Female, Other
   bloodGroup       String?
@@ -74,11 +122,11 @@ model Patient {
   pincode          String?
 
   // Emergency Contact
-  emergencyContactName  String?
-  emergencyContactPhone String?
+  emergencyContactName     String?
+  emergencyContactPhone    String?
   emergencyContactRelation String?
 
-  // Clinical
+  // Clinical & Economic
   riskLevel        String    @default("LOW") // LOW, MODERATE, HIGH, EMERGENCY
   incomeCategory   String?   // BPL, APL, EWS
 
@@ -86,6 +134,7 @@ model Patient {
   updatedAt        DateTime  @updatedAt
 
   // Relations
+  user             User?             @relation(fields: [userId], references: [id])
   encounters       Encounter[]
   vitals           Vital[]
   conditions       MedicalCondition[]
@@ -96,51 +145,31 @@ model Patient {
   documents        MedicalDocument[]
   insurance        Insurance[]
   appointments     Appointment[]
-  referralsOut     Referral[]       @relation("PatientReferrals")
+  referralsOut     Referral[]        @relation("PatientReferrals")
   interactions     Interaction[]
 }
 
-model Doctor {
-  id              String   @id @default(uuid())
-  name            String
-  specialty       String
-  department      String?
-  licenseNumber   String?
-  phone           String?
-  email           String?
-  facilityId      String?
-  available       Boolean  @default(true)
-  experience      String?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  facility        Hospital?       @relation(fields: [facilityId], references: [id])
-  appointments    Appointment[]
-  encounters      Encounter[]
-  prescriptions   Prescription[]
-  medicationsPrescribed Medication[] @relation("PrescribingDoctor")
-  labReportsOrdered    LabReport[]  @relation("OrderingDoctor")
-}
+// ============================================================
+// 4. Clinical Encounters, Appointments & Care
+// ============================================================
 
 model Appointment {
-  id          String   @id @default(uuid())
-  patientId   String
-  doctorId    String
-  dateTime    String   // ISO datetime
-  endTime     String?  // ISO datetime
-  status      String   @default("REQUESTED") // REQUESTED, CONFIRMED, CHECKED_IN, IN_CONSULTATION, COMPLETED, DECLINED, CANCELLED
-  visitType   String   @default("NEW") // NEW, FOLLOW_UP, EMERGENCY
-  reason      String?
-  notes       String?
+  id           String   @id @default(uuid())
+  patientId    String
+  doctorId     String
+  dateTime     String   // ISO datetime
+  endTime      String?  // ISO datetime
+  status       String   @default("REQUESTED") // REQUESTED, CONFIRMED, CHECKED_IN, IN_CONSULTATION, COMPLETED, DECLINED, CANCELLED
+  visitType    String   @default("NEW") // NEW, FOLLOW_UP, EMERGENCY
+  reason       String?
+  notes        String?
   cancelReason String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  patient     Patient  @relation(fields: [patientId], references: [id])
-  doctor      Doctor   @relation(fields: [doctorId], references: [id])
-  encounter   Encounter?
+  patient      Patient  @relation(fields: [patientId], references: [id])
+  doctor       Doctor   @relation(fields: [doctorId], references: [id])
+  encounter    Encounter?
 }
 
 model Encounter {
@@ -151,16 +180,16 @@ model Encounter {
 
   // History of Present Illness
   chiefComplaint   String?
-  symptoms         String?  // JSON array
-  onset            String?  // Sudden, Gradual
-  severity         String?  // Mild, Moderate, Severe
-  hpiNotes         String?  // Free text narrative
+  symptoms         String?  // JSON string
+  onset            String?
+  severity         String?
+  hpiNotes         String?
 
   // Diagnosis
-  diagnosis        String?  // Primary diagnosis
+  diagnosis        String?
   diagnosisIcdCode String?
-  secondaryDiagnoses String? // JSON array
-  clinicalNotes    String?  // SOAP notes
+  secondaryDiagnoses String?
+  clinicalNotes    String?
 
   // Treatment
   treatmentPlan    String?
@@ -168,12 +197,11 @@ model Encounter {
   // AI Risk Assessment snapshot
   riskScore        Int?
   urgency          String?  // LOW, MODERATE, HIGH, EMERGENCY
-  riskFactors      String?  // JSON array
+  riskFactors      String?
   suggestedDepartment String?
 
   // Follow-up
   followUpDate     String?
-
   status           String   @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
 
   createdAt        DateTime @default(now())
@@ -192,16 +220,15 @@ model Vital {
   patientId       String
   encounterId     String?
 
-  temperature     Float?   // in °C
+  temperature     Float?
   bpSystolic      Int?
   bpDiastolic     Int?
   heartRate       Int?
   respiratoryRate Int?
-  spO2            Float?   // percentage
-  height          Float?   // in cm
-  weight          Float?   // in kg
-  bmi             Float?   // auto-calculated
-
+  spO2            Float?
+  height          Float?
+  weight          Float?
+  bmi             Float?
   recordedAt      DateTime @default(now())
 
   patient         Patient   @relation(fields: [patientId], references: [id])
@@ -216,7 +243,6 @@ model MedicalCondition {
   onsetDate   String?
   status      String   @default("ACTIVE") // ACTIVE, RESOLVED, CHRONIC
   notes       String?
-
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -230,29 +256,27 @@ model Allergy {
   type        String   // DRUG, FOOD, ENVIRONMENTAL
   reaction    String?
   severity    String   @default("MILD") // MILD, MODERATE, SEVERE, LIFE_THREATENING
-
   createdAt   DateTime @default(now())
 
   patient     Patient  @relation(fields: [patientId], references: [id])
 }
 
 model Medication {
-  id                 String   @id @default(uuid())
-  patientId          String
+  id                  String   @id @default(uuid())
+  patientId           String
   prescribingDoctorId String?
-  name               String
-  dosage             String
-  frequency          String   // e.g., "Twice daily", "Once daily"
-  startDate          String
-  endDate            String?
-  status             String   @default("ACTIVE") // ACTIVE, COMPLETED, DISCONTINUED
-  notes              String?
+  name                String
+  dosage              String
+  frequency           String
+  startDate           String
+  endDate             String?
+  status              String   @default("ACTIVE") // ACTIVE, COMPLETED, DISCONTINUED
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  patient            Patient  @relation(fields: [patientId], references: [id])
-  prescribingDoctor  Doctor?  @relation("PrescribingDoctor", fields: [prescribingDoctorId], references: [id])
+  patient             Patient  @relation(fields: [patientId], references: [id])
+  prescribingDoctor   Doctor?  @relation("PrescribingDoctor", fields: [prescribingDoctorId], references: [id])
 }
 
 model Prescription {
@@ -262,7 +286,6 @@ model Prescription {
   encounterId  String?
   date         String
   notes        String?
-
   createdAt    DateTime @default(now())
 
   patient      Patient           @relation(fields: [patientId], references: [id])
@@ -289,14 +312,13 @@ model LabReport {
   encounterId      String?
   orderingDoctorId String?
   testName         String
-  category         String   // CBC, BIOCHEMISTRY, LIVER, KIDNEY, THYROID, LIPID, OTHER
+  category         String
   result           String?
   unit             String?
   referenceRange   String?
   status           String   @default("ORDERED") // ORDERED, SAMPLE_COLLECTED, PROCESSING, COMPLETED
   reportDate       String?
   notes            String?
-
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -310,9 +332,8 @@ model MedicalDocument {
   patientId   String
   fileName    String
   fileUrl     String?
-  category    String   // DISCHARGE_SUMMARY, CONSENT_FORM, IMAGING, LAB_REPORT, PRESCRIPTION, OTHER
+  category    String
   notes       String?
-
   uploadDate  DateTime @default(now())
 
   patient     Patient  @relation(fields: [patientId], references: [id])
@@ -323,12 +344,11 @@ model Insurance {
   patientId      String
   provider       String
   policyNumber   String?
-  coverageType   String?  // INDIVIDUAL, FAMILY
+  coverageType   String?
   validFrom      String?
   validTo        String?
-  pmjayStatus    String?  // ENROLLED, NOT_ENROLLED, PENDING
-  cghsStatus     String?  // ACTIVE, INACTIVE, NOT_APPLICABLE
-
+  pmjayStatus    String?
+  cghsStatus     String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -348,12 +368,51 @@ model Referral {
   urgency         String   @default("MODERATE") // LOW, MODERATE, HIGH, EMERGENCY
   reason          String
   notes           String?
-
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   patient         Patient  @relation("PatientReferrals", fields: [patientId], references: [id])
   toHospital      Hospital @relation(fields: [toHospitalId], references: [id])
+}
+
+// ============================================================
+// 5. Emergency SOS & Dispatch Tracking
+// ============================================================
+
+model EmergencyRequest {
+  id                   String   @id @default(uuid())
+  phone                String
+  location             String
+  lat                  Float?
+  lng                  Float?
+  emergencyType        String   @default("GENERAL") // ACCIDENT, CARDIAC, RESPIRATORY, TRAUMA, MATERNAL, GENERAL
+  patientName          String?
+  age                  Int?
+  gender               String?
+  assignedHospitalId   String?
+  assignedHospitalName String?
+  ambulanceId          String?
+  status               String   @default("DISPATCHED") // DISPATCHED, EN_ROUTE, ARRIVED, COMPLETED, CANCELLED
+  etaMinutes           Int      @default(8)
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// ============================================================
+// 6. Schemes, Messaging & System Communications
+// ============================================================
+
+model GovernmentScheme {
+  id              String   @id @default(uuid())
+  schemeName      String
+  description     String
+  eligibility     String
+  coverageAmount  String
+  officialLink    String
+  stateApplicable String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Message {
@@ -366,9 +425,9 @@ model Message {
   recipientRole  String
   threadId       String
   content        String
-  attachmentType String?  // PRESCRIPTION, LAB_REPORT, APPOINTMENT, DOCUMENT
+  attachmentType String?
   attachmentId   String?
-  attachmentData String?  // JSON metadata
+  attachmentData String?
   read           Boolean  @default(false)
   createdAt      DateTime @default(now())
 }
@@ -378,8 +437,8 @@ model Interaction {
   patientId    String
   staffId      String?
   staffName    String?
-  type         String   // PHONE_CALL, SMS, WHATSAPP, VIDEO, IN_PERSON
-  status       String   // CONNECTED, NO_ANSWER, CALLBACK_REQUESTED, COMPLETED
+  type         String
+  status       String
   notes        String?
   callbackDate String?
   createdAt    DateTime @default(now())
@@ -399,4 +458,3 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 }
-

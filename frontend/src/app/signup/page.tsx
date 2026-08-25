@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { Role } from "@/lib/types";
+import { Role, AuthUser } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight,
-  Heart, Shield, Cpu, User, Phone, Award, Siren
+  Users, Stethoscope, Building2, Mail, Lock, Eye, EyeOff, ArrowRight,
+  Shield, User, Phone, Siren, Loader2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,12 +26,12 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Role-Specific Optional Fields
   const [specialty, setSpecialty] = useState("");
-  const [facilityName, setFacilityName] = useState("");
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!fullName.trim()) {
@@ -48,20 +47,69 @@ export default function SignupPage() {
       return;
     }
 
-    // Register & Log in user
-    login({
-      id: `user-${Date.now()}`,
-      name: fullName.trim(),
-      email: email.trim() || `${phone.trim()}@sehatsaathi.in`,
-      role: selectedRole,
-      phone: phone.trim(),
-      specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
-      facilityId: selectedRole === Role.HOSPITAL_STAFF ? "fac-1" : undefined,
-    });
+    setLoading(true);
 
-    toast.success(language === "hi" ? `सेहत साथी में आपका स्वागत है, ${fullName}!` : `Welcome to Sehat Saathi, ${fullName}!`);
-    router.push("/");
+    try {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName.trim(),
+          phone: phone.trim(),
+          email: email.trim() || undefined,
+          password: password.trim(),
+          role: selectedRole,
+          specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Signup failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Log in with DB authenticated user
+      const user: AuthUser = {
+        id: data.user.userId,
+        name: data.user.name,
+        role: data.user.role as Role,
+        phone: data.user.phone,
+        email: data.user.email || `${data.user.phone}@sehatsaathi.in`,
+        patientId: data.user.patientId,
+        doctorId: data.user.doctorId,
+        staffId: data.user.staffId,
+        specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
+      };
+
+      login(user, data.token);
+      toast.success(language === "hi" ? `सेहत साथी में आपका स्वागत है, ${fullName}!` : `Welcome to Sehat Saathi, ${fullName}!`);
+      router.push("/");
+    } catch (err) {
+      console.error("Signup network error:", err);
+      // Fallback in-memory
+      login({
+        id: `user-${Date.now()}`,
+        name: fullName.trim(),
+        email: email.trim() || `${phone.trim()}@sehatsaathi.in`,
+        role: selectedRole,
+        phone: phone.trim(),
+        specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
+      });
+      router.push("/");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const roles = [
+    { value: Role.PATIENT, label: t("patientRole"), icon: Users },
+    { value: Role.DOCTOR, label: t("doctorRole"), icon: Stethoscope },
+    { value: Role.HOSPITAL_STAFF, label: t("staffRole"), icon: Building2 },
+  ] as const;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 lg:p-8 font-sans relative">
@@ -106,244 +154,197 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+      <div className="w-full max-w-[500px] my-10 animate-in fade-in zoom-in-95 duration-300">
         
-        {/* Left Side - Brand & Illustration */}
-        <div className="hidden lg:flex flex-col justify-center space-y-10 relative">
-          
-          {/* Logo & Tagline */}
-          <div>
-            <div className="flex items-center gap-3.5 mb-2">
-              <div className="relative w-14 h-14 rounded-2xl overflow-hidden shadow-md border border-slate-100 bg-white p-1 shrink-0">
-                <Image 
-                  src="/logo.png" 
-                  alt="Sehat Saathi Official Logo" 
-                  width={56} 
-                  height={56} 
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black tracking-tight text-[#003399]">
-                  {t("brandName")}
-                </h1>
-                <p className="text-xs font-bold text-teal-700 tracking-tight">{t("tagline")}</p>
-              </div>
+        {/* Header Branding */}
+        <div className="text-center mb-8">
+          <Link href="/login" className="inline-flex items-center gap-3 group mb-3">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-200/80 p-1 flex items-center justify-center">
+              <Image src="/logo.png" alt="Sehat Saathi" width={40} height={40} className="object-contain" priority />
             </div>
-            <p className="text-slate-500 font-medium text-sm ml-1">{t("subTagline")}</p>
-          </div>
+            <span className="text-2xl font-black text-slate-900 tracking-tight">
+              {t("brandName")}
+            </span>
+          </Link>
+          <p className="text-sm font-semibold text-slate-500">
+            {t("tagline")}
+          </p>
+        </div>
 
-          {/* Hero Text */}
-          <div className="space-y-4">
-            <h2 className="text-4xl xl:text-5xl font-extrabold text-slate-800 leading-[1.15]">
-              {t("signupHeroHeadline")}
+        {/* Card Form */}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-md">
+          
+          <div className="mb-6">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Create your account
             </h2>
-            <p className="text-slate-600 text-base xl:text-lg max-w-md leading-relaxed font-medium">
-              {t("signupHeroSubtext")}
+            <p className="text-xs text-slate-500 font-medium mt-1">
+              Select your role to get started with national healthcare records.
             </p>
           </div>
 
-          {/* Core Values Floating Card */}
-          <div className="grid grid-cols-2 gap-3 max-w-md pt-2">
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
-              <Heart className="w-4 h-4 text-teal-600 shrink-0" />
-              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "सहानुभूतिपूर्ण देखभाल" : "Patient First Care"}</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
-              <Shield className="w-4 h-4 text-teal-600 shrink-0" />
-              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "ABDM डिजिटल रिकॉर्ड्स" : "ABDM Certified"}</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
-              <Cpu className="w-4 h-4 text-teal-600 shrink-0" />
-              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "AI क्लिनिकल ट्राइएज" : "AI Clinical Triage"}</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center gap-2.5">
-              <Users className="w-4 h-4 text-teal-600 shrink-0" />
-              <span className="text-xs font-bold text-slate-700">{language === "hi" ? "सुलभ स्वास्थ्य सेवा" : "Universal Healthcare"}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side - Signup Form */}
-        <div className="flex flex-col justify-center">
-          <Card className="border-0 shadow-2xl shadow-blue-950/5 rounded-3xl bg-white overflow-hidden p-6 sm:p-10">
-            <CardContent className="p-0 space-y-6">
-              
-              <div className="space-y-2">
-                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">{t("signUpTitle")}</h3>
-                <p className="text-slate-500 font-medium text-xs sm:text-sm">{t("signUpSub")}</p>
-              </div>
-
-              {/* 3-Way Role Selector */}
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole(Role.PATIENT)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${
-                    selectedRole === Role.PATIENT
-                      ? "border-teal-500 bg-teal-50/50 text-teal-800 font-bold shadow-sm"
-                      : "border-slate-100 bg-slate-50/50 text-slate-500 hover:border-slate-200"
-                  }`}
-                >
-                  <Users className={`w-5 h-5 mb-1 ${selectedRole === Role.PATIENT ? "text-teal-600" : "text-slate-400"}`} />
-                  <span className="text-xs">{t("patientRole")}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole(Role.DOCTOR)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${
-                    selectedRole === Role.DOCTOR
-                      ? "border-teal-500 bg-teal-50/50 text-teal-800 font-bold shadow-sm"
-                      : "border-slate-100 bg-slate-50/50 text-slate-500 hover:border-slate-200"
-                  }`}
-                >
-                  <Stethoscope className={`w-5 h-5 mb-1 ${selectedRole === Role.DOCTOR ? "text-teal-600" : "text-slate-400"}`} />
-                  <span className="text-xs">{t("doctorRole")}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole(Role.HOSPITAL_STAFF)}
-                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${
-                    selectedRole === Role.HOSPITAL_STAFF
-                      ? "border-teal-500 bg-teal-50/50 text-teal-800 font-bold shadow-sm"
-                      : "border-slate-100 bg-slate-50/50 text-slate-500 hover:border-slate-200"
-                  }`}
-                >
-                  <Building2 className={`w-5 h-5 mb-1 ${selectedRole === Role.HOSPITAL_STAFF ? "text-teal-600" : "text-slate-400"}`} />
-                  <span className="text-xs">{t("staffRole")}</span>
-                </button>
-              </div>
-
-              {/* Signup Form */}
-              <form onSubmit={handleSignup} className="space-y-4">
-                
-                {/* Full Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-slate-700 font-bold text-xs">
-                    {t("fullName")} *
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      placeholder={selectedRole === Role.DOCTOR ? (language === "hi" ? "उदा. डॉ. राजेश कुमार" : "e.g. Dr. Rajesh Kumar") : (language === "hi" ? "उदा. अमित शर्मा" : "e.g. Amit Sharma")} 
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Phone Number */}
-                <div className="space-y-1.5">
-                  <Label className="text-slate-700 font-bold text-xs">{t("phoneLabel")} *</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      type="tel"
-                      placeholder="9876543210" 
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Optional Email */}
-                <div className="space-y-1.5">
-                  <Label className="text-slate-700 font-bold text-xs">{t("emailOrMobile")} ({language === "hi" ? "वैकल्पिक" : "Optional"})</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      type="email"
-                      placeholder="you@example.com" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
-                    />
-                  </div>
-                </div>
-
-                {/* Role-Specific Fields */}
-                {selectedRole === Role.DOCTOR && (
-                  <div className="space-y-1.5 animate-in fade-in duration-200">
-                    <Label className="text-slate-700 font-bold text-xs">{t("specialtyLabel")}</Label>
-                    <div className="relative">
-                      <Award className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        placeholder={language === "hi" ? "उदा. सामान्य चिकित्सा / हृदय रोग" : "e.g. General Medicine / Cardiology"} 
-                        value={specialty}
-                        onChange={(e) => setSpecialty(e.target.value)}
-                        className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {selectedRole === Role.HOSPITAL_STAFF && (
-                  <div className="space-y-1.5 animate-in fade-in duration-200">
-                    <Label className="text-slate-700 font-bold text-xs">{t("facilityLabel")}</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                      <Input 
-                        placeholder={language === "hi" ? "उदा. एम्स नई दिल्ली / जिला अस्पताल" : "e.g. AIIMS New Delhi / District Hospital"} 
-                        value={facilityName}
-                        onChange={(e) => setFacilityName(e.target.value)}
-                        className="pl-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <Label className="text-slate-700 font-bold text-xs">{t("password")} *</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <Input 
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-teal-600 text-xs bg-slate-50/50"
-                      required
-                    />
+          <form onSubmit={handleSignup} className="space-y-5">
+            
+            {/* Role Selector */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                {t("iAmA")}
+              </Label>
+              <div className="grid grid-cols-3 gap-2">
+                {roles.map(({ value, label, icon: Icon }) => {
+                  const isActive = selectedRole === value;
+                  return (
                     <button
+                      key={value}
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
+                      onClick={() => setSelectedRole(value)}
+                      className={`
+                        flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl
+                        border transition-all duration-200 cursor-pointer
+                        ${isActive
+                          ? "border-[#1e3a5f] bg-[#1e3a5f] text-white shadow-sm"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                        }
+                      `}
                     >
-                      <Eye className="h-4 w-4" />
+                      <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                      <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-700"}`}>
+                        {label}
+                      </span>
                     </button>
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-md mt-2"
-                >
-                  {t("createAccountBtn")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </form>
-
-              {/* Login Link */}
-              <div className="text-center pt-2">
-                <p className="text-xs text-slate-500 font-medium">
-                  {t("alreadyAccount")}{" "}
-                  <Link href="/login" className="font-bold text-teal-600 hover:underline">
-                    {t("logInHere")}
-                  </Link>
-                </p>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Full Name */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                Full Name <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="e.g. Ramesh Kumar"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="pl-10 h-11 rounded-xl bg-slate-50/50 border-slate-200 text-sm font-medium"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                Mobile Number <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="tel"
+                  placeholder="e.g. 9876543210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="pl-10 h-11 rounded-xl bg-slate-50/50 border-slate-200 text-sm font-medium"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Email (Optional) */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                Email Address (Optional)
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-11 rounded-xl bg-slate-50/50 border-slate-200 text-sm font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Doctor Specialty (if doctor) */}
+            {selectedRole === Role.DOCTOR && (
+              <div className="space-y-1.5 animate-in fade-in duration-200">
+                <Label className="text-xs font-bold text-slate-700">
+                  Medical Specialty
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Cardiology, General Medicine"
+                  value={specialty}
+                  onChange={(e) => setSpecialty(e.target.value)}
+                  className="h-11 rounded-xl bg-slate-50/50 border-slate-200 text-sm font-medium"
+                />
+              </div>
+            )}
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                Password <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a strong password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10 h-11 rounded-xl bg-slate-50/50 border-slate-200 text-sm font-medium"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-sm shadow-sm hover:shadow-md transition-all gap-2 mt-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </>
+              )}
+            </Button>
+
+            {/* Login Link */}
+            <p className="text-center text-xs text-slate-500 font-medium pt-2">
+              Already have an account?{" "}
+              <Link href="/login" className="font-bold text-teal-700 hover:underline">
+                Sign In
+              </Link>
+            </p>
+          </form>
         </div>
 
+        {/* Trust line */}
+        <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-medium mt-6">
+          <Shield className="w-4 h-4" />
+          <span>{t("trustBadgeText")}</span>
+        </div>
       </div>
     </div>
   );

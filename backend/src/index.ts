@@ -1,24 +1,322 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-
+const JWT_SECRET = process.env.JWT_SECRET || 'sehat_saathi_sih_jwt_secret_key_2026';
 const PORT = process.env.PORT || 5000;
 
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+
 // ============================================================
-// 1. Core / Reference Data
+// Auth Middleware & Types
+// ============================================================
+
+export interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    role: string;
+    phone: string;
+    email?: string | null;
+    name: string;
+    patientId?: string;
+    doctorId?: string;
+    staffId?: string;
+    facilityId?: string;
+  };
+}
+
+export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return next(); // Proceed as unauthenticated
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    req.user = payload;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: 'Invalid or expired session token' });
+  }
+};
+
+export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  next();
+};
+
+export const requireRole = (allowedRoles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Access denied: insufficient permissions for this role' });
+    }
+    next();
+  };
+};
+
+app.use(authenticateToken);
+
+// ============================================================
+// 1. Authentication Endpoints (Signup, Login, Me)
+// ============================================================
+
+// Signup
+app.post('/api/auth/signup', async (req: Request, res: Response) => {
+  try {
+    const { name, phone, email, password, role, specialty, facilityId } = req.body;
+
+    if (!name || !phone || !password) {
+      return res.status(400).json({ error: 'Name, phone number, and password are required' });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({ error: 'Password must be at least 4 characters long' });
+    }
+
+    const assignedRole = role || 'PATIENT';
+
+    // Check if phone or email already registered
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phone: String(phone).trim() },
+          ...(email ? [{ email: String(email).trim() }] : []),
+        ],
+      },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'An account with this phone number or email already exists' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        name: name.trim(),
+        phone: String(phone).trim(),
+        email: email ? String(email).trim() : null,
+        passwordHash,
+        role: assignedRole,
+      },
+    });
+
+    let patientId: string | undefined;
+    let doctorId: string | undefined;
+    let staffId: string | undefined;
+
+    // Link appropriate role entity
+    if (assignedRole === 'PATIENT' || assignedRole === 'CITIZEN') {
+      const count = await prisma.patient.count();
+      const patient = await prisma.patient.create({
+        data: {
+          userId: user.id,
+          mrn: `MRN-2026-${String(count + 1).padStart(4, '0')}`,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          age: 30,
+          gender: 'Other',
+          district: 'New Delhi',
+          state: 'Delhi',
+        },
+      });
+      patientId = patient.id;
+    } else if (assignedRole === 'DOCTOR') {
+      const doctor = await prisma.doctor.create({
+        data: {
+          userId: user.id,
+          name: user.name,
+          specialty: specialty || 'General Medicine',
+          phone: user.phone,
+          email: user.email,
+          facilityId: facilityId || null,
+          available: true,
+        },
+      });
+      doctorId = doctor.id;
+    } else if (assignedRole === 'HOSPITAL_STAFF') {
+      const staff = await prisma.staff.create({
+        data: {
+          userId: user.id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          facilityId: facilityId || null,
+          role: 'NURSE',
+        },
+      });
+      staffId = staff.id;
+    }
+
+    // Generate JWT
+    const tokenPayload = {
+      userId: user.id,
+      name: user.name,
+      role: user.role,
+      phone: user.phone,
+      email: user.email,
+      patientId,
+      doctorId,
+      staffId,
+      facilityId,
+    };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(201).json({
+      message: 'Account created successfully',
+      token,
+      user: tokenPayload,
+    });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Internal server error during registration' });
+  }
+});
+
+// Login
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  try {
+    const { emailOrMobile, password, role: requestedRole } = req.body;
+
+    if (!emailOrMobile || !password) {
+      return res.status(400).json({ error: 'Phone/Email and password are required' });
+    }
+
+    const query = String(emailOrMobile).trim();
+
+    // Find user by phone, email, or name
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { phone: query },
+          { email: query },
+        ],
+      },
+      include: {
+        patient: true,
+        doctor: true,
+        staff: true,
+      },
+    });
+
+    // If demo mode or user not found, check if it's one of the seed demo accounts
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials. User not found.' });
+    }
+
+    // Verify hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid password. Please check your credentials.' });
+    }
+
+    const tokenPayload = {
+      userId: user.id,
+      name: user.name,
+      role: user.role, // Determined by DATABASE, not client
+      phone: user.phone,
+      email: user.email,
+      patientId: user.patient?.id,
+      doctorId: user.doctor?.id,
+      staffId: user.staff?.id,
+      facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
+    };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: tokenPayload,
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error during login' });
+  }
+});
+
+// Get Current Profile (Me)
+app.get('/api/auth/me', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: {
+        patient: {
+          include: {
+            conditions: true,
+            allergies: true,
+            vitals: { orderBy: { recordedAt: 'desc' }, take: 1 },
+          },
+        },
+        doctor: {
+          include: {
+            facility: true,
+          },
+        },
+        staff: {
+          include: {
+            facility: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User record not found' });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      role: user.role,
+      patient: user.patient,
+      doctor: user.doctor,
+      staff: user.staff,
+      patientId: user.patient?.id,
+      doctorId: user.doctor?.id,
+      staffId: user.staff?.id,
+      facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+// ============================================================
+// 2. Facilities & Core Reference Data
 // ============================================================
 
 // Get all hospitals
-app.get('/api/hospitals', async (req, res) => {
+app.get('/api/hospitals', async (req: Request, res: Response) => {
   try {
     const hospitals = await prisma.hospital.findMany({
       include: { doctors: true },
+      orderBy: { availableBeds: 'desc' },
     });
     res.json(hospitals);
   } catch (error) {
@@ -26,21 +324,12 @@ app.get('/api/hospitals', async (req, res) => {
   }
 });
 
-// Get all government schemes
-app.get('/api/schemes', async (req, res) => {
-  try {
-    const schemes = await prisma.governmentScheme.findMany();
-    res.json(schemes);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch government schemes' });
-  }
-});
-
 // Get all doctors
-app.get('/api/doctors', async (req, res) => {
+app.get('/api/doctors', async (req: Request, res: Response) => {
   try {
     const doctors = await prisma.doctor.findMany({
       include: { facility: true },
+      orderBy: { name: 'asc' },
     });
     res.json(doctors);
   } catch (error) {
@@ -48,25 +337,12 @@ app.get('/api/doctors', async (req, res) => {
   }
 });
 
-app.post('/api/doctors', async (req, res) => {
+// Create/Update Doctor
+app.post('/api/doctors', async (req: Request, res: Response) => {
   try {
     const { name, specialty, phone, email, facilityId, department, licenseNumber, experience } = req.body;
     if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-
-    if (phone || email) {
-      const existing = await prisma.doctor.findFirst({
-        where: {
-          OR: [
-            ...(phone ? [{ phone }] : []),
-            ...(email ? [{ email }] : []),
-          ],
-        },
-      });
-      if (existing) {
-        return res.json(existing);
-      }
+      return res.status(400).json({ error: 'Doctor name is required' });
     }
 
     const hospital = facilityId
@@ -94,11 +370,11 @@ app.post('/api/doctors', async (req, res) => {
 });
 
 // ============================================================
-// 2. Patient Management & Search (Registry)
+// 3. Patient Management & Search (Registry)
 // ============================================================
 
 // List patients with query search and filters
-app.get('/api/patients', async (req, res) => {
+app.get('/api/patients', async (req: Request, res: Response) => {
   try {
     const { search, riskLevel, district, gender, condition } = req.query;
 
@@ -107,12 +383,12 @@ app.get('/api/patients', async (req, res) => {
     if (search && typeof search === 'string') {
       const q = search.trim();
       whereClause.OR = [
-        { name: { contains: q } },
-        { mrn: { contains: q } },
-        { abhaId: { contains: q } },
-        { phone: { contains: q } },
-        { village: { contains: q } },
-        { district: { contains: q } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { mrn: { contains: q, mode: 'insensitive' } },
+        { abhaId: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } },
+        { village: { contains: q, mode: 'insensitive' } },
+        { district: { contains: q, mode: 'insensitive' } },
       ];
     }
 
@@ -131,7 +407,7 @@ app.get('/api/patients', async (req, res) => {
     if (condition && typeof condition === 'string') {
       whereClause.conditions = {
         some: {
-          name: { contains: condition },
+          name: { contains: condition, mode: 'insensitive' },
         },
       };
     }
@@ -168,9 +444,9 @@ app.get('/api/patients', async (req, res) => {
 });
 
 // Get Patient 360° Profile (Complete relational record)
-app.get('/api/patients/:id', async (req, res) => {
+app.get('/api/patients/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const patient = await prisma.patient.findUnique({
       where: { id },
       include: {
@@ -249,8 +525,8 @@ function pickPatientFields(data: any) {
   };
 }
 
-// Create new patient (also used when staff intake or citizen signup)
-app.post('/api/patients', async (req, res) => {
+// Create new patient (used by Staff Registration flow)
+app.post('/api/patients', async (req: Request, res: Response) => {
   try {
     const data = pickPatientFields(req.body);
     if (!data.name) {
@@ -282,9 +558,9 @@ app.post('/api/patients', async (req, res) => {
 });
 
 // Update patient
-app.put('/api/patients/:id', async (req, res) => {
+app.put('/api/patients/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const data = req.body;
     const updated = await prisma.patient.update({
       where: { id },
@@ -297,13 +573,13 @@ app.put('/api/patients/:id', async (req, res) => {
 });
 
 // ============================================================
-// 3. Clinical Encounters & AI Risk Scoring
+// 4. Clinical Encounters & AI Risk Scoring
 // ============================================================
 
 // Get encounters for a patient
-app.get('/api/patients/:id/encounters', async (req, res) => {
+app.get('/api/patients/:id/encounters', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const encounters = await prisma.encounter.findMany({
       where: { patientId: id },
       include: {
@@ -321,9 +597,9 @@ app.get('/api/patients/:id/encounters', async (req, res) => {
 });
 
 // Create full encounter with optional vitals & prescription
-app.post('/api/patients/:id/encounters', async (req, res) => {
+app.post('/api/patients/:id/encounters', async (req: Request, res: Response) => {
   try {
-    const { id: patientId } = req.params;
+    const patientId = req.params.id as string;
     const {
       doctorId,
       appointmentId,
@@ -474,194 +750,16 @@ app.post('/api/patients/:id/encounters', async (req, res) => {
 });
 
 // ============================================================
-// 4. Vitals & Medical History Sub-routes
-// ============================================================
-
-// Vitals
-app.get('/api/patients/:id/vitals', async (req, res) => {
-  try {
-    const vitals = await prisma.vital.findMany({
-      where: { patientId: req.params.id },
-      orderBy: { recordedAt: 'desc' },
-    });
-    res.json(vitals);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch vitals' });
-  }
-});
-
-app.post('/api/patients/:id/vitals', async (req, res) => {
-  try {
-    const { id: patientId } = req.params;
-    const data = req.body;
-    let bmi: number | undefined = undefined;
-    if (data.height && data.weight) {
-      const heightM = data.height / 100;
-      bmi = parseFloat((data.weight / (heightM * heightM)).toFixed(1));
-    }
-
-    const vital = await prisma.vital.create({
-      data: {
-        ...data,
-        patientId,
-        bmi,
-      },
-    });
-    res.status(201).json(vital);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to record vital' });
-  }
-});
-
-// Conditions
-app.get('/api/patients/:id/conditions', async (req, res) => {
-  try {
-    const conditions = await prisma.medicalCondition.findMany({
-      where: { patientId: req.params.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(conditions);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch conditions' });
-  }
-});
-
-app.post('/api/patients/:id/conditions', async (req, res) => {
-  try {
-    const condition = await prisma.medicalCondition.create({
-      data: {
-        ...req.body,
-        patientId: req.params.id,
-      },
-    });
-    res.status(201).json(condition);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add condition' });
-  }
-});
-
-// Allergies
-app.get('/api/patients/:id/allergies', async (req, res) => {
-  try {
-    const allergies = await prisma.allergy.findMany({
-      where: { patientId: req.params.id },
-    });
-    res.json(allergies);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch allergies' });
-  }
-});
-
-app.post('/api/patients/:id/allergies', async (req, res) => {
-  try {
-    const allergy = await prisma.allergy.create({
-      data: {
-        ...req.body,
-        patientId: req.params.id,
-      },
-    });
-    res.status(201).json(allergy);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add allergy' });
-  }
-});
-
-// Medications
-app.get('/api/patients/:id/medications', async (req, res) => {
-  try {
-    const meds = await prisma.medication.findMany({
-      where: { patientId: req.params.id },
-      include: { prescribingDoctor: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(meds);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch medications' });
-  }
-});
-
-app.post('/api/patients/:id/medications', async (req, res) => {
-  try {
-    const med = await prisma.medication.create({
-      data: {
-        ...req.body,
-        patientId: req.params.id,
-      },
-    });
-    res.status(201).json(med);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add medication' });
-  }
-});
-
-// Prescriptions
-app.get('/api/patients/:id/prescriptions', async (req, res) => {
-  try {
-    const rxs = await prisma.prescription.findMany({
-      where: { patientId: req.params.id },
-      include: {
-        doctor: true,
-        items: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(rxs);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch prescriptions' });
-  }
-});
-
-// Lab Reports
-app.get('/api/patients/:id/lab-reports', async (req, res) => {
-  try {
-    const reports = await prisma.labReport.findMany({
-      where: { patientId: req.params.id },
-      include: { orderingDoctor: true },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(reports);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch lab reports' });
-  }
-});
-
-app.post('/api/patients/:id/lab-reports', async (req, res) => {
-  try {
-    const report = await prisma.labReport.create({
-      data: {
-        ...req.body,
-        patientId: req.params.id,
-      },
-    });
-    res.status(201).json(report);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create lab report' });
-  }
-});
-
-// Insurance
-app.get('/api/patients/:id/insurance', async (req, res) => {
-  try {
-    const insurance = await prisma.insurance.findMany({
-      where: { patientId: req.params.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(insurance);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch insurance' });
-  }
-});
-
-// ============================================================
 // 5. Appointments & Referrals
 // ============================================================
 
-// Appointments
-app.get('/api/appointments', async (req, res) => {
+// Appointments List
+app.get('/api/appointments', async (req: Request, res: Response) => {
   try {
-    const { doctorId, status, date } = req.query;
+    const { doctorId, patientId, status, date } = req.query;
     const where: any = {};
     if (doctorId && typeof doctorId === 'string') where.doctorId = doctorId;
+    if (patientId && typeof patientId === 'string') where.patientId = patientId;
     if (status && typeof status === 'string') where.status = status;
     if (date && typeof date === 'string') {
       where.dateTime = { startsWith: date };
@@ -671,7 +769,11 @@ app.get('/api/appointments', async (req, res) => {
       where,
       include: {
         patient: true,
-        doctor: true,
+        doctor: {
+          include: {
+            facility: true,
+          },
+        },
       },
       orderBy: { dateTime: 'asc' },
     });
@@ -681,7 +783,8 @@ app.get('/api/appointments', async (req, res) => {
   }
 });
 
-app.post('/api/appointments', async (req, res) => {
+// Book Appointment
+app.post('/api/appointments', async (req: Request, res: Response) => {
   try {
     let { patientId, doctorId, dateTime, status, visitType, reason, notes, patientName, phone, specialty } = req.body;
 
@@ -718,7 +821,7 @@ app.post('/api/appointments', async (req, res) => {
 
     if (!doctor && specialty) {
       doctor = await prisma.doctor.findFirst({
-        where: { specialty: { contains: String(specialty) } },
+        where: { specialty: { contains: String(specialty), mode: 'insensitive' } },
       });
     }
 
@@ -749,10 +852,11 @@ app.post('/api/appointments', async (req, res) => {
   }
 });
 
-app.put('/api/appointments/:id', async (req, res) => {
+app.put('/api/appointments/:id', async (req: Request, res: Response) => {
   try {
+    const id = req.params.id as string;
     const appt = await prisma.appointment.update({
-      where: { id: req.params.id },
+      where: { id },
       data: req.body,
     });
     res.json(appt);
@@ -762,7 +866,7 @@ app.put('/api/appointments/:id', async (req, res) => {
 });
 
 // Referrals
-app.get('/api/referrals', async (req, res) => {
+app.get('/api/referrals', async (req: Request, res: Response) => {
   try {
     const referrals = await prisma.referral.findMany({
       include: {
@@ -777,7 +881,7 @@ app.get('/api/referrals', async (req, res) => {
   }
 });
 
-app.post('/api/referrals', async (req, res) => {
+app.post('/api/referrals', async (req: Request, res: Response) => {
   try {
     const referral = await prisma.referral.create({
       data: req.body,
@@ -789,10 +893,68 @@ app.post('/api/referrals', async (req, res) => {
 });
 
 // ============================================================
-// 5.5 Government Health Schemes
+// 6. Emergency 108 SOS System (Persistent)
 // ============================================================
 
-app.get('/api/schemes', async (req, res) => {
+app.post('/api/emergency', async (req: Request, res: Response) => {
+  try {
+    const { phone, location, emergencyType, patientName, age, gender, notes } = req.body;
+
+    if (!phone || !location) {
+      return res.status(400).json({ error: 'Phone number and location are required for emergency dispatch' });
+    }
+
+    const hospitals = await prisma.hospital.findMany({ take: 3 });
+    const assignedHospital = hospitals[0];
+
+    const emergencyRequest = await prisma.emergencyRequest.create({
+      data: {
+        phone: String(phone).trim(),
+        location: String(location).trim(),
+        emergencyType: emergencyType || 'GENERAL',
+        patientName: patientName || 'Emergency Patient',
+        age: age ? Number(age) : null,
+        gender: gender || null,
+        assignedHospitalId: assignedHospital?.id || null,
+        assignedHospitalName: assignedHospital?.name || 'Nearest Government Hospital',
+        ambulanceId: `108-AMB-${Math.floor(1000 + Math.random() * 9000)}`,
+        status: 'DISPATCHED',
+        etaMinutes: 7,
+        notes: notes || null,
+      },
+    });
+
+    res.status(201).json(emergencyRequest);
+  } catch (error) {
+    console.error('Error logging emergency SOS:', error);
+    res.status(500).json({ error: 'Failed to dispatch emergency request' });
+  }
+});
+
+app.get('/api/emergency', async (req: Request, res: Response) => {
+  try {
+    const requests = await prisma.emergencyRequest.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch emergency records' });
+  }
+});
+
+// ============================================================
+// 7. Government Health Schemes
+// ============================================================
+
+app.get('/api/schemes', async (req: Request, res: Response) => {
+  try {
+    const dbSchemes = await prisma.governmentScheme.findMany();
+    if (dbSchemes.length > 0) {
+      return res.json(dbSchemes);
+    }
+  } catch {}
+
   const schemes = [
     {
       id: 'sch-pmjay',
@@ -902,40 +1064,15 @@ app.get('/api/schemes', async (req, res) => {
       minAge: 0,
       maxAge: 120,
     },
-    {
-      id: 'sch-up-mmjay',
-      schemeName: 'UP Mukhyamantri Jan Arogya Yojana (MMJAY)',
-      category: 'STATE',
-      description: 'State health cover for families left out of the SECC list, unorganized workers, and rural households in Uttar Pradesh.',
-      eligibility: 'Residents of Uttar Pradesh with Antyodaya or BPL/EWS status.',
-      coverageAmount: '₹5,00,000 per family / year',
-      officialLink: 'https://ayushmanup.in',
-      stateApplicable: 'Uttar Pradesh',
-      minAge: 0,
-      maxAge: 120,
-    },
-    {
-      id: 'sch-chiranjeevi',
-      schemeName: 'Mukhyamantri Ayushman Rajasthan Health Cover',
-      category: 'STATE',
-      description: 'Universal cashless health assurance for all families in Rajasthan for secondary & tertiary treatment.',
-      eligibility: 'Residents of Rajasthan (Free for BPL, farmers, contractual workers, nominal premium for others).',
-      coverageAmount: '₹25,00,000 universal annual health cover',
-      officialLink: 'https://chiranjeevi.rajasthan.gov.in',
-      stateApplicable: 'Rajasthan',
-      minAge: 0,
-      maxAge: 120,
-    },
   ];
   res.json(schemes);
 });
 
 // ============================================================
-// 6. Messaging & Care Coordination System (Phase 3)
+// 8. Messaging, Notifications & Stats
 // ============================================================
 
-// List messages / threads
-app.get('/api/messages', async (req, res) => {
+app.get('/api/messages', async (req: Request, res: Response) => {
   try {
     const { threadId, userId } = req.query;
     const where: any = {};
@@ -956,8 +1093,7 @@ app.get('/api/messages', async (req, res) => {
   }
 });
 
-// Send new message
-app.post('/api/messages', async (req, res) => {
+app.post('/api/messages', async (req: Request, res: Response) => {
   try {
     const data = req.body;
     const message = await prisma.message.create({
@@ -972,59 +1108,7 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-// Mark messages in thread as read
-app.put('/api/messages/read', async (req, res) => {
-  try {
-    const { threadId, recipientId } = req.body;
-    await prisma.message.updateMany({
-      where: {
-        threadId,
-        recipientId,
-        read: false,
-      },
-      data: { read: true },
-    });
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to mark messages as read' });
-  }
-});
-
-// ============================================================
-// 7. Interactions / Call History (Phase 3)
-// ============================================================
-
-app.get('/api/patients/:id/interactions', async (req, res) => {
-  try {
-    const interactions = await prisma.interaction.findMany({
-      where: { patientId: req.params.id },
-      orderBy: { createdAt: 'desc' },
-    });
-    res.json(interactions);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch interactions' });
-  }
-});
-
-app.post('/api/patients/:id/interactions', async (req, res) => {
-  try {
-    const interaction = await prisma.interaction.create({
-      data: {
-        ...req.body,
-        patientId: req.params.id,
-      },
-    });
-    res.status(201).json(interaction);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to log interaction' });
-  }
-});
-
-// ============================================================
-// 8. Notifications System (Phase 3)
-// ============================================================
-
-app.get('/api/notifications', async (req, res) => {
+app.get('/api/notifications', async (req: Request, res: Response) => {
   try {
     const { role, userId, unreadOnly } = req.query;
     const where: any = {};
@@ -1050,7 +1134,7 @@ app.get('/api/notifications', async (req, res) => {
   }
 });
 
-app.post('/api/notifications', async (req, res) => {
+app.post('/api/notifications', async (req: Request, res: Response) => {
   try {
     const notification = await prisma.notification.create({
       data: req.body,
@@ -1061,36 +1145,7 @@ app.post('/api/notifications', async (req, res) => {
   }
 });
 
-app.put('/api/notifications/:id/read', async (req, res) => {
-  try {
-    const notification = await prisma.notification.update({
-      where: { id: req.params.id },
-      data: { read: true },
-    });
-    res.json(notification);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update notification' });
-  }
-});
-
-app.put('/api/notifications/read-all', async (req, res) => {
-  try {
-    const { role } = req.body;
-    await prisma.notification.updateMany({
-      where: role ? { OR: [{ role }, { role: 'ALL' }] } : {},
-      data: { read: true },
-    });
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to mark all notifications as read' });
-  }
-});
-
-// ============================================================
-// 9. Overall Stats Overview
-// ============================================================
-
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', async (req: Request, res: Response) => {
   try {
     const totalPatients = await prisma.patient.count();
     const emergencyPatients = await prisma.patient.count({ where: { riskLevel: 'EMERGENCY' } });
@@ -1110,9 +1165,11 @@ app.get('/api/stats', async (req, res) => {
       totalEncounters,
       totalAppointments,
       pendingReferrals,
-      totalHospitals: hospitals.length,
+      totalFacilities: hospitals.length,
       totalICUAvailable,
       totalBedsAvailable,
+      totalGeneralAvailable: totalBedsAvailable,
+      totalPrivateRoomsAvailable: 24,
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch stats' });
@@ -1121,5 +1178,5 @@ app.get('/api/stats', async (req, res) => {
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Sehat Saathi Backend server running on http://localhost:${PORT}`);
+  console.log(`🚀 Sehat Saathi Backend running on port ${PORT}`);
 });

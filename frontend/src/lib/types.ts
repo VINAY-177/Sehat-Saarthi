@@ -377,6 +377,7 @@ export interface AuthUser {
   specialty?: string;
   patientId?: string;
   doctorId?: string;
+  staffId?: string;
 }
 
 export interface SchemeEligibilityCheck {
