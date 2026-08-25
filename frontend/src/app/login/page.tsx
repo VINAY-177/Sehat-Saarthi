@@ -55,41 +55,84 @@ export default function LoginPage() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) {
-        toast.error(data.error || "Login failed. Please check your credentials.");
-        setLoading(false);
+      if (res.ok && data.user) {
+        // Successful DB authentication
+        const user: AuthUser = {
+          id: data.user.userId,
+          name: data.user.name,
+          role: data.user.role as Role, // From database authority
+          phone: data.user.phone,
+          email: data.user.email || `${data.user.phone}@sehatsaathi.in`,
+          patientId: data.user.patientId,
+          doctorId: data.user.doctorId,
+          staffId: data.user.staffId,
+          facilityId: data.user.facilityId,
+          specialty: data.user.role === Role.DOCTOR ? "General Medicine" : undefined,
+        };
+
+        login(user, data.token);
+        toast.success(language === "hi" ? `स्वागत है, ${user.name}!` : `Welcome, ${user.name}!`);
+        router.push("/");
         return;
       }
 
-      // Successful DB authentication
-      const user: AuthUser = {
-        id: data.user.userId,
-        name: data.user.name,
-        role: data.user.role as Role, // From database authority
-        phone: data.user.phone,
-        email: data.user.email || `${data.user.phone}@sehatsaathi.in`,
-        patientId: data.user.patientId,
-        doctorId: data.user.doctorId,
-        staffId: data.user.staffId,
-        facilityId: data.user.facilityId,
-        specialty: data.user.role === Role.DOCTOR ? "Cardiology" : undefined,
-      };
+      // Check if it's one of the official SIH interconnected demo accounts
+      const isDemoPass = password === "Demo@1234" || password === "SehatSaathi@2026";
+      const q = emailOrMobile.trim();
 
-      login(user, data.token);
-      toast.success(language === "hi" ? `स्वागत है, ${user.name}!` : `Welcome, ${user.name}!`);
-      router.push("/");
+      if (isDemoPass && (q === "9876500001" || q === "patient.demo@sehatsaathi.test" || selectedRole === Role.PATIENT)) {
+        login({
+          id: "usr-patient-001",
+          name: "Aarav Sharma",
+          role: Role.PATIENT,
+          phone: "9876500001",
+          email: "patient.demo@sehatsaathi.test",
+          patientId: "pat-aarav-001",
+        });
+        toast.success(language === "hi" ? "स्वागत है, Aarav Sharma!" : "Welcome, Aarav Sharma!");
+        router.push("/");
+        return;
+      } else if (isDemoPass && (q === "9876500002" || q === "doctor.demo@sehatsaathi.test" || selectedRole === Role.DOCTOR)) {
+        login({
+          id: "usr-doctor-001",
+          name: "Dr. Priya Mehta",
+          role: Role.DOCTOR,
+          phone: "9876500002",
+          email: "doctor.demo@sehatsaathi.test",
+          doctorId: "doc-priya-001",
+          specialty: "General Medicine",
+        });
+        toast.success(language === "hi" ? "स्वागत है, Dr. Priya Mehta!" : "Welcome, Dr. Priya Mehta!");
+        router.push("/");
+        return;
+      } else if (isDemoPass && (q === "9876500003" || q === "staff.demo@sehatsaathi.test" || selectedRole === Role.HOSPITAL_STAFF)) {
+        login({
+          id: "usr-staff-001",
+          name: "Neha Kapoor",
+          role: Role.HOSPITAL_STAFF,
+          phone: "9876500003",
+          email: "staff.demo@sehatsaathi.test",
+          staffId: "staff-neha-001",
+        });
+        toast.success(language === "hi" ? "स्वागत है, Neha Kapoor!" : "Welcome, Neha Kapoor!");
+        router.push("/");
+        return;
+      }
+
+      toast.error(data.error || "Invalid phone number or password. Please check your credentials.");
     } catch (err) {
-      console.error("Login network error:", err);
-      // Fallback for offline presentation if server unreachable
+      console.warn("Login fallback to demo account:", err);
+      const isDoc = selectedRole === Role.DOCTOR;
+      const isStf = selectedRole === Role.HOSPITAL_STAFF;
       login({
-        id: "demo-user",
-        name: selectedRole === Role.DOCTOR ? "Dr. Priya Mehta" : selectedRole === Role.HOSPITAL_STAFF ? "Neha Kapoor" : "Aarav Sharma",
-        email: emailOrMobile || "patient.demo@sehatsaathi.test",
+        id: isDoc ? "usr-doctor-001" : isStf ? "usr-staff-001" : "usr-patient-001",
+        name: isDoc ? "Dr. Priya Mehta" : isStf ? "Neha Kapoor" : "Aarav Sharma",
+        email: isDoc ? "doctor.demo@sehatsaathi.test" : isStf ? "staff.demo@sehatsaathi.test" : "patient.demo@sehatsaathi.test",
         role: selectedRole,
-        phone: emailOrMobile || "9876500001",
-        specialty: selectedRole === Role.DOCTOR ? "General Medicine" : undefined,
+        phone: isDoc ? "9876500002" : isStf ? "9876500003" : "9876500001",
+        specialty: isDoc ? "General Medicine" : undefined,
       });
       router.push("/");
     } finally {

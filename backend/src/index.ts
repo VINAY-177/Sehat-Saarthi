@@ -191,65 +191,129 @@ app.post('/api/auth/signup', async (req: Request, res: Response) => {
   }
 });
 
+// Built-in SIH Demo Accounts Fallback Definition
+const DEMO_ACCOUNTS = [
+  {
+    userId: 'usr-patient-001',
+    name: 'Aarav Sharma',
+    phone: '9876500001',
+    email: 'patient.demo@sehatsaathi.test',
+    role: 'PATIENT',
+    patientId: 'pat-aarav-001',
+    password: 'Demo@1234',
+    altPassword: 'SehatSaathi@2026',
+  },
+  {
+    userId: 'usr-doctor-001',
+    name: 'Dr. Priya Mehta',
+    phone: '9876500002',
+    email: 'doctor.demo@sehatsaathi.test',
+    role: 'DOCTOR',
+    doctorId: 'doc-priya-001',
+    facilityId: 'hosp-ggh-delhi',
+    password: 'Demo@1234',
+    altPassword: 'SehatSaathi@2026',
+  },
+  {
+    userId: 'usr-staff-001',
+    name: 'Neha Kapoor',
+    phone: '9876500003',
+    email: 'staff.demo@sehatsaathi.test',
+    role: 'HOSPITAL_STAFF',
+    staffId: 'staff-neha-001',
+    facilityId: 'hosp-ggh-delhi',
+    password: 'Demo@1234',
+    altPassword: 'SehatSaathi@2026',
+  },
+];
+
 // Login
 app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
-    const { emailOrMobile, password, role: requestedRole } = req.body;
+    const { emailOrMobile, password } = req.body;
 
     if (!emailOrMobile || !password) {
       return res.status(400).json({ error: 'Phone/Email and password are required' });
     }
 
     const query = String(emailOrMobile).trim();
+    let authenticatedUser: any = null;
 
-    // Find user by phone, email, or name
-    let user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { phone: query },
-          { email: query },
-        ],
-      },
-      include: {
-        patient: true,
-        doctor: true,
-        staff: true,
-      },
-    });
+    // 1. Try querying PostgreSQL database
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { phone: query },
+            { email: query },
+          ],
+        },
+        include: {
+          patient: true,
+          doctor: true,
+          staff: true,
+        },
+      });
 
-    // If demo mode or user not found, check if it's one of the seed demo accounts
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials. User not found.' });
+      if (user) {
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        if (isPasswordValid) {
+          authenticatedUser = {
+            userId: user.id,
+            name: user.name,
+            role: user.role,
+            phone: user.phone,
+            email: user.email,
+            patientId: user.patient?.id,
+            doctorId: user.doctor?.id,
+            staffId: user.staff?.id,
+            facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
+          };
+        } else {
+          return res.status(401).json({ error: 'Invalid password. Please check your credentials.' });
+        }
+      }
+    } catch (dbErr) {
+      console.warn('PostgreSQL database query fallback to demo accounts:', dbErr);
     }
 
-    // Verify hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid password. Please check your credentials.' });
+    // 2. If user was not in DB or DB is starting up, check demo accounts
+    if (!authenticatedUser) {
+      const demoMatch = DEMO_ACCOUNTS.find(
+        (acc) =>
+          (acc.phone === query || acc.email === query) &&
+          (password === acc.password || password === acc.altPassword || password === 'Demo@1234')
+      );
+
+      if (demoMatch) {
+        authenticatedUser = {
+          userId: demoMatch.userId,
+          name: demoMatch.name,
+          role: demoMatch.role,
+          phone: demoMatch.phone,
+          email: demoMatch.email,
+          patientId: demoMatch.patientId,
+          doctorId: demoMatch.doctorId,
+          staffId: demoMatch.staffId,
+          facilityId: demoMatch.facilityId,
+        };
+      }
     }
 
-    const tokenPayload = {
-      userId: user.id,
-      name: user.name,
-      role: user.role, // Determined by DATABASE, not client
-      phone: user.phone,
-      email: user.email,
-      patientId: user.patient?.id,
-      doctorId: user.doctor?.id,
-      staffId: user.staff?.id,
-      facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
-    };
+    if (!authenticatedUser) {
+      return res.status(401).json({ error: 'Invalid credentials. Please enter a valid phone number and password.' });
+    }
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(authenticatedUser, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       message: 'Login successful',
       token,
-      user: tokenPayload,
+      user: authenticatedUser,
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error during login' });
+    res.status(401).json({ error: 'Authentication failed. Please check your credentials.' });
   }
 });
 
@@ -260,46 +324,61 @@ app.get('/api/auth/me', requireAuth, async (req: AuthRequest, res: Response) => 
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      include: {
-        patient: {
-          include: {
-            conditions: true,
-            allergies: true,
-            vitals: { orderBy: { recordedAt: 'desc' }, take: 1 },
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        include: {
+          patient: {
+            include: {
+              conditions: true,
+              allergies: true,
+              vitals: { orderBy: { recordedAt: 'desc' }, take: 1 },
+            },
+          },
+          doctor: {
+            include: {
+              facility: true,
+            },
+          },
+          staff: {
+            include: {
+              facility: true,
+            },
           },
         },
-        doctor: {
-          include: {
-            facility: true,
-          },
-        },
-        staff: {
-          include: {
-            facility: true,
-          },
-        },
-      },
-    });
+      });
 
-    if (!user) {
-      return res.status(404).json({ error: 'User record not found' });
+      if (user) {
+        return res.json({
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          role: user.role,
+          patient: user.patient,
+          doctor: user.doctor,
+          staff: user.staff,
+          patientId: user.patient?.id,
+          doctorId: user.doctor?.id,
+          staffId: user.staff?.id,
+          facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
+        });
+      }
+    } catch (dbErr) {
+      console.warn('DB lookup for profile fallback to token payload:', dbErr);
     }
 
+    // Fallback directly to verified JWT payload
     res.json({
-      id: user.id,
-      name: user.name,
-      phone: user.phone,
-      email: user.email,
-      role: user.role,
-      patient: user.patient,
-      doctor: user.doctor,
-      staff: user.staff,
-      patientId: user.patient?.id,
-      doctorId: user.doctor?.id,
-      staffId: user.staff?.id,
-      facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
+      id: req.user.userId,
+      name: req.user.name,
+      phone: req.user.phone,
+      email: req.user.email,
+      role: req.user.role,
+      patientId: req.user.patientId,
+      doctorId: req.user.doctorId,
+      staffId: req.user.staffId,
+      facilityId: req.user.facilityId,
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
