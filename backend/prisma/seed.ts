@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding Sehat Saathi PostgreSQL database...\n');
+  console.log('🌱 Seeding Sehat Saathi Interconnected SIH Demo Database...\n');
 
   // Clean existing tables in reverse dependency order
   await prisma.prescriptionItem.deleteMany().catch(() => {});
@@ -30,12 +30,31 @@ async function main() {
   await prisma.governmentScheme.deleteMany().catch(() => {});
   await prisma.hospital.deleteMany().catch(() => {});
 
-  const defaultPasswordHash = await bcrypt.hash('SehatSaathi@2026', 10);
+  const demoPasswordHash = await bcrypt.hash('Demo@1234', 10);
 
   // ============================================================
-  // 1. Delhi Government Hospitals
+  // 1. Delhi Hospitals Network
   // ============================================================
-  console.log('🏥 Seeding Delhi Government Hospitals...');
+  console.log('🏥 Seeding Delhi Hospitals...');
+
+  const gghDelhi = await prisma.hospital.create({
+    data: {
+      name: 'Government General Hospital — Delhi',
+      type: 'Government',
+      district: 'Central Delhi',
+      state: 'Delhi',
+      location: 'Civil Lines, Rajpur Road, Delhi 110054',
+      phone: '011-23955000',
+      lat: 28.6750,
+      lng: 77.2250,
+      totalBeds: 680,
+      availableBeds: 84,
+      icuBeds: 60,
+      availableIcu: 8,
+      specialties: 'General Medicine,Cardiology,Paediatrics,Orthopaedics,Emergency',
+    },
+  });
+
   const aiims = await prisma.hospital.create({
     data: {
       name: 'AIIMS New Delhi',
@@ -72,263 +91,156 @@ async function main() {
     },
   });
 
-  const rml = await prisma.hospital.create({
-    data: {
-      name: 'Dr. Ram Manohar Lohia Hospital',
-      type: 'Government',
-      district: 'New Delhi',
-      state: 'Delhi',
-      location: 'Baba Kharak Singh Marg, New Delhi 110001',
-      phone: '011-23404440',
-      lat: 28.6254,
-      lng: 77.2015,
-      totalBeds: 1420,
-      availableBeds: 110,
-      icuBeds: 120,
-      availableIcu: 14,
-      specialties: 'Cardiology,General Medicine,Surgery,Paediatrics,Neurology',
-    },
-  });
-
-  const lnjp = await prisma.hospital.create({
-    data: {
-      name: 'Lok Nayak Hospital (LNJP)',
-      type: 'Government',
-      district: 'Central Delhi',
-      state: 'Delhi',
-      location: 'Jawaharlal Nehru Marg, New Delhi 110002',
-      phone: '011-23236000',
-      lat: 28.6384,
-      lng: 77.2394,
-      totalBeds: 2000,
-      availableBeds: 240,
-      icuBeds: 180,
-      availableIcu: 16,
-      specialties: 'General Medicine,Surgery,Paediatrics,Dermatology,Emergency',
-    },
-  });
-
   // ============================================================
-  // 2. Demo Users & Clinical Staff
+  // 2. Interconnected Demo Accounts (Doctor, Staff, Patient)
   // ============================================================
-  console.log('👤 Seeding Users, Doctors, Staff and Patients...');
+  console.log('👤 Seeding Interconnected Demo Users...');
 
-  // Doctor 1: Dr. Rajesh Kumar
-  const doctor1User = await prisma.user.create({
+  // 👨‍⚕️ Doctor Demo: Dr. Priya Mehta
+  const doctorUser = await prisma.user.create({
     data: {
-      name: 'Dr. Rajesh Kumar',
-      phone: '9876543210',
-      email: 'rajesh.kumar@aiims.gov.in',
-      passwordHash: defaultPasswordHash,
+      name: 'Dr. Priya Mehta',
+      phone: '9876500002',
+      email: 'doctor.demo@sehatsaathi.test',
+      passwordHash: demoPasswordHash,
       role: 'DOCTOR',
     },
   });
 
-  const doctor1 = await prisma.doctor.create({
+  const doctor = await prisma.doctor.create({
     data: {
-      userId: doctor1User.id,
-      name: 'Dr. Rajesh Kumar',
-      specialty: 'Cardiology',
-      department: 'Cardiology & Critical Care',
-      licenseNumber: 'DMC-2014-48291',
-      phone: '9876543210',
-      email: 'rajesh.kumar@aiims.gov.in',
-      facilityId: aiims.id,
-      experience: '12 Years',
-      available: true,
-    },
-  });
-
-  // Doctor 2: Dr. Priya Sharma
-  const doctor2User = await prisma.user.create({
-    data: {
-      name: 'Dr. Priya Sharma',
-      phone: '9876543211',
-      email: 'priya.sharma@safdarjung.gov.in',
-      passwordHash: defaultPasswordHash,
-      role: 'DOCTOR',
-    },
-  });
-
-  const doctor2 = await prisma.doctor.create({
-    data: {
-      userId: doctor2User.id,
-      name: 'Dr. Priya Sharma',
+      userId: doctorUser.id,
+      name: 'Dr. Priya Mehta',
       specialty: 'General Medicine',
-      department: 'Internal Medicine',
-      licenseNumber: 'DMC-2018-62910',
-      phone: '9876543211',
-      email: 'priya.sharma@safdarjung.gov.in',
-      facilityId: safdarjung.id,
-      experience: '8 Years',
+      department: 'General Medicine & Internal Care',
+      licenseNumber: 'DEMO-DOC-001',
+      phone: '9876500002',
+      email: 'doctor.demo@sehatsaathi.test',
+      facilityId: gghDelhi.id,
+      experience: '8 years',
       available: true,
     },
   });
 
-  // Staff User: Sunita Sharma (Operations Lead / Nurse)
+  // 🧑‍💼 Staff Demo: Neha Kapoor
   const staffUser = await prisma.user.create({
     data: {
-      name: 'Sunita Sharma (Nurse)',
-      phone: '9876543220',
-      email: 'sunita.sharma@aiims.gov.in',
-      passwordHash: defaultPasswordHash,
+      name: 'Neha Kapoor',
+      phone: '9876500003',
+      email: 'staff.demo@sehatsaathi.test',
+      passwordHash: demoPasswordHash,
       role: 'HOSPITAL_STAFF',
     },
   });
 
-  await prisma.staff.create({
+  const staff = await prisma.staff.create({
     data: {
       userId: staffUser.id,
-      name: 'Sunita Sharma (Nurse)',
-      role: 'NURSE',
-      phone: '9876543220',
-      email: 'sunita.sharma@aiims.gov.in',
-      facilityId: aiims.id,
+      name: 'Neha Kapoor',
+      role: 'Hospital Operations',
+      phone: '9876500003',
+      email: 'staff.demo@sehatsaathi.test',
+      facilityId: gghDelhi.id,
     },
   });
 
-  // Patient 1: Ramesh Kumar
-  const patient1User = await prisma.user.create({
+  // 👤 Patient Demo: Aarav Sharma
+  const patientUser = await prisma.user.create({
     data: {
-      name: 'Ramesh Kumar',
-      phone: '9876543230',
-      email: 'ramesh.kumar@example.com',
-      passwordHash: defaultPasswordHash,
+      name: 'Aarav Sharma',
+      phone: '9876500001',
+      email: 'patient.demo@sehatsaathi.test',
+      passwordHash: demoPasswordHash,
       role: 'PATIENT',
     },
   });
 
-  const patient1 = await prisma.patient.create({
+  const patient = await prisma.patient.create({
     data: {
-      userId: patient1User.id,
+      userId: patientUser.id,
       mrn: 'MRN-2026-0001',
-      name: 'Ramesh Kumar',
-      age: 52,
+      name: 'Aarav Sharma',
+      age: 28,
       gender: 'Male',
       bloodGroup: 'B+',
-      phone: '9876543230',
-      email: 'ramesh.kumar@example.com',
-      dateOfBirth: '1974-05-12',
-      address: 'House No. 42, Gali No. 3',
-      village: 'Najafgarh',
-      district: 'South West Delhi',
-      state: 'Delhi',
-      pincode: '110043',
-      emergencyContactName: 'Geeta Kumar',
-      emergencyContactPhone: '9876543239',
-      emergencyContactRelation: 'Spouse',
-      riskLevel: 'HIGH',
-      incomeCategory: 'BPL',
-      abhaLinked: true,
-      abhaId: '91-4820-1928-3841',
-    },
-  });
-
-  // Patient 2: Sunita Devi
-  const patient2User = await prisma.user.create({
-    data: {
-      name: 'Sunita Devi',
-      phone: '9876543231',
-      email: 'sunita.devi@example.com',
-      passwordHash: defaultPasswordHash,
-      role: 'PATIENT',
-    },
-  });
-
-  const patient2 = await prisma.patient.create({
-    data: {
-      userId: patient2User.id,
-      mrn: 'MRN-2026-0002',
-      name: 'Sunita Devi',
-      age: 46,
-      gender: 'Female',
-      bloodGroup: 'O+',
-      phone: '9876543231',
-      email: 'sunita.devi@example.com',
-      dateOfBirth: '1980-08-20',
-      address: 'B-12, Sector 4',
-      district: 'North West Delhi',
-      state: 'Delhi',
-      pincode: '110085',
-      emergencyContactName: 'Vikram Singh',
-      emergencyContactPhone: '9876543238',
-      emergencyContactRelation: 'Brother',
-      riskLevel: 'MODERATE',
-      incomeCategory: 'EWS',
-      abhaLinked: false,
-    },
-  });
-
-  // Patient 3: Amit Patel
-  const patient3 = await prisma.patient.create({
-    data: {
-      mrn: 'MRN-2026-0003',
-      name: 'Amit Patel',
-      age: 29,
-      gender: 'Male',
-      bloodGroup: 'A+',
-      phone: '9876543232',
+      phone: '9876500001',
+      email: 'patient.demo@sehatsaathi.test',
+      dateOfBirth: '1998-04-15',
+      address: 'Flat 302, Green View Apartments',
+      village: 'Civil Lines',
+      city: 'Delhi',
       district: 'Central Delhi',
       state: 'Delhi',
-      riskLevel: 'LOW',
+      pincode: '110054',
+      emergencyContactName: 'Kavita Sharma',
+      emergencyContactPhone: '9876500009',
+      emergencyContactRelation: 'Mother',
+      riskLevel: 'MODERATE',
       incomeCategory: 'APL',
+      abhaLinked: true,
+      abhaId: '91-2849-5820-1928',
     },
   });
 
   // ============================================================
-  // 3. Clinical Data (Vitals, Conditions, Encounters)
+  // 3. Clinical Data for Aarav Sharma
   // ============================================================
-  console.log('🩺 Seeding Clinical Encounters and Vitals...');
+  console.log('🩺 Seeding Clinical Vitals, Conditions, & Past Encounter...');
 
-  // Patient 1 Vitals & Condition
+  // Vitals
   await prisma.vital.create({
     data: {
-      patientId: patient1.id,
-      temperature: 37.2,
-      bpSystolic: 145,
-      bpDiastolic: 92,
-      heartRate: 88,
-      respiratoryRate: 18,
-      spO2: 96,
-      height: 172,
-      weight: 78,
-      bmi: 26.4,
+      patientId: patient.id,
+      temperature: 36.8,
+      bpSystolic: 138,
+      bpDiastolic: 88,
+      heartRate: 76,
+      respiratoryRate: 16,
+      spO2: 98.5,
+      height: 176,
+      weight: 73,
+      bmi: 23.6,
     },
   });
 
+  // Active Condition
   await prisma.medicalCondition.create({
     data: {
-      patientId: patient1.id,
-      name: 'Hypertension Stage 2',
+      patientId: patient.id,
+      name: 'Hypertension — mild',
       icdCode: 'I10',
       status: 'ACTIVE',
+      onsetDate: '2026-02-10',
+      notes: 'Stage 1 essential hypertension. Responding well to lifestyle modifications.',
     },
   });
 
+  // Allergy
   await prisma.allergy.create({
     data: {
-      patientId: patient1.id,
-      allergen: 'Penicillin',
-      type: 'DRUG',
-      severity: 'SEVERE',
-      reaction: 'Anaphylaxis / Skin Urticaria',
+      patientId: patient.id,
+      allergen: 'Dust Mites',
+      type: 'ENVIRONMENTAL',
+      severity: 'MILD',
+      reaction: 'Occasional morning sneezing and mild rhinitis',
     },
   });
 
-  // Clinical Encounter for Patient 1
-  const encounter1 = await prisma.encounter.create({
+  // Past Encounter (18 Aug 2026)
+  const pastEncounter = await prisma.encounter.create({
     data: {
-      patientId: patient1.id,
-      doctorId: doctor1.id,
-      chiefComplaint: 'Chest tightness, elevated blood pressure & mild dyspnea',
-      symptoms: JSON.stringify(['Chest pain', 'Shortness of breath', 'Headache']),
-      onset: 'Gradual over 3 days',
-      severity: 'Moderate',
-      diagnosis: 'Essential Hypertension with Angina Pectoris Symptoms',
-      diagnosisIcdCode: 'I20.9',
-      treatmentPlan: 'Prescribed Amlodipine 5mg OD + Telmisartan 40mg OD. Advised low salt diet & ECG monitoring.',
-      riskScore: 78,
-      urgency: 'HIGH',
+      patientId: patient.id,
+      doctorId: doctor.id,
+      chiefComplaint: 'Mild occasional morning headaches, slightly elevated home BP readings',
+      symptoms: JSON.stringify(['Mild headache', 'Occasional fatigue']),
+      onset: 'Gradual over 2 weeks',
+      severity: 'Mild',
+      diagnosis: 'Mild Essential Hypertension (Stage 1)',
+      diagnosisIcdCode: 'I10',
+      treatmentPlan: 'Prescribed Telmisartan 20mg OD in morning. Advised 30 min daily brisk walking and low sodium diet.',
+      riskScore: 42,
+      urgency: 'MODERATE',
+      suggestedDepartment: 'General Medicine',
       status: 'COMPLETED',
     },
   });
@@ -336,103 +248,291 @@ async function main() {
   // Prescription
   await prisma.prescription.create({
     data: {
-      patientId: patient1.id,
-      doctorId: doctor1.id,
-      encounterId: encounter1.id,
-      date: new Date().toISOString().split('T')[0],
-      notes: 'Take medications post meals regularly.',
+      patientId: patient.id,
+      doctorId: doctor.id,
+      encounterId: pastEncounter.id,
+      date: '2026-08-18',
+      notes: 'Take with warm water before breakfast daily.',
       items: {
         create: [
           {
-            medicationName: 'Telmisartan 40mg',
-            dosage: '40mg',
+            medicationName: 'Telmisartan 20mg',
+            dosage: '20mg',
             frequency: 'Once Daily (Morning)',
             duration: '30 days',
-            instructions: 'Take with water before breakfast',
-          },
-          {
-            medicationName: 'Amlodipine 5mg',
-            dosage: '5mg',
-            frequency: 'Once Daily (Night)',
-            duration: '30 days',
-            instructions: 'Take after dinner',
+            instructions: 'Take before breakfast with water',
           },
         ],
       },
     },
   });
 
-  // ============================================================
-  // 4. Appointments & Referrals
-  // ============================================================
-  console.log('📅 Seeding Appointments & Referrals...');
-
-  await prisma.appointment.create({
+  await prisma.medication.create({
     data: {
-      patientId: patient1.id,
-      doctorId: doctor1.id,
-      dateTime: new Date(Date.now() + 86400000).toISOString(),
-      status: 'CONFIRMED',
-      visitType: 'FOLLOW_UP',
-      reason: 'Hypertension and cardiac follow-up review',
+      patientId: patient.id,
+      prescribingDoctorId: doctor.id,
+      name: 'Telmisartan 20mg',
+      dosage: '20mg',
+      frequency: 'Once Daily (Morning)',
+      startDate: '2026-08-18',
+      status: 'ACTIVE',
+      notes: 'Take before breakfast',
     },
   });
 
+  // ============================================================
+  // 4. Interconnected Appointments
+  // ============================================================
+  console.log('📅 Seeding Interconnected Appointments...');
+
+  // Main SIH Demo Appointment: 28 Aug 2026, 10:30 AM (Confirmed)
   await prisma.appointment.create({
     data: {
-      patientId: patient2.id,
-      doctorId: doctor2.id,
-      dateTime: new Date(Date.now() + 172800000).toISOString(),
+      patientId: patient.id,
+      doctorId: doctor.id,
+      dateTime: '2026-08-28T10:30:00.000Z',
       status: 'CONFIRMED',
       visitType: 'NEW',
-      reason: 'General health checkup and seasonal fever evaluation',
+      reason: 'General Consultation & Hypertension Evaluation',
+      notes: 'Patient to present home blood pressure logs.',
     },
   });
+
+  // Follow-up: 04 Sep 2026, 11:00 AM (Scheduled)
+  await prisma.appointment.create({
+    data: {
+      patientId: patient.id,
+      doctorId: doctor.id,
+      dateTime: '2026-09-04T11:00:00.000Z',
+      status: 'REQUESTED',
+      visitType: 'FOLLOW_UP',
+      reason: 'Follow-up blood pressure review and lifestyle check',
+      notes: 'Review response to Telmisartan 20mg.',
+    },
+  });
+
+  // Completed: 18 Aug 2026, 02:00 PM
+  await prisma.appointment.create({
+    data: {
+      patientId: patient.id,
+      doctorId: doctor.id,
+      dateTime: '2026-08-18T14:00:00.000Z',
+      status: 'COMPLETED',
+      visitType: 'NEW',
+      reason: 'Initial intake consultation and baseline vitals recording',
+    },
+  });
+
+  // ============================================================
+  // 5. Interconnected Referral (Doctor -> AIIMS Cardiology)
+  // ============================================================
+  console.log('⭐ Seeding Interconnected Clinical Referral...');
 
   await prisma.referral.create({
     data: {
-      patientId: patient1.id,
-      patientName: patient1.name,
-      fromHospitalId: lnjp.id,
+      patientId: patient.id,
+      patientName: patient.name,
+      fromHospitalId: gghDelhi.id,
       toHospitalId: aiims.id,
       toHospitalName: aiims.name,
-      doctorName: doctor1.name,
+      doctorName: doctor.name,
       specialty: 'Cardiology',
       status: 'PENDING',
-      urgency: 'HIGH',
-      reason: 'Coronary Angiography and Advanced Cardiac Consultation',
+      urgency: 'MODERATE',
+      reason: 'Further cardiovascular evaluation and ambulatory blood pressure monitoring',
+      notes: 'Stage 1 hypertension evaluation; recommended 24h Holter BP monitoring.',
     },
   });
 
   // ============================================================
-  // 5. Emergency Requests (108 SOS)
+  // 6. Interconnected Demo Messages
   // ============================================================
-  console.log('🚑 Seeding Emergency 108 SOS Records...');
+  console.log('💬 Seeding Interconnected Demo Messages...');
+
+  // Thread 1: Patient (Aarav) ↔ Doctor (Dr. Priya)
+  await prisma.message.createMany({
+    data: [
+      {
+        senderId: doctorUser.id,
+        senderName: doctor.name,
+        senderRole: 'DOCTOR',
+        recipientId: patientUser.id,
+        recipientName: patient.name,
+        recipientRole: 'PATIENT',
+        threadId: 'thread-aarav-drpriya',
+        content: 'Hello Aarav, your appointment is confirmed for 28 August at 10:30 AM. Please bring your previous prescriptions if available.',
+        read: true,
+        createdAt: new Date(Date.now() - 7200000), // 2 hours ago
+      },
+      {
+        senderId: patientUser.id,
+        senderName: patient.name,
+        senderRole: 'PATIENT',
+        recipientId: doctorUser.id,
+        recipientName: doctor.name,
+        recipientRole: 'DOCTOR',
+        threadId: 'thread-aarav-drpriya',
+        content: "Thank you, doctor. I'll be there. I also wanted to discuss my recent blood pressure readings.",
+        read: true,
+        createdAt: new Date(Date.now() - 3600000), // 1 hour ago
+      },
+      {
+        senderId: doctorUser.id,
+        senderName: doctor.name,
+        senderRole: 'DOCTOR',
+        recipientId: patientUser.id,
+        recipientName: patient.name,
+        recipientRole: 'PATIENT',
+        threadId: 'thread-aarav-drpriya',
+        content: "Certainly. We'll review them during your consultation.",
+        read: false,
+        createdAt: new Date(Date.now() - 1800000), // 30 mins ago
+      },
+    ],
+  });
+
+  // Thread 2: Staff (Neha) ↔ Doctor (Dr. Priya)
+  await prisma.message.createMany({
+    data: [
+      {
+        senderId: staffUser.id,
+        senderName: staff.name,
+        senderRole: 'HOSPITAL_STAFF',
+        recipientId: doctorUser.id,
+        recipientName: doctor.name,
+        recipientRole: 'DOCTOR',
+        threadId: 'thread-neha-drpriya',
+        content: "Good morning, Doctor. Aarav Sharma's appointment has been confirmed for 10:30 AM.",
+        read: true,
+        createdAt: new Date(Date.now() - 5400000), // 1.5 hours ago
+      },
+      {
+        senderId: doctorUser.id,
+        senderName: doctor.name,
+        senderRole: 'DOCTOR',
+        recipientId: staffUser.id,
+        recipientName: staff.name,
+        recipientRole: 'HOSPITAL_STAFF',
+        threadId: 'thread-neha-drpriya',
+        content: "Thank you. Please ensure his previous records are available before the consultation.",
+        read: false,
+        createdAt: new Date(Date.now() - 3000000),
+      },
+    ],
+  });
+
+  // ============================================================
+  // 7. Interconnected Demo Notifications
+  // ============================================================
+  console.log('🔔 Seeding Role-Specific Notifications...');
+
+  // Patient Notifications
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: patientUser.id,
+        role: 'PATIENT',
+        category: 'APPOINTMENT',
+        title: 'Appointment Confirmed',
+        message: 'Appointment confirmed with Dr. Priya Mehta — 28 Aug, 10:30 AM',
+        urgency: 'NORMAL',
+        read: false,
+        createdAt: new Date(Date.now() - 7200000),
+      },
+      {
+        userId: patientUser.id,
+        role: 'PATIENT',
+        category: 'APPOINTMENT',
+        title: 'Follow-up Scheduled',
+        message: 'Your follow-up appointment has been scheduled for 04 Sep.',
+        urgency: 'NORMAL',
+        read: false,
+        createdAt: new Date(Date.now() - 3600000),
+      },
+    ],
+  });
+
+  // Doctor Notifications
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: doctorUser.id,
+        role: 'DOCTOR',
+        category: 'APPOINTMENT',
+        title: 'New Appointment',
+        message: 'New appointment: Aarav Sharma — 28 Aug, 10:30 AM',
+        urgency: 'NORMAL',
+        read: false,
+        createdAt: new Date(Date.now() - 7200000),
+      },
+      {
+        userId: doctorUser.id,
+        role: 'DOCTOR',
+        category: 'CLINICAL',
+        title: 'Patient Record Updated',
+        message: 'Patient record updated for Aarav Sharma.',
+        urgency: 'NORMAL',
+        read: false,
+        createdAt: new Date(Date.now() - 3600000),
+      },
+    ],
+  });
+
+  // Staff Notifications
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: staffUser.id,
+        role: 'HOSPITAL_STAFF',
+        category: 'APPOINTMENT',
+        title: 'Appointment Scheduled',
+        message: 'Appointment successfully scheduled for Aarav Sharma.',
+        urgency: 'NORMAL',
+        read: false,
+        createdAt: new Date(Date.now() - 7200000),
+      },
+      {
+        userId: staffUser.id,
+        role: 'HOSPITAL_STAFF',
+        category: 'SYSTEM',
+        title: 'Patient Registered',
+        message: 'New patient registered: Aarav Sharma.',
+        urgency: 'NORMAL',
+        read: false,
+        createdAt: new Date(Date.now() - 10800000),
+      },
+    ],
+  });
+
+  // ============================================================
+  // 8. Emergency 108 SOS Record
+  // ============================================================
+  console.log('🚑 Seeding Emergency 108 SOS Dispatch...');
 
   await prisma.emergencyRequest.create({
     data: {
-      phone: '9876543299',
-      location: 'Near Najafgarh Metro Station, Pillar 42, New Delhi',
+      phone: '9876500001',
+      location: 'Near Civil Lines Metro Station, Gate 2, Delhi',
       emergencyType: 'CARDIAC',
-      patientName: 'Kishore Sharma',
-      age: 58,
+      patientName: 'Aarav Sharma',
+      age: 28,
       gender: 'Male',
-      assignedHospitalId: aiims.id,
-      assignedHospitalName: aiims.name,
-      ambulanceId: '108-AMB-4029',
-      status: 'EN_ROUTE',
+      assignedHospitalId: gghDelhi.id,
+      assignedHospitalName: gghDelhi.name,
+      ambulanceId: '108-ALS-1081',
+      status: 'DISPATCHED',
       etaMinutes: 6,
-      notes: 'Acute chest pain with sweating reported by family.',
+      notes: 'Pre-hospital ALS emergency response simulation active.',
     },
   });
 
-  console.log('\n✅ Database seeding completed successfully!');
-  console.log('----------------------------------------------------');
-  console.log('Demo Credentials for Testing:');
-  console.log('Doctor:  Phone 9876543210 | Password SehatSaathi@2026');
-  console.log('Staff:   Phone 9876543220 | Password SehatSaathi@2026');
-  console.log('Patient: Phone 9876543230 | Password SehatSaathi@2026');
-  console.log('----------------------------------------------------');
+  console.log('\n======================================================');
+  console.log('✅ SEED COMPLETED: Interconnected SIH Demo Accounts');
+  console.log('======================================================');
+  console.log('👤 Patient:  Aarav Sharma     | Phone: 9876500001 | Pass: Demo@1234');
+  console.log('👨‍⚕️ Doctor:   Dr. Priya Mehta  | Phone: 9876500002 | Pass: Demo@1234');
+  console.log('🧑‍💼 Staff:    Neha Kapoor      | Phone: 9876500003 | Pass: Demo@1234');
+  console.log('======================================================\n');
 }
 
 main()

@@ -19,8 +19,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, language, setLanguage, t } = useStore();
   const [selectedRole, setSelectedRole] = useState<Role>(Role.PATIENT);
-  const [emailOrMobile, setEmailOrMobile] = useState("9876543230");
-  const [password, setPassword] = useState("SehatSaathi@2026");
+  const [emailOrMobile, setEmailOrMobile] = useState("9876500001");
+  const [password, setPassword] = useState("Demo@1234");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -28,14 +28,14 @@ export default function LoginPage() {
   const handleRoleSelect = (role: Role) => {
     setSelectedRole(role);
     if (role === Role.DOCTOR) {
-      setEmailOrMobile("9876543210");
-      setPassword("SehatSaathi@2026");
+      setEmailOrMobile("9876500002");
+      setPassword("Demo@1234");
     } else if (role === Role.HOSPITAL_STAFF) {
-      setEmailOrMobile("9876543220");
-      setPassword("SehatSaathi@2026");
+      setEmailOrMobile("9876500003");
+      setPassword("Demo@1234");
     } else {
-      setEmailOrMobile("9876543230");
-      setPassword("SehatSaathi@2026");
+      setEmailOrMobile("9876500001");
+      setPassword("Demo@1234");
     }
   };
 
@@ -85,11 +85,11 @@ export default function LoginPage() {
       // Fallback for offline presentation if server unreachable
       login({
         id: "demo-user",
-        name: selectedRole === Role.DOCTOR ? "Dr. Rajesh Kumar" : selectedRole === Role.HOSPITAL_STAFF ? "Sunita Sharma (Nurse)" : "Ramesh Kumar",
-        email: emailOrMobile || "demo@sehatsaathi.in",
+        name: selectedRole === Role.DOCTOR ? "Dr. Priya Mehta" : selectedRole === Role.HOSPITAL_STAFF ? "Neha Kapoor" : "Aarav Sharma",
+        email: emailOrMobile || "patient.demo@sehatsaathi.test",
         role: selectedRole,
-        phone: emailOrMobile || "9876543210",
-        specialty: selectedRole === Role.DOCTOR ? "Cardiology" : undefined,
+        phone: emailOrMobile || "9876500001",
+        specialty: selectedRole === Role.DOCTOR ? "General Medicine" : undefined,
       });
       router.push("/");
     } finally {
@@ -191,23 +191,23 @@ export default function LoginPage() {
           <div className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
               <Shield className="w-4 h-4 text-teal-600" />
-              <span>SIH Demo Credentials (Select role above):</span>
+              <span>SIH Interconnected Demo Credentials (Select role):</span>
             </div>
             <div className="text-[11px] text-slate-600 grid grid-cols-3 gap-2">
               <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p className="font-bold text-slate-900">Doctor</p>
-                <p className="font-mono text-[10px] text-slate-500">9876543210</p>
+                <p className="font-bold text-slate-900">Dr. Priya</p>
+                <p className="font-mono text-[10px] text-slate-500">9876500002</p>
               </div>
               <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p className="font-bold text-slate-900">Staff</p>
-                <p className="font-mono text-[10px] text-slate-500">9876543220</p>
+                <p className="font-bold text-slate-900">Neha (Staff)</p>
+                <p className="font-mono text-[10px] text-slate-500">9876500003</p>
               </div>
               <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p className="font-bold text-slate-900">Patient</p>
-                <p className="font-mono text-[10px] text-slate-500">9876543230</p>
+                <p className="font-bold text-slate-900">Aarav (Patient)</p>
+                <p className="font-mono text-[10px] text-slate-500">9876500001</p>
               </div>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium text-center">Password: <span className="font-mono font-bold text-slate-700">SehatSaathi@2026</span></p>
+            <p className="text-[10px] text-slate-400 font-medium text-center">Password: <span className="font-mono font-bold text-slate-700">Demo@1234</span></p>
           </div>
         </div>
 
