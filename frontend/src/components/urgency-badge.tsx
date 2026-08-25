@@ -3,39 +3,48 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface UrgencyBadgeProps {
-  urgency: Urgency;
+  urgency: Urgency | string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
 export function UrgencyBadge({ urgency, size = 'md', className }: UrgencyBadgeProps) {
-  const getUrgencyConfig = (u: Urgency) => {
-    switch (u) {
+  const getUrgencyConfig = (u: Urgency | string) => {
+    const norm = typeof u === 'string' ? u.toUpperCase() : u;
+    switch (norm) {
       case Urgency.LOW:
-        return { label: "Low Risk", classes: "bg-green-600 hover:bg-green-700 text-white" };
+      case 'LOW':
+      case 'NORMAL':
+        return { label: "Low Risk", classes: "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold" };
       case Urgency.MODERATE:
-        return { label: "Moderate", classes: "bg-amber-500 hover:bg-amber-600 text-white" };
+      case 'MODERATE':
+      case 'MEDIUM':
+        return { label: "Moderate", classes: "bg-amber-50 text-amber-700 border-amber-200 font-semibold" };
       case Urgency.HIGH:
-        return { label: "High Risk", classes: "bg-orange-600 hover:bg-orange-700 text-white" };
+      case 'HIGH':
+        return { label: "High Risk", classes: "bg-orange-50 text-orange-800 border-orange-200 font-semibold" };
       case Urgency.EMERGENCY:
-        return { label: "Emergency", classes: "bg-red-600 hover:bg-red-700 text-white animate-pulse" };
+      case 'EMERGENCY':
+      case 'CRITICAL':
+        return { label: "Emergency", classes: "bg-rose-600 text-white border-rose-700 font-bold shadow-xs animate-pulse" };
       default:
-        return { label: "Unknown", classes: "bg-gray-500 text-white" };
+        return { label: "Standard", classes: "bg-slate-50 text-slate-600 border-slate-200 font-medium" };
     }
   };
 
   const config = getUrgencyConfig(urgency);
   
   const sizeClasses = {
-    sm: "text-xs px-2 py-0.5",
-    md: "text-sm px-2.5 py-0.5",
-    lg: "text-base px-3 py-1",
+    sm: "text-[11px] px-2 py-0.5 rounded-lg",
+    md: "text-xs px-2.5 py-1 rounded-xl",
+    lg: "text-sm px-3.5 py-1.5 rounded-xl font-bold",
   };
 
   return (
     <Badge 
+      variant="outline"
       className={cn(
-        "font-medium border-0",
+        "border",
         config.classes,
         sizeClasses[size],
         className
