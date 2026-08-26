@@ -86,8 +86,12 @@ export default function SignupPage() {
       };
 
       login(user, data.token);
-      toast.success(language === "hi" ? `सेहत साथी में आपका स्वागत है, ${fullName}!` : `Welcome to Sehat Saathi, ${fullName}!`);
-      router.push("/");
+      toast.success(
+        language === "hi" 
+          ? `सेहत साथी में आपका स्वागत है, ${fullName}! कृपया अपना प्रोफ़ाइल पूरा करें।` 
+          : `Welcome to Sehat Saathi, ${fullName}! Let's complete your profile.`
+      );
+      router.push("/profile?onboarding=true");
     } catch (err) {
       console.error("Signup network error:", err);
       // Fallback in-memory
@@ -99,7 +103,7 @@ export default function SignupPage() {
         phone: phone.trim(),
         specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
       });
-      router.push("/");
+      router.push("/profile?onboarding=true");
     } finally {
       setLoading(false);
     }

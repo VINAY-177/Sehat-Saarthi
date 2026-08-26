@@ -28,6 +28,7 @@ interface StoreState {
   currentUser: AuthUser | null;
   login: (user: AuthUser, token?: string) => void;
   logout: () => void;
+  updateUserProfile: (profileData: Partial<AuthUser>) => Promise<boolean>;
   getAuthHeaders: () => Record<string, string>;
 
   // Patients
@@ -565,10 +566,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 role: verifiedUser.role as Role,
                 phone: verifiedUser.phone,
                 email: verifiedUser.email || `${verifiedUser.phone}@sehatsaathi.in`,
-                patientId: verifiedUser.patientId,
-                doctorId: verifiedUser.doctorId,
-                staffId: verifiedUser.staffId,
-                facilityId: verifiedUser.facilityId,
+                patientId: verifiedUser.patientId || verifiedUser.patient?.id,
+                doctorId: verifiedUser.doctorId || verifiedUser.doctor?.id,
+                staffId: verifiedUser.staffId || verifiedUser.staff?.id,
+                facilityId: verifiedUser.facilityId || verifiedUser.doctor?.facilityId || verifiedUser.staff?.facilityId,
+                facilityName: verifiedUser.facilityName || verifiedUser.doctor?.facility?.name || verifiedUser.staff?.facility?.name,
+                specialty: verifiedUser.specialty || verifiedUser.doctor?.specialty,
+                dateOfBirth: verifiedUser.patient?.dateOfBirth,
+                age: verifiedUser.patient?.age,
+                gender: verifiedUser.patient?.gender,
+                bloodGroup: verifiedUser.patient?.bloodGroup,
+                address: verifiedUser.patient?.address,
+                village: verifiedUser.patient?.village,
+                city: verifiedUser.patient?.city,
+                district: verifiedUser.patient?.district,
+                state: verifiedUser.patient?.state,
+                pincode: verifiedUser.patient?.pincode,
+                emergencyContactName: verifiedUser.patient?.emergencyContactName,
+                emergencyContactPhone: verifiedUser.patient?.emergencyContactPhone,
+                emergencyContactRelation: verifiedUser.patient?.emergencyContactRelation,
+                allergies: Array.isArray(verifiedUser.patient?.allergies)
+                  ? verifiedUser.patient.allergies.map((a: { allergen?: string } | string) => typeof a === 'string' ? a : (a?.allergen || '')).filter(Boolean)
+                  : [],
+                conditions: Array.isArray(verifiedUser.patient?.conditions)
+                  ? verifiedUser.patient.conditions.map((c: { name?: string } | string) => typeof c === 'string' ? c : (c?.name || '')).filter(Boolean)
+                  : [],
+                registrationNumber: verifiedUser.doctor?.licenseNumber,
+                department: verifiedUser.doctor?.department || verifiedUser.staff?.role,
+                experience: verifiedUser.doctor?.experience,
+                designation: verifiedUser.staff?.role,
+                createdAt: verifiedUser.createdAt,
               };
               setCurrentUser(mappedUser);
               setRole(mappedUser.role);
@@ -582,6 +609,88 @@ export function DataProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
     }
   }, []);
+
+  const updateUserProfile = useCallback(async (profileData: Partial<AuthUser>): Promise<boolean> => {
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+    try {
+      const res = await fetch(`${API}/api/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.user) {
+        const u = data.user;
+        const updatedAuthUser: AuthUser = {
+          id: u.id,
+          name: u.name,
+          role: u.role as Role,
+          phone: u.phone,
+          email: u.email || `${u.phone}@sehatsaathi.in`,
+          patientId: u.patientId || u.patient?.id,
+          doctorId: u.doctorId || u.doctor?.id,
+          staffId: u.staffId || u.staff?.id,
+          facilityId: u.facilityId,
+          facilityName: u.facilityName,
+          specialty: u.specialty,
+          dateOfBirth: u.patient?.dateOfBirth || profileData.dateOfBirth,
+          age: u.patient?.age ?? profileData.age,
+          gender: u.patient?.gender || profileData.gender,
+          bloodGroup: u.patient?.bloodGroup || profileData.bloodGroup,
+          address: u.patient?.address || profileData.address,
+          village: u.patient?.village || profileData.village,
+          city: u.patient?.city || profileData.city,
+          district: u.patient?.district || profileData.district,
+          state: u.patient?.state || profileData.state,
+          pincode: u.patient?.pincode || profileData.pincode,
+          emergencyContactName: u.patient?.emergencyContactName || profileData.emergencyContactName,
+          emergencyContactPhone: u.patient?.emergencyContactPhone || profileData.emergencyContactPhone,
+          emergencyContactRelation: u.patient?.emergencyContactRelation || profileData.emergencyContactRelation,
+          allergies: Array.isArray(u.patient?.allergies)
+            ? u.patient.allergies.map((a: { allergen?: string } | string) => typeof a === 'string' ? a : (a?.allergen || '')).filter(Boolean)
+            : (profileData.allergies || []),
+          conditions: Array.isArray(u.patient?.conditions)
+            ? u.patient.conditions.map((c: { name?: string } | string) => typeof c === 'string' ? c : (c?.name || '')).filter(Boolean)
+            : (profileData.conditions || []),
+          registrationNumber: u.doctor?.licenseNumber || profileData.registrationNumber,
+          department: u.doctor?.department || u.staff?.role || profileData.department,
+          experience: u.doctor?.experience || profileData.experience,
+          designation: u.staff?.role || profileData.designation,
+        };
+
+        setCurrentUser(updatedAuthUser);
+        if (data.token) {
+          setToken(data.token);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+          }
+        }
+        if (typeof window !== "undefined") {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedAuthUser));
+        }
+        return true;
+      }
+    } catch (err) {
+      console.warn("Backend update error, falling back to client store:", err);
+    }
+
+    // Fallback client store update
+    if (currentUser) {
+      const updated = { ...currentUser, ...profileData };
+      setCurrentUser(updated as AuthUser);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+      }
+      return true;
+    }
+    return false;
+  }, [currentUser, token]);
 
   // Fetch patients from PostgreSQL backend
   const refreshPatients = useCallback(async () => {
@@ -777,6 +886,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     currentUser,
     login,
     logout,
+    updateUserProfile,
     getAuthHeaders,
     patients,
     addPatient,

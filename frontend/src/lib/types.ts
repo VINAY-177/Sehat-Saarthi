@@ -381,6 +381,28 @@ export interface AuthUser {
   patientId?: string;
   doctorId?: string;
   staffId?: string;
+  // Extended Profile Fields
+  dateOfBirth?: string;
+  age?: number;
+  gender?: string;
+  bloodGroup?: string | null;
+  address?: string;
+  village?: string;
+  city?: string;
+  district?: string;
+  state?: string;
+  pincode?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  allergies?: string[];
+  conditions?: string[];
+  registrationNumber?: string;
+  department?: string;
+  experience?: string;
+  designation?: string;
+  shift?: string;
+  createdAt?: string;
 }
 
 export interface SchemeEligibilityCheck {

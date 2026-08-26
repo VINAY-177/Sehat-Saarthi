@@ -317,8 +317,10 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-// Get Current Profile (Me)
-app.get('/api/auth/me', requireAuth, async (req: AuthRequest, res: Response) => {
+const VALID_BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+// Get Current Profile (Me & Profile alias)
+app.get(['/api/auth/me', '/api/profile'], requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
@@ -362,27 +364,335 @@ app.get('/api/auth/me', requireAuth, async (req: AuthRequest, res: Response) => 
           doctorId: user.doctor?.id,
           staffId: user.staff?.id,
           facilityId: user.doctor?.facilityId || user.staff?.facilityId || undefined,
+          facilityName: user.doctor?.facility?.name || user.staff?.facility?.name,
+          specialty: user.doctor?.specialty,
         });
       }
     } catch (dbErr) {
       console.warn('DB lookup for profile fallback to token payload:', dbErr);
     }
 
-    // Fallback directly to verified JWT payload
+    // Fallback directly to verified JWT payload or demo account
+    const demoMatch = DEMO_ACCOUNTS.find(a => a.userId === req.user?.userId || a.phone === req.user?.phone);
     res.json({
       id: req.user.userId,
-      name: req.user.name,
-      phone: req.user.phone,
-      email: req.user.email,
+      name: demoMatch?.name || req.user.name,
+      phone: demoMatch?.phone || req.user.phone,
+      email: demoMatch?.email || req.user.email,
       role: req.user.role,
       patientId: req.user.patientId,
       doctorId: req.user.doctorId,
       staffId: req.user.staffId,
       facilityId: req.user.facilityId,
+      specialty: (demoMatch as any)?.specialty,
+      patient: req.user.role === 'PATIENT' ? {
+        id: req.user.patientId || 'pat-aarav-001',
+        name: demoMatch?.name || req.user.name,
+        age: 28,
+        gender: 'Male',
+        bloodGroup: 'B+',
+        district: 'Central Delhi',
+        state: 'Delhi',
+        village: 'Connaught Place',
+        emergencyContactName: 'Ramesh Sharma',
+        emergencyContactPhone: '9876500099',
+        allergies: [{ allergen: 'Penicillin' }],
+        conditions: [{ name: 'Hypertension — mild' }],
+      } : undefined,
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
     res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+// Update Profile (PUT /api/profile & PUT /api/auth/me)
+app.put(['/api/profile', '/api/auth/me'], requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const {
+      name, phone, email,
+      // Patient fields
+      dateOfBirth, age, gender, bloodGroup, address, village, city, district, state, pincode,
+      emergencyContactName, emergencyContactPhone, emergencyContactRelation,
+      allergies, conditions,
+      // Doctor fields
+      specialty, department, registrationNumber, licenseNumber, experience, facilityId,
+      // Staff fields
+      designation, shift, employeeId
+    } = req.body;
+
+    // Frontend & Backend Field Validations
+    if (name !== undefined && (!name || typeof name !== 'string' || name.trim().length < 2)) {
+      return res.status(400).json({ error: 'Full name must be at least 2 characters long' });
+    }
+
+    if (phone !== undefined && (!phone || typeof phone !== 'string' || phone.trim().length < 4)) {
+      return res.status(400).json({ error: 'Valid phone number is required' });
+    }
+
+    if (email && typeof email === 'string' && email.trim().length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ error: 'Invalid email address format' });
+      }
+    }
+
+    if (bloodGroup && typeof bloodGroup === 'string' && bloodGroup.trim().length > 0) {
+      const formattedBlood = bloodGroup.trim().toUpperCase();
+      if (!VALID_BLOOD_GROUPS.includes(formattedBlood)) {
+        return res.status(400).json({ error: `Invalid blood group. Please select one of: ${VALID_BLOOD_GROUPS.join(', ')}` });
+      }
+    }
+
+    if (age !== undefined && age !== null && age !== '') {
+      const numAge = parseInt(String(age), 10);
+      if (isNaN(numAge) || numAge < 0 || numAge > 125) {
+        return res.status(400).json({ error: 'Please enter a valid age between 0 and 125' });
+      }
+    }
+
+    let updatedUser: any = null;
+
+    try {
+      // 1. Update Core User model
+      const userUpdateData: any = {};
+      if (name) userUpdateData.name = name.trim();
+      if (phone) userUpdateData.phone = String(phone).trim();
+      if (email !== undefined) userUpdateData.email = email ? String(email).trim() : null;
+
+      const user = await prisma.user.update({
+        where: { id: req.user.userId },
+        data: userUpdateData,
+      });
+
+      // 2. Update Role-specific models
+      if (req.user.role === 'PATIENT' || req.user.role === 'CITIZEN') {
+        const patientData: any = {
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+        };
+        if (dateOfBirth !== undefined) patientData.dateOfBirth = dateOfBirth;
+        if (age !== undefined && age !== null && age !== '') patientData.age = parseInt(String(age), 10);
+        if (gender !== undefined) patientData.gender = gender;
+        if (bloodGroup !== undefined) patientData.bloodGroup = bloodGroup ? bloodGroup.trim().toUpperCase() : null;
+        if (address !== undefined) patientData.address = address;
+        if (village !== undefined) patientData.village = village;
+        if (city !== undefined) patientData.city = city;
+        if (district !== undefined) patientData.district = district;
+        if (state !== undefined) patientData.state = state;
+        if (pincode !== undefined) patientData.pincode = pincode;
+        if (emergencyContactName !== undefined) patientData.emergencyContactName = emergencyContactName;
+        if (emergencyContactPhone !== undefined) patientData.emergencyContactPhone = emergencyContactPhone;
+        if (emergencyContactRelation !== undefined) patientData.emergencyContactRelation = emergencyContactRelation;
+
+        const updatedPatient = await prisma.patient.upsert({
+          where: { userId: user.id },
+          create: {
+            userId: user.id,
+            mrn: `MRN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            age: patientData.age || 30,
+            gender: patientData.gender || 'Other',
+            district: patientData.district || 'New Delhi',
+            state: patientData.state || 'Delhi',
+            ...patientData,
+          },
+          update: patientData,
+        });
+
+        // Update allergies if supplied
+        if (Array.isArray(allergies)) {
+          await prisma.allergy.deleteMany({ where: { patientId: updatedPatient.id } });
+          for (const item of allergies) {
+            const allergen = typeof item === 'string' ? item.trim() : (item?.allergen || '').trim();
+            if (allergen) {
+              await prisma.allergy.create({
+                data: {
+                  patientId: updatedPatient.id,
+                  allergen,
+                  type: 'OTHER',
+                  severity: 'MILD',
+                },
+              });
+            }
+          }
+        }
+
+        // Update conditions if supplied
+        if (Array.isArray(conditions)) {
+          await prisma.medicalCondition.deleteMany({ where: { patientId: updatedPatient.id } });
+          for (const item of conditions) {
+            const condName = typeof item === 'string' ? item.trim() : (item?.name || '').trim();
+            if (condName) {
+              await prisma.medicalCondition.create({
+                data: {
+                  patientId: updatedPatient.id,
+                  name: condName,
+                  status: 'ACTIVE',
+                },
+              });
+            }
+          }
+        }
+      } else if (req.user.role === 'DOCTOR') {
+        const doctorData: any = {
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+        };
+        if (specialty !== undefined) doctorData.specialty = specialty;
+        if (department !== undefined) doctorData.department = department;
+        if (licenseNumber !== undefined || registrationNumber !== undefined) {
+          doctorData.licenseNumber = licenseNumber || registrationNumber;
+        }
+        if (experience !== undefined) doctorData.experience = experience;
+        if (facilityId !== undefined) doctorData.facilityId = facilityId;
+
+        await prisma.doctor.upsert({
+          where: { userId: user.id },
+          create: {
+            userId: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            specialty: doctorData.specialty || 'General Medicine',
+            department: doctorData.department || 'General Medicine',
+            facilityId: doctorData.facilityId || null,
+            ...doctorData,
+          },
+          update: doctorData,
+        });
+      } else if (req.user.role === 'HOSPITAL_STAFF') {
+        const staffData: any = {
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+        };
+        if (designation !== undefined || department !== undefined) {
+          staffData.role = designation || department || 'NURSE';
+        }
+        if (facilityId !== undefined) staffData.facilityId = facilityId;
+
+        await prisma.staff.upsert({
+          where: { userId: user.id },
+          create: {
+            userId: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            facilityId: staffData.facilityId || null,
+            role: staffData.role || 'NURSE',
+            ...staffData,
+          },
+          update: staffData,
+        });
+      }
+
+      // 3. Fetch full updated profile
+      const fullUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          patient: {
+            include: {
+              conditions: true,
+              allergies: true,
+              vitals: { orderBy: { recordedAt: 'desc' }, take: 1 },
+            },
+          },
+          doctor: { include: { facility: true } },
+          staff: { include: { facility: true } },
+        },
+      });
+
+      if (fullUser) {
+        updatedUser = {
+          id: fullUser.id,
+          name: fullUser.name,
+          phone: fullUser.phone,
+          email: fullUser.email,
+          role: fullUser.role,
+          patient: fullUser.patient,
+          doctor: fullUser.doctor,
+          staff: fullUser.staff,
+          patientId: fullUser.patient?.id,
+          doctorId: fullUser.doctor?.id,
+          staffId: fullUser.staff?.id,
+          facilityId: fullUser.doctor?.facilityId || fullUser.staff?.facilityId || undefined,
+          facilityName: fullUser.doctor?.facility?.name || fullUser.staff?.facility?.name,
+          specialty: fullUser.doctor?.specialty,
+        };
+      }
+    } catch (dbErr) {
+      console.warn('DB update failed, using in-memory demo update fallback:', dbErr);
+    }
+
+    // Fallback in-memory update for demo accounts
+    if (!updatedUser) {
+      const demoAccount = DEMO_ACCOUNTS.find(a => a.userId === req.user?.userId || a.phone === req.user?.phone);
+      if (demoAccount) {
+        if (name) demoAccount.name = name.trim();
+        if (phone) demoAccount.phone = phone.trim();
+        if (email) demoAccount.email = email.trim();
+        if (specialty) (demoAccount as any).specialty = specialty;
+      }
+
+      updatedUser = {
+        id: req.user.userId,
+        name: name || req.user.name,
+        phone: phone || req.user.phone,
+        email: email || req.user.email,
+        role: req.user.role,
+        patientId: req.user.patientId,
+        doctorId: req.user.doctorId,
+        staffId: req.user.staffId,
+        facilityId: facilityId || req.user.facilityId,
+        specialty: specialty || (req.user as any).specialty,
+        patient: {
+          id: req.user.patientId,
+          name: name || req.user.name,
+          age: age ? parseInt(String(age), 10) : 28,
+          gender: gender || 'Male',
+          bloodGroup: bloodGroup || 'B+',
+          district: district || 'Central Delhi',
+          state: state || 'Delhi',
+          village: village || address || 'Connaught Place',
+          emergencyContactName,
+          emergencyContactPhone,
+          allergies: Array.isArray(allergies) ? allergies.map(a => ({ allergen: typeof a === 'string' ? a : a?.allergen })) : [],
+          conditions: Array.isArray(conditions) ? conditions.map(c => ({ name: typeof c === 'string' ? c : c?.name })) : [],
+        },
+      };
+    }
+
+    // Create fresh JWT token
+    const tokenPayload = {
+      userId: updatedUser.id,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      phone: updatedUser.phone,
+      email: updatedUser.email,
+      patientId: updatedUser.patientId,
+      doctorId: updatedUser.doctorId,
+      staffId: updatedUser.staffId,
+      facilityId: updatedUser.facilityId,
+    };
+    const newToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({
+      message: 'Profile updated successfully',
+      token: newToken,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update user profile' });
   }
 });
 
