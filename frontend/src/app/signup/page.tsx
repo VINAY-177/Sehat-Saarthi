@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { 
   Users, Stethoscope, Building2, Mail, Lock, Eye, EyeOff, ArrowRight,
-  Shield, User, Phone, Siren, Loader2
+  Shield, User, Phone, Siren, Loader2, Activity
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -116,8 +116,83 @@ export default function SignupPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 lg:p-8 font-sans relative">
+    <div className="min-h-screen bg-slate-50/90 flex items-center justify-center p-4 lg:p-8 font-sans relative overflow-hidden">
       
+      {/* ── Background Decorative Elements ── */}
+      {/* 1. Subtle Dot Matrix Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:28px_28px] opacity-30 pointer-events-none" />
+
+      {/* 2. Ambient Soft Glow Blobs */}
+      <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-gradient-to-br from-teal-500/15 via-emerald-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-36 -right-36 w-[550px] h-[550px] bg-gradient-to-tl from-sky-500/15 via-teal-400/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 -right-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/3 -left-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* 3. Subtle Medical Cross & ECG Pulse Vector */}
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none opacity-[0.035] text-teal-900">
+        <svg className="w-full max-w-6xl h-48 stroke-current" fill="none" viewBox="0 0 1200 120">
+          <path d="M0,60 L280,60 L300,15 L320,105 L340,35 L360,85 L380,60 L750,60 L770,15 L790,105 L810,35 L830,85 L850,60 L1200,60" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+
+      {/* 4. Subtle Concentric Orbital Ring */}
+      <div className="absolute w-[800px] h-[800px] rounded-full border border-teal-500/10 pointer-events-none -top-48 -left-48" />
+      <div className="absolute w-[800px] h-[800px] rounded-full border border-emerald-500/10 pointer-events-none -bottom-48 -right-48" />
+
+      {/* ── Left Side Floating Badges (Visible on xl screens) ── */}
+      <div className="hidden xl:flex flex-col gap-4 absolute left-12 top-1/2 -translate-y-1/2 w-72 pointer-events-none select-none animate-in fade-in slide-in-from-left-4 duration-500">
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-teal-50 text-teal-700 border border-teal-100">
+              <Shield className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-slate-800">ABDM &amp; ABHA Ready</p>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+            Unified digital health IDs with strict 256-bit record encryption.
+          </p>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-red-50 text-red-600 border border-red-100">
+              <Siren className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-slate-800">108 Emergency Network</p>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+            Live ambulance dispatch &amp; instant GPS facility routing.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Right Side Floating Badges (Visible on xl screens) ── */}
+      <div className="hidden xl:flex flex-col gap-4 absolute right-12 top-1/2 -translate-y-1/2 w-72 pointer-events-none select-none animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <Activity className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-slate-800">AI Clinical Triage</p>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+            Intelligent risk scoring to prioritize emergency &amp; specialty cases.
+          </p>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-slate-800">15 Delhi Gov Hospitals</p>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+            Live ICU, oxygen, and emergency bed availability telemetry.
+          </p>
+        </div>
+      </div>
+
       {/* Top Floating Action Bar (Emergency SOS + Language Switcher) */}
       <div className="absolute top-5 right-5 sm:top-6 sm:right-6 z-30 flex items-center gap-3">
         {/* Pinned 108 Emergency SOS Button */}
@@ -147,7 +222,7 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => setLanguage("hi")}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
               language === "hi"
                 ? "bg-[#0d9488] text-white shadow-xs"
                 : "text-slate-500 hover:text-slate-800"
@@ -158,7 +233,7 @@ export default function SignupPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-[500px] my-10 animate-in fade-in zoom-in-95 duration-300">
+      <div className="w-full max-w-[500px] my-10 relative z-10 animate-in fade-in zoom-in-95 duration-300">
         
         {/* Header Branding */}
         <div className="text-center mb-8">
@@ -176,7 +251,7 @@ export default function SignupPage() {
         </div>
 
         {/* Card Form */}
-        <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-md">
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 sm:p-10 border border-slate-200/90 shadow-xl shadow-slate-200/50">
           
           <div className="mb-6">
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
