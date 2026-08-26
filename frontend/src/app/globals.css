@@ -108,6 +108,16 @@
   }
 }
 
+/* ── Leaflet map z-index containment ── */
+/* Force the map into its own stacking context so Leaflet's internal
+   z-index (200–1000 on tile/control panes) stays scoped to the map
+   and never overlaps dialogs, modals, or dropdowns (z-50). */
+.leaflet-container {
+  z-index: 0 !important;
+  isolation: isolate;
+}
+
+
 /* ── Sehat Saathi Dashboard Animations ── */
 @layer utilities {
   /* Staggered card entrance delays */
