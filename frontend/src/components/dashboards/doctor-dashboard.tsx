@@ -79,16 +79,18 @@ export function DoctorDashboard() {
       
       {/* Ultra-subtle Ambient Clinical Background Accents */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-radial from-sky-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-600/8 via-teal-600/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-radial from-teal-600/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-600/6 via-sky-600/3 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
+      {/* Subtle Clinical Dot Matrix Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
 
-      <div className="relative max-w-7xl mx-auto space-y-6 pb-12 z-10">
+      <div className="relative max-w-7xl mx-auto space-y-6 pb-12 z-10 page-enter">
         
         {/* 1. Header Section — Doctor Greeting & On-Duty Status */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 section-enter">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               {greeting}, {currentUser?.name || "Dr. Priya Mehta"} 👋
@@ -102,14 +104,14 @@ export function DoctorDashboard() {
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-subtle" />
               <span>On Duty</span>
               <span className="text-slate-300">•</span>
               <span className="text-slate-500 font-medium">{currentUser?.specialty || "General Medicine"}</span>
             </div>
 
             <Link href="/assess">
-              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all">
+              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all btn-press">
                 <Activity className="w-3.5 h-3.5" />
                 {language === "hi" ? "नया क्लिनिकल ट्राइएज" : "New AI Triage"}
               </Button>
@@ -269,19 +271,19 @@ export function DoctorDashboard() {
               </CardHeader>
               <CardContent className="p-4 space-y-2.5">
                 <Link href="/assess" className="block">
-                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-xs">
+                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-xs btn-press">
                     <Activity className="h-4 w-4" />
                     New AI Clinical Assessment
                   </Button>
                 </Link>
                 <Link href="/patients" className="block">
-                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700" variant="outline">
+                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 btn-press" variant="outline">
                     <Users className="h-4 w-4 text-sky-700" />
                     Patient Records (360° EHR)
                   </Button>
                 </Link>
                 <Link href="/referrals" className="block">
-                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700" variant="outline">
+                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 btn-press" variant="outline">
                     <Ambulance className="h-4 w-4 text-amber-600" />
                     Initiate Tertiary Referral
                   </Button>

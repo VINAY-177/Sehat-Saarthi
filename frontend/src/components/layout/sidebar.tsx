@@ -141,7 +141,7 @@ export function Sidebar() {
       <div className="px-3.5 pt-2 pb-1 border-t border-slate-100">
         <Link
           href="/emergency"
-          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-700 hover:bg-rose-100 hover:border-rose-300 font-bold text-xs transition-all shadow-xs group"
+          className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-700 hover:bg-rose-100 hover:border-rose-300 font-bold text-xs transition-all shadow-xs group btn-press"
         >
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 bg-rose-600 text-white rounded-lg group-hover:scale-105 transition-transform">

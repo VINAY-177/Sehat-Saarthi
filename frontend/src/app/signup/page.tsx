@@ -279,7 +279,7 @@ export default function SignupPage() {
                       onClick={() => setSelectedRole(value)}
                       className={`
                         flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl
-                        border transition-all duration-200 cursor-pointer
+                        border transition-all duration-200 cursor-pointer btn-press
                         ${isActive
                           ? "border-[#1e3a5f] bg-[#1e3a5f] text-white shadow-sm"
                           : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
@@ -394,7 +394,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-sm shadow-sm hover:shadow-md transition-all gap-2 mt-2"
+              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-sm shadow-sm hover:shadow-md transition-all gap-2 mt-2 btn-press"
             >
               {loading ? (
                 <>

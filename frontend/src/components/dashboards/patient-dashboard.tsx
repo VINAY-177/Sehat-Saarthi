@@ -52,18 +52,20 @@ export function PatientDashboard() {
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
       
-      {/* Subtle Ambient Healthcare Corner Gradients (Soft, low-opacity) */}
+      {/* Subtle Ambient Healthcare Corner Gradients & Vector Motifs */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-radial from-teal-500/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-teal-500/10 via-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-radial from-emerald-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-500/8 via-teal-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
+      {/* Subtle Dot Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
 
-      <div className="relative space-y-6 max-w-6xl mx-auto pb-10 z-10">
+      <div className="relative space-y-6 max-w-6xl mx-auto pb-10 z-10 page-enter">
         
         {/* 1. Header Section - Clean & Personal Greeting */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mt-1">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mt-1 section-enter">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               {greeting}, {firstName} 👋
@@ -77,7 +79,7 @@ export function PatientDashboard() {
 
           <Link href="/scheduling">
             <Button 
-              className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-xs gap-1.5 transition-all card-hover"
+              className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-xs gap-1.5 transition-all card-hover btn-press"
             >
               <Calendar className="w-3.5 h-3.5" />
               {language === "hi" ? "नया अपॉइंटमेंट बुक करें" : "Book New Appointment"}
@@ -86,7 +88,7 @@ export function PatientDashboard() {
         </div>
 
         {/* 2. Primary Hero Feature: Next Appointment Spotlight Card */}
-        <div className="bg-white border border-teal-100 rounded-2xl p-5 sm:p-6 shadow-xs relative overflow-hidden card-hover section-enter">
+        <div className="bg-white border border-teal-100 rounded-2xl p-5 sm:p-6 shadow-xs relative overflow-hidden card-hover section-enter stagger-1">
           {/* Subtle teal accent border on top */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500" />
 
@@ -130,7 +132,7 @@ export function PatientDashboard() {
             <div className="flex items-center gap-3 shrink-0">
               <Link href="/scheduling">
                 <Button 
-                  className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-11 px-5 rounded-xl shadow-xs transition-all flex items-center gap-2"
+                  className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-11 px-5 rounded-xl shadow-xs transition-all flex items-center gap-2 btn-press"
                 >
                   {language === "hi" ? "अपॉइंटमेंट देखें" : "View Appointment"}
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -323,7 +325,7 @@ export function PatientDashboard() {
               </div>
 
               <Link href={currentUser?.patientId ? `/patients/${currentUser.patientId}` : "/profile"} className="block">
-                <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700">
+                <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 btn-press">
                   {language === "hi" ? "पूर्ण स्वास्थ्य रिकॉर्ड देखें" : "View Full Health Records"}
                   <ChevronRight className="w-3.5 h-3.5 ml-1" />
                 </Button>

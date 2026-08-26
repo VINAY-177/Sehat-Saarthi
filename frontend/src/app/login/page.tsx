@@ -189,17 +189,29 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Left Panel: Brand & Illustration ── */}
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-12 xl:p-16 relative overflow-hidden">
+      {/* ── Left Panel: Healthcare Visual with Image & Dark/Teal Overlay ── */}
+      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-12 xl:p-16 relative overflow-hidden animate-in fade-in duration-700">
 
-        {/* Soft decorative gradient blobs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-[#e8f4f8] to-transparent rounded-full blur-3xl opacity-60 -translate-y-1/4 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-[#eef0fb] to-transparent rounded-full blur-3xl opacity-50 translate-y-1/4 -translate-x-1/4" />
+        {/* High-quality healthcare environment background image */}
+        <Image
+          src="/login-bg.jpg"
+          alt="Healthcare consultation"
+          fill
+          priority
+          className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
+        />
 
-        {/* Top: Logo */}
+        {/* Healthcare Dark & Deep Teal Transparent Protective Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-teal-950/85 to-slate-900/75 backdrop-blur-[2px]" />
+
+        {/* Subtle Decorative Ambient Glows */}
+        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
+
+        {/* Top: Logo with White Text Contrast */}
         <div className="relative z-10">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 p-1.5 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white/95 backdrop-blur-sm shadow-md border border-white/20 p-1.5 flex items-center justify-center">
               <Image
                 src="/logo.png"
                 alt="Sehat Saathi"
@@ -210,59 +222,59 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <h1 className="text-[22px] font-bold tracking-tight text-[#1a1f36]">
+              <h1 className="text-[22px] font-bold tracking-tight text-white">
                 {t("brandName")}
               </h1>
-              <p className="text-[11px] font-bold text-[#0d9488] tracking-wide">
+              <p className="text-[11px] font-bold text-teal-300 tracking-wide">
                 {t("tagline")}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Middle: Headline + Sub */}
+        {/* Middle: Headline + Subtext */}
         <div className="relative z-10 space-y-6 max-w-lg">
-          <h2 className="text-[38px] xl:text-[42px] font-extrabold text-[#1a1f36] leading-[1.15] tracking-tight">
+          <h2 className="text-[36px] xl:text-[42px] font-extrabold text-white leading-[1.15] tracking-tight">
             {t("heroHeadline")}{" "}
-            <span className="text-[#1e3a5f]">{t("heroHeadlineAccent")}</span>
+            <span className="text-teal-300">{t("heroHeadlineAccent")}</span>
           </h2>
-          <p className="text-[16px] xl:text-[17px] text-[#64748b] leading-relaxed max-w-md">
+          <p className="text-[15px] xl:text-[16px] text-slate-200 leading-relaxed max-w-md">
             {t("heroSubtext")}
           </p>
 
-          {/* Quick Demo Info Pill */}
-          <div className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-xs space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-              <Shield className="w-4 h-4 text-teal-600" />
+          {/* Quick Demo Info Pill (Glassmorphic) */}
+          <div className="p-4 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/15 shadow-lg space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-teal-300">
+              <Shield className="w-4 h-4 text-teal-400" />
               <span>SIH Interconnected Demo Credentials (Select role):</span>
             </div>
-            <div className="text-[11px] text-slate-600 grid grid-cols-3 gap-2">
-              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p className="font-bold text-slate-900">Dr. Priya</p>
-                <p className="font-mono text-[10px] text-slate-500">9876500002</p>
+            <div className="text-[11px] text-slate-200 grid grid-cols-3 gap-2">
+              <div className="bg-white/10 p-2 rounded-xl border border-white/10">
+                <p className="font-bold text-white">Dr. Priya</p>
+                <p className="font-mono text-[10px] text-teal-200">9876500002</p>
               </div>
-              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p className="font-bold text-slate-900">Neha (Staff)</p>
-                <p className="font-mono text-[10px] text-slate-500">9876500003</p>
+              <div className="bg-white/10 p-2 rounded-xl border border-white/10">
+                <p className="font-bold text-white">Neha (Staff)</p>
+                <p className="font-mono text-[10px] text-teal-200">9876500003</p>
               </div>
-              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <p className="font-bold text-slate-900">Aarav (Patient)</p>
-                <p className="font-mono text-[10px] text-slate-500">9876500001</p>
+              <div className="bg-white/10 p-2 rounded-xl border border-white/10">
+                <p className="font-bold text-white">Aarav (Patient)</p>
+                <p className="font-mono text-[10px] text-teal-200">9876500001</p>
               </div>
             </div>
-            <p className="text-[10px] text-slate-400 font-medium text-center">Password: <span className="font-mono font-bold text-slate-700">Demo@1234</span></p>
+            <p className="text-[10px] text-slate-400 font-medium text-center">Password: <span className="font-mono font-bold text-white">Demo@1234</span></p>
           </div>
         </div>
 
         {/* Bottom: Trust line */}
-        <div className="relative z-10 flex items-center gap-3 text-[13px] text-[#94a3b8] font-medium">
-          <Shield className="w-4 h-4 text-[#94a3b8]" />
+        <div className="relative z-10 flex items-center gap-2.5 text-[12px] text-slate-300 font-medium">
+          <Shield className="w-4 h-4 text-teal-400" />
           <span>{t("trustBadgeText")}</span>
         </div>
       </div>
 
       {/* ── Right Panel: Login Form ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-white lg:border-l border-[#eef0f4]">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-white lg:border-l border-[#eef0f4] animate-in fade-in slide-in-from-bottom-3 duration-500">
         <div className="w-full max-w-[420px] space-y-8">
 
           {/* Mobile-only logo */}
@@ -368,7 +380,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all duration-200 group gap-2"
+              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all duration-200 group gap-2 btn-press"
             >
               {loading ? (
                 <>

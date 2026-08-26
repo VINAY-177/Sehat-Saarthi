@@ -46,16 +46,18 @@ export function StaffDashboard() {
       
       {/* Ultra-subtle Ambient Operations Background Accents */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-radial from-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/8 via-teal-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-radial from-teal-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-500/6 via-indigo-500/3 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
+      {/* Subtle Operations Dot Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
 
-      <div className="relative max-w-7xl mx-auto space-y-6 pb-12 z-10">
+      <div className="relative max-w-7xl mx-auto space-y-6 pb-12 z-10 page-enter">
         
         {/* 1. Header Section — Staff Greeting & Hospital Affiliation */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 section-enter">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
               {greeting}, {firstName} 👋
@@ -69,14 +71,14 @@ export function StaffDashboard() {
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-indigo-500 pulse-subtle" />
               <span>Operations Lead</span>
               <span className="text-slate-300">•</span>
               <span className="text-slate-600 font-medium">{userFacility?.name || "GGH Delhi"}</span>
             </div>
 
             <Link href="/register">
-              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all">
+              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all btn-press">
                 <UserPlus className="w-3.5 h-3.5" />
                 {language === "hi" ? "मरीज पंजीकरण" : "Register Patient"}
               </Button>
