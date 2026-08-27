@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useStore } from "@/lib/store";
 import { Urgency } from "@/lib/types";
 import { StatCard } from "@/components/stat-card";
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 
 export function DoctorDashboard() {
-  const { patients, screenings, referrals, currentUser, language } = useStore();
+  const { patients, screenings, referrals, currentUser, language, appointments = [] } = useStore();
 
   const emergencyScreenings = screenings.filter((s) => s.urgency === Urgency.EMERGENCY);
   const pendingReferrals = referrals.filter((r) => r.status === "PENDING");
@@ -37,46 +38,40 @@ export function DoctorDashboard() {
     greeting = "Good night";
   }
 
-  // Interconnected SIH Demo Appointments Schedule for Dr. Priya Mehta
-  const todayAppointments = [
-    {
-      id: "appt-001",
-      time: "10:30 AM",
-      patientName: "Aarav Sharma",
-      patientId: "pat-aarav-001",
-      age: "28M",
-      type: "General Consultation",
-      reason: "Hypertension Review & BP Monitoring",
-      status: "CONFIRMED",
-      statusColor: "emerald",
-    },
-    {
-      id: "appt-002",
-      time: "11:45 AM",
-      patientName: "Sunita Verma",
-      patientId: "pat-sunita-002",
-      age: "45F",
-      type: "Follow-up",
-      reason: "Routine Diabetes Checkup",
-      status: "WAITING",
-      statusColor: "amber",
-    },
-    {
-      id: "appt-003",
-      time: "02:00 PM",
-      patientName: "Rajesh Gupta",
-      patientId: "pat-rajesh-003",
-      age: "52M",
-      type: "Clinical Review",
-      reason: "Post-discharge Medication Adjustment",
-      status: "UPCOMING",
-      statusColor: "slate",
-    },
-  ];
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppointments = appointments
+    .filter((a) => {
+      const apptDate = a.dateTime?.split('T')[0];
+      return a.doctorId === currentUser?.doctorId && apptDate === today && !['CANCELLED', 'DECLINED'].includes(a.status);
+    })
+    .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+    .map((a) => ({
+      id: a.id,
+      patientName: a.patient?.name || 'Patient',
+      patientId: a.patient?.id || '',
+      age: a.patient?.age || '-',
+      gender: a.patient?.gender || '-',
+      time: new Date(a.dateTime).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      type: a.visitType || 'NEW',
+      status: a.status,
+      reason: a.reason || 'General Consultation',
+    }));
 
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
       
+      {/* Visible Clinical ECG Telemetry Background Image */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+        <Image
+          src="/doctor-bg.jpg"
+          alt="Clinical ECG background"
+          fill
+          priority
+          className="object-cover object-top opacity-15 mix-blend-multiply"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-slate-50/85 to-[#F8FAFC]" />
+      </div>
+
       {/* Ultra-subtle Ambient Clinical Background Accents */}
       <div 
         className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-600/8 via-teal-600/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
@@ -97,8 +92,8 @@ export function DoctorDashboard() {
             </h1>
             <p className="text-slate-500 text-sm font-medium">
               {language === "hi" 
-                ? "आज आपके पास 3 अपॉइंटमेंट निर्धारित हैं।" 
-                : "You have 3 appointments scheduled for today."}
+                ? `आज आपके पास ${todayAppointments.length} अपॉइंटमेंट निर्धारित हैं।` 
+                : `You have ${todayAppointments.length} appointments scheduled for today.`}
             </p>
           </div>
 
@@ -123,9 +118,9 @@ export function DoctorDashboard() {
         <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title={language === "hi" ? "आज के अपॉइंटमेंट्स" : "Today's Appointments"}
-            value="3"
+            value={todayAppointments.length.toString()}
             icon={<Calendar className="h-4 w-4 text-sky-700" />}
-            description="1 Confirmed, 1 Waiting, 1 Upcoming"
+            description={`${todayAppointments.length} appointments today`}
             className="stagger-1"
           />
           <StatCard
@@ -168,61 +163,72 @@ export function DoctorDashboard() {
                   </CardDescription>
                 </div>
                 <Badge variant="outline" className="text-[11px] bg-sky-50 text-sky-800 border-sky-200 font-bold px-2.5 py-0.5">
-                  3 Patients Scheduled
+                  {todayAppointments.length} Patients Scheduled
                 </Badge>
               </CardHeader>
 
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-100">
-                  {todayAppointments.map((appt) => (
-                    <div key={appt.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors">
-                      <div className="flex items-start gap-3.5">
-                        <div className="p-2.5 bg-slate-100 rounded-xl text-slate-700 font-bold text-xs shrink-0 flex flex-col items-center justify-center min-w-[65px]">
-                          <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-500" />
-                          <span>{appt.time}</span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-extrabold text-sm text-slate-900">{appt.patientName}</span>
-                            <span className="text-[11px] text-slate-400 font-medium">({appt.age})</span>
-                            
-                            {/* Status Indicators: Green=Completed, Amber=Waiting, Slate=Upcoming */}
-                            {appt.status === "CONFIRMED" && (
-                              <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0">
-                                Confirmed
-                              </Badge>
-                            )}
-                            {appt.status === "WAITING" && (
-                              <Badge className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold py-0">
-                                Waiting
-                              </Badge>
-                            )}
-                            {appt.status === "UPCOMING" && (
-                              <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] font-medium py-0">
-                                Upcoming
-                              </Badge>
-                            )}
+                  {todayAppointments.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 text-sm">
+                      No appointments scheduled for today.
+                    </div>
+                  ) : (
+                    todayAppointments.map((appt) => (
+                      <div key={appt.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors">
+                        <div className="flex items-start gap-3.5">
+                          <div className="p-2.5 bg-slate-100 rounded-xl text-slate-700 font-bold text-xs shrink-0 flex flex-col items-center justify-center min-w-[65px]">
+                            <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-500" />
+                            <span>{appt.time}</span>
                           </div>
 
-                          <p className="text-xs text-slate-600 font-medium">
-                            <span className="font-semibold text-slate-700">{appt.type}:</span> {appt.reason}
-                          </p>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-sm text-slate-900">{appt.patientName}</span>
+                              <span className="text-[11px] text-slate-400 font-medium">({appt.age})</span>
+                              
+                              {/* Status Indicators: Green=Completed, Amber=Waiting, Slate=Upcoming */}
+                              {appt.status === "CONFIRMED" && (
+                                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0">
+                                  Confirmed
+                                </Badge>
+                              )}
+                              {appt.status === "WAITING" && (
+                                <Badge className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold py-0">
+                                  Waiting
+                                </Badge>
+                              )}
+                              {appt.status === "CHECKED_IN" && (
+                                <Badge className="bg-blue-50 text-blue-800 border-blue-200 text-[10px] font-bold py-0">
+                                  Checked In
+                                </Badge>
+                              )}
+                              {(appt.status === "REQUESTED" || appt.status === "UPCOMING") && (
+                                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] font-medium py-0">
+                                  Upcoming
+                                </Badge>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-slate-600 font-medium">
+                              <span className="font-semibold text-slate-700">{appt.type}:</span> {appt.reason}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 sm:self-center shrink-0">
+                          <Link href={`/patients/${appt.patientId}`}>
+                            <Button 
+                              size="sm" 
+                              className="h-8 text-xs font-bold rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 shadow-xs"
+                            >
+                              View Patient
+                            </Button>
+                          </Link>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2 sm:self-center shrink-0">
-                        <Link href={`/patients/${appt.patientId}`}>
-                          <Button 
-                            size="sm" 
-                            className="h-8 text-xs font-bold rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 shadow-xs"
-                          >
-                            View Patient
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

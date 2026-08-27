@@ -7,7 +7,6 @@ import { UrgencyBadge } from "@/components/urgency-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Urgency } from "@/lib/types";
 import { 
   Building2, 
   Bed, 
@@ -21,7 +20,12 @@ import {
 } from "lucide-react";
 
 export function StaffDashboard() {
-  const { currentUser, facilities, referrals, patients, stats, language } = useStore();
+  const { currentUser, facilities, referrals = [], patients = [], stats, language, appointments = [] } = useStore();
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppointments = appointments
+    .filter((a) => a.dateTime?.startsWith(today) && !['CANCELLED', 'DECLINED'].includes(a.status))
+    .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
 
   const userFacility = currentUser?.facilityId 
     ? facilities?.find(f => f.id === currentUser.facilityId)
@@ -249,42 +253,34 @@ export function StaffDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      <tr className="hover:bg-slate-50/60 transition-colors">
-                        <td className="px-5 py-3.5 font-bold text-slate-900">Aarav Sharma</td>
-                        <td className="px-3 py-3.5">
-                          <UrgencyBadge urgency={Urgency.MODERATE} size="sm" />
-                        </td>
-                        <td className="px-3 py-3.5">
-                          <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold">
-                            PENDING
-                          </Badge>
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <Link href="/referrals">
-                            <Button variant="ghost" size="sm" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
-                              View
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-slate-50/60 transition-colors">
-                        <td className="px-5 py-3.5 font-bold text-slate-900">Sunita Verma</td>
-                        <td className="px-3 py-3.5">
-                          <UrgencyBadge urgency={Urgency.LOW} size="sm" />
-                        </td>
-                        <td className="px-3 py-3.5">
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
-                            ACCEPTED
-                          </Badge>
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <Link href="/referrals">
-                            <Button variant="ghost" size="sm" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
-                              View
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
+                      {referrals && referrals.length > 0 ? (
+                        referrals.slice(0, 3).map((ref) => (
+                          <tr key={ref.id} className="hover:bg-slate-50/60 transition-colors">
+                            <td className="px-5 py-3.5 font-bold text-slate-900">{ref.patientName}</td>
+                            <td className="px-3 py-3.5">
+                              <UrgencyBadge urgency={ref.urgency} size="sm" />
+                            </td>
+                            <td className="px-3 py-3.5">
+                              <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold">
+                                {ref.status}
+                              </Badge>
+                            </td>
+                            <td className="px-5 py-3.5 text-right">
+                              <Link href="/referrals">
+                                <Button variant="ghost" size="sm" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
+                                  View
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-5 py-6 text-center text-slate-400 font-medium">
+                            No incoming referrals pending
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -306,25 +302,25 @@ export function StaffDashboard() {
                 </Link>
               </CardHeader>
               <CardContent className="p-4 space-y-2.5">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-slate-900">Aarav Sharma</span>
-                    <p className="text-[11px] text-slate-500">Dr. Priya Mehta • 10:30 AM</p>
+                {todayAppointments && todayAppointments.length > 0 ? (
+                  todayAppointments.slice(0, 4).map((appt) => (
+                    <div key={appt.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                      <div className="space-y-0.5">
+                        <span className="font-bold text-slate-900">{appt.patient?.name || 'Patient'}</span>
+                        <p className="text-[11px] text-slate-500">
+                          {appt.doctor?.name || 'Doctor'} • {new Date(appt.dateTime).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                        </p>
+                      </div>
+                      <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
+                        {appt.status}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-6 text-center text-slate-400 font-medium text-xs">
+                    No OPD appointments scheduled for today
                   </div>
-                  <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
-                    Confirmed
-                  </Badge>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                  <div className="space-y-0.5">
-                    <span className="font-bold text-slate-900">Sunita Verma</span>
-                    <p className="text-[11px] text-slate-500">Dr. Priya Mehta • 11:45 AM</p>
-                  </div>
-                  <Badge className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold">
-                    Waiting
-                  </Badge>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>

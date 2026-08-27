@@ -16,6 +16,22 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const correlationId = `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  (req as any).correlationId = correlationId;
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.userId || 'anon';
+    const role = authReq.user?.role || '-';
+    console.log(`[${correlationId}] ${req.method} ${req.path} ${res.statusCode} ${duration}ms user=${userId} role=${role}`);
+  });
+  
+  next();
+});
+
 // ============================================================
 // Auth Middleware & Types
 // ============================================================
@@ -1052,7 +1068,7 @@ app.post('/api/doctors', async (req: Request, res: Response) => {
 // ============================================================
 
 // List patients with query search and filters
-app.get('/api/patients', async (req: Request, res: Response) => {
+app.get('/api/patients', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { search, riskLevel, district, gender, condition } = req.query;
 
@@ -1122,7 +1138,7 @@ app.get('/api/patients', async (req: Request, res: Response) => {
 });
 
 // Get Patient 360° Profile (Complete relational record)
-app.get('/api/patients/:id', async (req: Request, res: Response) => {
+app.get('/api/patients/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
     const patient = await prisma.patient.findUnique({
@@ -1204,7 +1220,7 @@ function pickPatientFields(data: any) {
 }
 
 // Create new patient (used by Staff Registration flow)
-app.post('/api/patients', async (req: Request, res: Response) => {
+app.post('/api/patients', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const data = pickPatientFields(req.body);
     if (!data.name) {
@@ -1236,7 +1252,7 @@ app.post('/api/patients', async (req: Request, res: Response) => {
 });
 
 // Update patient
-app.put('/api/patients/:id', async (req: Request, res: Response) => {
+app.put('/api/patients/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
     const data = req.body;
@@ -1255,7 +1271,7 @@ app.put('/api/patients/:id', async (req: Request, res: Response) => {
 // ============================================================
 
 // Get encounters for a patient
-app.get('/api/patients/:id/encounters', async (req: Request, res: Response) => {
+app.get('/api/patients/:id/encounters', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
     const encounters = await prisma.encounter.findMany({
@@ -1275,7 +1291,7 @@ app.get('/api/patients/:id/encounters', async (req: Request, res: Response) => {
 });
 
 // Create full encounter with optional vitals & prescription
-app.post('/api/patients/:id/encounters', async (req: Request, res: Response) => {
+app.post('/api/patients/:id/encounters', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const patientId = req.params.id as string;
     const {
@@ -1301,126 +1317,130 @@ app.post('/api/patients/:id/encounters', async (req: Request, res: Response) => 
       labOrders,
     } = req.body;
 
-    const encounter = await prisma.encounter.create({
-      data: {
-        patientId,
-        doctorId,
-        appointmentId,
-        chiefComplaint,
-        symptoms: typeof symptoms === 'object' ? JSON.stringify(symptoms) : symptoms,
-        onset,
-        severity,
-        hpiNotes,
-        diagnosis,
-        diagnosisIcdCode,
-        secondaryDiagnoses: typeof secondaryDiagnoses === 'object' ? JSON.stringify(secondaryDiagnoses) : secondaryDiagnoses,
-        clinicalNotes,
-        treatmentPlan,
-        riskScore,
-        urgency,
-        riskFactors: typeof riskFactors === 'object' ? JSON.stringify(riskFactors) : riskFactors,
-        suggestedDepartment,
-        followUpDate,
-        status: 'COMPLETED',
-      },
-    });
-
-    // Update patient risk level if provided
-    if (urgency) {
-      await prisma.patient.update({
-        where: { id: patientId },
-        data: { riskLevel: urgency },
-      });
-    }
-
-    // Save vitals if attached
-    if (vitals && Object.keys(vitals).length > 0) {
-      let bmi: number | undefined = undefined;
-      if (vitals.height && vitals.weight) {
-        const heightM = vitals.height / 100;
-        bmi = parseFloat((vitals.weight / (heightM * heightM)).toFixed(1));
-      }
-
-      await prisma.vital.create({
-        data: {
-          patientId,
-          encounterId: encounter.id,
-          temperature: vitals.temperature,
-          bpSystolic: vitals.bpSystolic,
-          bpDiastolic: vitals.bpDiastolic,
-          heartRate: vitals.heartRate || vitals.pulse,
-          respiratoryRate: vitals.respiratoryRate,
-          spO2: vitals.spO2,
-          height: vitals.height,
-          weight: vitals.weight,
-          bmi,
-        },
-      });
-    }
-
-    // Save Prescription if items exist
-    if (prescriptionItems && Array.isArray(prescriptionItems) && prescriptionItems.length > 0) {
-      await prisma.prescription.create({
+    const result = await prisma.$transaction(async (tx) => {
+      const encounter = await tx.encounter.create({
         data: {
           patientId,
           doctorId,
-          encounterId: encounter.id,
-          date: new Date().toISOString().split('T')[0],
-          notes: treatmentPlan,
-          items: {
-            create: prescriptionItems.map((item: any) => ({
-              medicationName: item.medicationName,
-              dosage: item.dosage,
-              frequency: item.frequency,
-              duration: item.duration || '7 days',
-              instructions: item.instructions,
-            })),
-          },
+          appointmentId,
+          chiefComplaint,
+          symptoms: typeof symptoms === 'object' ? JSON.stringify(symptoms) : symptoms,
+          onset,
+          severity,
+          hpiNotes,
+          diagnosis,
+          diagnosisIcdCode,
+          secondaryDiagnoses: typeof secondaryDiagnoses === 'object' ? JSON.stringify(secondaryDiagnoses) : secondaryDiagnoses,
+          clinicalNotes,
+          treatmentPlan,
+          riskScore,
+          urgency,
+          riskFactors: typeof riskFactors === 'object' ? JSON.stringify(riskFactors) : riskFactors,
+          suggestedDepartment,
+          followUpDate,
+          status: 'COMPLETED',
         },
       });
 
-      // Also add active medications
-      for (const item of prescriptionItems) {
-        await prisma.medication.create({
-          data: {
-            patientId,
-            prescribingDoctorId: doctorId,
-            name: item.medicationName,
-            dosage: item.dosage,
-            frequency: item.frequency,
-            startDate: new Date().toISOString().split('T')[0],
-            status: 'ACTIVE',
-            notes: item.instructions,
-          },
+      // Update patient risk level if provided
+      if (urgency) {
+        await tx.patient.update({
+          where: { id: patientId },
+          data: { riskLevel: urgency },
         });
       }
-    }
 
-    // Save Lab Orders if selected
-    if (labOrders && Array.isArray(labOrders) && labOrders.length > 0) {
-      for (const testName of labOrders) {
-        await prisma.labReport.create({
+      // Save vitals if attached
+      if (vitals && Object.keys(vitals).length > 0) {
+        let bmi: number | undefined = undefined;
+        if (vitals.height && vitals.weight) {
+          const heightM = vitals.height / 100;
+          bmi = parseFloat((vitals.weight / (heightM * heightM)).toFixed(1));
+        }
+
+        await tx.vital.create({
           data: {
             patientId,
             encounterId: encounter.id,
-            orderingDoctorId: doctorId,
-            testName,
-            category: 'BIOCHEMISTRY',
-            status: 'ORDERED',
+            temperature: vitals.temperature,
+            bpSystolic: vitals.bpSystolic,
+            bpDiastolic: vitals.bpDiastolic,
+            heartRate: vitals.heartRate || vitals.pulse,
+            respiratoryRate: vitals.respiratoryRate,
+            spO2: vitals.spO2,
+            height: vitals.height,
+            weight: vitals.weight,
+            bmi,
           },
         });
       }
-    }
 
-    // Update appointment status if linked
-    if (appointmentId) {
-      await prisma.appointment.update({
-        where: { id: appointmentId },
-        data: { status: 'COMPLETED' },
-      });
-    }
+      // Save Prescription if items exist
+      if (prescriptionItems && Array.isArray(prescriptionItems) && prescriptionItems.length > 0) {
+        await tx.prescription.create({
+          data: {
+            patientId,
+            doctorId,
+            encounterId: encounter.id,
+            date: new Date().toISOString().split('T')[0],
+            notes: treatmentPlan,
+            items: {
+              create: prescriptionItems.map((item: any) => ({
+                medicationName: item.medicationName,
+                dosage: item.dosage,
+                frequency: item.frequency,
+                duration: item.duration || '7 days',
+                instructions: item.instructions,
+              })),
+            },
+          },
+        });
 
-    res.status(201).json(encounter);
+        // Also add active medications
+        for (const item of prescriptionItems) {
+          await tx.medication.create({
+            data: {
+              patientId,
+              prescribingDoctorId: doctorId,
+              name: item.medicationName,
+              dosage: item.dosage,
+              frequency: item.frequency,
+              startDate: new Date().toISOString().split('T')[0],
+              status: 'ACTIVE',
+              notes: item.instructions,
+            },
+          });
+        }
+      }
+
+      // Save Lab Orders if selected
+      if (labOrders && Array.isArray(labOrders) && labOrders.length > 0) {
+        for (const testName of labOrders) {
+          await tx.labReport.create({
+            data: {
+              patientId,
+              encounterId: encounter.id,
+              orderingDoctorId: doctorId,
+              testName,
+              category: 'BIOCHEMISTRY',
+              status: 'ORDERED',
+            },
+          });
+        }
+      }
+
+      // Update appointment status if linked
+      if (appointmentId) {
+        await tx.appointment.update({
+          where: { id: appointmentId },
+          data: { status: 'COMPLETED' },
+        });
+      }
+      
+      return encounter;
+    });
+
+    res.status(201).json(result);
   } catch (error) {
     console.error('Error creating encounter:', error);
     res.status(500).json({ error: 'Failed to create clinical encounter' });
@@ -1432,7 +1452,7 @@ app.post('/api/patients/:id/encounters', async (req: Request, res: Response) => 
 // ============================================================
 
 // Appointments List
-app.get('/api/appointments', async (req: Request, res: Response) => {
+app.get('/api/appointments', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { doctorId, patientId, status, date } = req.query;
     const where: any = {};
@@ -1462,7 +1482,7 @@ app.get('/api/appointments', async (req: Request, res: Response) => {
 });
 
 // Book Appointment
-app.post('/api/appointments', async (req: Request, res: Response) => {
+app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     let { patientId, doctorId, dateTime, status, visitType, reason, notes, patientName, phone, specialty } = req.body;
 
@@ -1523,6 +1543,41 @@ app.post('/api/appointments', async (req: Request, res: Response) => {
       },
       include: { patient: true, doctor: true },
     });
+    // Auto-create notifications for appointment
+    try {
+      await prisma.notification.createMany({
+        data: [
+          {
+            userId: appt.patient?.userId || null,
+            role: 'PATIENT',
+            category: 'APPOINTMENT',
+            title: 'Appointment Confirmed',
+            message: `Your appointment with ${appt.doctor?.name || 'your doctor'} has been scheduled.`,
+            link: '/scheduling',
+            urgency: 'NORMAL',
+          },
+          {
+            userId: appt.doctor?.userId || null,
+            role: 'DOCTOR',
+            category: 'APPOINTMENT',
+            title: 'New Appointment Scheduled',
+            message: `New appointment with patient ${appt.patient?.name || 'a patient'}.`,
+            link: '/scheduling',
+            urgency: 'NORMAL',
+          },
+          {
+            role: 'HOSPITAL_STAFF',
+            category: 'APPOINTMENT',
+            title: 'Appointment Scheduled',
+            message: `${appt.patient?.name || 'A patient'} has an appointment with ${appt.doctor?.name || 'a doctor'}.`,
+            link: '/scheduling',
+            urgency: 'NORMAL',
+          },
+        ],
+      });
+    } catch (notifErr) {
+      console.warn('Failed to create appointment notifications:', notifErr);
+    }
     res.status(201).json(appt);
   } catch (error) {
     console.error('Error creating appointment:', error);
@@ -1530,7 +1585,7 @@ app.post('/api/appointments', async (req: Request, res: Response) => {
   }
 });
 
-app.put('/api/appointments/:id', async (req: Request, res: Response) => {
+app.put('/api/appointments/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
     const appt = await prisma.appointment.update({
@@ -1544,7 +1599,7 @@ app.put('/api/appointments/:id', async (req: Request, res: Response) => {
 });
 
 // Referrals
-app.get('/api/referrals', async (req: Request, res: Response) => {
+app.get('/api/referrals', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const referrals = await prisma.referral.findMany({
       include: {
@@ -1559,7 +1614,7 @@ app.get('/api/referrals', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/referrals', async (req: Request, res: Response) => {
+app.post('/api/referrals', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const referral = await prisma.referral.create({
       data: req.body,
@@ -1750,7 +1805,7 @@ app.get('/api/schemes', async (req: Request, res: Response) => {
 // 8. Messaging, Notifications & Stats
 // ============================================================
 
-app.get('/api/messages', async (req: Request, res: Response) => {
+app.get('/api/messages', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { threadId, userId } = req.query;
     const where: any = {};
@@ -1771,7 +1826,7 @@ app.get('/api/messages', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/messages', async (req: Request, res: Response) => {
+app.post('/api/messages', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const data = req.body;
     const message = await prisma.message.create({
@@ -1786,7 +1841,7 @@ app.post('/api/messages', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/notifications', async (req: Request, res: Response) => {
+app.get('/api/notifications', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { role, userId, unreadOnly } = req.query;
     const where: any = {};
@@ -1812,7 +1867,7 @@ app.get('/api/notifications', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/notifications', async (req: Request, res: Response) => {
+app.post('/api/notifications', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const notification = await prisma.notification.create({
       data: req.body,
@@ -1823,7 +1878,7 @@ app.post('/api/notifications', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/api/stats', async (req: Request, res: Response) => {
+app.get('/api/stats', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const totalPatients = await prisma.patient.count();
     const emergencyPatients = await prisma.patient.count({ where: { riskLevel: 'EMERGENCY' } });
@@ -1851,6 +1906,72 @@ app.get('/api/stats', async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+app.put('/api/notifications/:id/read', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { read } = req.body;
+    const notification = await prisma.notification.update({
+      where: { id },
+      data: { read: read !== undefined ? read : true },
+    });
+    res.json(notification);
+  } catch (err) {
+    console.error('Failed to update notification read status:', err);
+    res.status(500).json({ error: 'Failed to update notification' });
+  }
+});
+
+app.put('/api/notifications/read-all', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+    await prisma.notification.updateMany({
+      where: {
+        OR: [
+          { userId: userId },
+          { role: role },
+          { role: 'ALL' },
+        ],
+        read: false,
+      },
+      data: { read: true },
+    });
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (err) {
+    console.error('Failed to mark all notifications read:', err);
+    res.status(500).json({ error: 'Failed to update notifications' });
+  }
+});
+
+app.put('/api/referrals/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const referral = await prisma.referral.update({
+      where: { id },
+      data: req.body,
+      include: { patient: true, toHospital: true },
+    });
+    res.json(referral);
+  } catch (err) {
+    console.error('Failed to update referral:', err);
+    res.status(500).json({ error: 'Failed to update referral' });
+  }
+});
+
+app.put('/api/hospitals/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const hospital = await prisma.hospital.update({
+      where: { id },
+      data: req.body,
+    });
+    res.json(hospital);
+  } catch (err) {
+    console.error('Failed to update hospital:', err);
+    res.status(500).json({ error: 'Failed to update hospital' });
   }
 });
 

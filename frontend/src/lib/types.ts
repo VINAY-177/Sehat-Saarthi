@@ -381,6 +381,7 @@ export interface AuthUser {
   patientId?: string;
   doctorId?: string;
   staffId?: string;
+  abhaId?: string;
   // Extended Profile Fields
   dateOfBirth?: string;
   age?: number;

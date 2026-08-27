@@ -29,6 +29,7 @@ import { UrgencyBadge } from "@/components/urgency-badge";
 
 interface Thread {
   id: string;
+  contactId?: string;
   contactName: string;
   contactRole: "DOCTOR" | "PATIENT" | "STAFF" | "AMBULANCE";
   contactSpecialtyOrMrn?: string;
@@ -52,6 +53,9 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // Load patients for context
   useEffect(() => {
     async function loadPatients() {
@@ -66,415 +70,111 @@ export default function MessagesPage() {
     loadPatients();
   }, []);
 
-  // 1. Patient / Citizen Isolated Threads
-  const patientThreads: Thread[] = useMemo(() => [
-    {
-      id: "pat-thread-1",
-      contactName: "Dr. Priya Sharma",
-      contactRole: "DOCTOR",
-      contactSpecialtyOrMrn: "Senior Cardiologist (AIIMS New Delhi)",
-      facilityName: "AIIMS New Delhi",
-      lastMessage: "Always take Aspirin strictly after breakfast. I have updated your digital prescription.",
-      lastMessageTime: "10:45 AM",
-      unreadCount: 0,
-      online: true,
-      category: "DOCTORS",
-      avatarBg: "bg-teal-100 text-teal-800",
-    },
-    {
-      id: "pat-thread-2",
-      contactName: "Dr. Rajesh Kumar",
-      contactRole: "DOCTOR",
-      contactSpecialtyOrMrn: "General Physician (OPD Clinic)",
-      facilityName: "Safdarjung Hospital",
-      lastMessage: "Your blood test results show normal glucose levels. Keep up the dietary plan.",
-      lastMessageTime: "Yesterday",
-      unreadCount: 1,
-      online: false,
-      category: "DOCTORS",
-      avatarBg: "bg-blue-100 text-blue-800",
-    },
-    {
-      id: "pat-thread-3",
-      contactName: "AIIMS OPD Helpdesk & Tokens",
-      contactRole: "STAFF",
-      contactSpecialtyOrMrn: "Queue & OPD Token Support Desk",
-      facilityName: "AIIMS New Delhi",
-      lastMessage: "Token #24 confirmed for Room 102 tomorrow morning at 10:30 AM.",
-      lastMessageTime: "Yesterday",
-      unreadCount: 0,
-      online: true,
-      category: "HELPDESK",
-      avatarBg: "bg-emerald-100 text-emerald-800",
-    },
-    {
-      id: "pat-thread-4",
-      contactName: "108 Emergency Care Response",
-      contactRole: "AMBULANCE",
-      contactSpecialtyOrMrn: "Emergency Dispatch & Triage Desk",
-      facilityName: "National Health Mission",
-      lastMessage: "For urgent ambulance support, tap the 108 emergency button or type your location.",
-      lastMessageTime: "2 days ago",
-      unreadCount: 0,
-      online: true,
-      category: "AMBULANCE",
-      avatarBg: "bg-rose-100 text-rose-800",
-    },
-  ], []);
+  // Fetch messages from API
+  useEffect(() => {
+    async function loadMessages() {
+      if (!currentUser?.id) return;
+      try {
+        setIsLoading(true);
+        const { apiGet } = await import("@/lib/api");
+        const data = await apiGet<Message[]>(`/api/messages?userId=${currentUser.id}`);
+        setAllMessages(data);
+      } catch (err) {
+        console.error("Failed to load messages:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadMessages();
+  }, [currentUser?.id]);
 
-  // 2. Doctor / Clinician Isolated Threads
-  const doctorThreads: Thread[] = useMemo(() => [
-    {
-      id: "doc-thread-1",
-      contactName: "Amit Sharma",
-      contactRole: "PATIENT",
-      contactSpecialtyOrMrn: "MRN-2025-0001 (Post-Op Cardiology)",
-      patientId: patients[0]?.id || "p-1",
-      lastMessage: "Doctor, I took the morning dosage of Atorvastatin. Feeling much better.",
-      lastMessageTime: "10:45 AM",
-      unreadCount: 0,
-      online: true,
-      category: "PATIENTS",
-      avatarBg: "bg-teal-100 text-teal-800",
-    },
-    {
-      id: "doc-thread-2",
-      contactName: "Ramesh Yadav",
-      contactRole: "PATIENT",
-      contactSpecialtyOrMrn: "MRN-2025-0003 (Acute COPD & Triage)",
-      patientId: patients[2]?.id || "p-3",
-      lastMessage: "Doctor, chest tightness has decreased after nebulization.",
-      lastMessageTime: "09:15 AM",
-      unreadCount: 2,
-      online: true,
-      category: "PATIENTS",
-      avatarBg: "bg-amber-100 text-amber-800",
-    },
-    {
-      id: "doc-thread-3",
-      contactName: "Dr. Vikram Sethi",
-      contactRole: "DOCTOR",
-      contactSpecialtyOrMrn: "Orthopedic Surgeon (Safdarjung)",
-      lastMessage: "Please review the X-Ray hip joint views before scheduling arthroscopy tomorrow.",
-      lastMessageTime: "08:30 AM",
-      unreadCount: 1,
-      online: true,
-      category: "COLLEAGUES",
-      avatarBg: "bg-purple-100 text-purple-800",
-    },
-    {
-      id: "doc-thread-4",
-      contactName: "ICU Operations Coordinator",
-      contactRole: "STAFF",
-      contactSpecialtyOrMrn: "Safdarjung Hospital Operations",
-      lastMessage: "ICU Bed #4 allocated and prepared for incoming cardiology transfer.",
-      lastMessageTime: "Yesterday",
-      unreadCount: 0,
-      online: true,
-      category: "STAFF",
-      avatarBg: "bg-blue-100 text-blue-800",
-    },
-  ], [patients]);
-
-  // 3. Hospital Staff / Operations Isolated Threads
-  const staffThreads: Thread[] = useMemo(() => [
-    {
-      id: "staff-thread-1",
-      contactName: "Ambulance Unit DL-01-AB-1234",
-      contactRole: "AMBULANCE",
-      contactSpecialtyOrMrn: "Advanced Life Support (108 Fleet)",
-      lastMessage: "Trauma case en-route with driver Manoj. ETA 8 minutes to Emergency Bay 2.",
-      lastMessageTime: "11:02 AM",
-      unreadCount: 1,
-      online: true,
-      category: "AMBULANCE",
-      avatarBg: "bg-rose-100 text-rose-800",
-    },
-    {
-      id: "staff-thread-2",
-      contactName: "Dr. Priya Sharma",
-      contactRole: "DOCTOR",
-      contactSpecialtyOrMrn: "Chief Cardiologist (AIIMS)",
-      lastMessage: "Requesting 1 ICU Bed reservation for incoming acute MI patient transfer.",
-      lastMessageTime: "10:15 AM",
-      unreadCount: 0,
-      online: true,
-      category: "STAFF",
-      avatarBg: "bg-purple-100 text-purple-800",
-    },
-    {
-      id: "staff-thread-3",
-      contactName: "OPD Central Admissions Desk",
-      contactRole: "STAFF",
-      contactSpecialtyOrMrn: "Hospital Registration & ABHA Desk",
-      lastMessage: "142 OPD tokens generated today. 28 verified via Ayushman Bharat ABHA ID.",
-      lastMessageTime: "09:40 AM",
-      unreadCount: 0,
-      online: true,
-      category: "HELPDESK",
-      avatarBg: "bg-blue-100 text-blue-800",
-    },
-    {
-      id: "staff-thread-4",
-      contactName: "Sunita Devi (Patient Inquiry)",
-      contactRole: "PATIENT",
-      contactSpecialtyOrMrn: "MRN-2025-0012 (Admissions Inquiry)",
-      lastMessage: "Can we get an estimate for the General Ward bed occupancy for tomorrow?",
-      lastMessageTime: "Yesterday",
-      unreadCount: 0,
-      online: false,
-      category: "PATIENTS",
-      avatarBg: "bg-teal-100 text-teal-800",
-    },
-  ], []);
-
-  // Determine active thread set by role
   const isDoctor = role === Role.DOCTOR;
   const isStaff = role === Role.HOSPITAL_STAFF;
   const isPatient = !isDoctor && !isStaff;
 
   const currentRoleThreads: Thread[] = useMemo(() => {
-    if (isDoctor) return doctorThreads;
-    if (isStaff) return staffThreads;
-    return patientThreads;
-  }, [isDoctor, isStaff, doctorThreads, staffThreads, patientThreads]);
+    if (!currentUser?.id) return [];
+    
+    const threadMap = new Map<string, Thread>();
+    const sortedMessages = [...allMessages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    for (const msg of sortedMessages) {
+      const isOutgoing = msg.senderId === currentUser.id;
+      const contactId = isOutgoing ? msg.recipientId : msg.senderId;
+      const contactName = isOutgoing ? msg.recipientName : msg.senderName;
+      const contactRole = isOutgoing ? msg.recipientRole : msg.senderRole;
+      
+      let category = "PATIENTS";
+      if (isDoctor) {
+        if (contactRole === "DOCTOR") category = "COLLEAGUES";
+        else if (contactRole === "STAFF") category = "STAFF";
+        else if (contactRole === "AMBULANCE") category = "AMBULANCE";
+        else category = "PATIENTS";
+      } else if (isStaff) {
+        if (contactRole === "PATIENT") category = "PATIENTS";
+        else if (contactRole === "STAFF") category = "STAFF";
+        else if (contactRole === "AMBULANCE") category = "AMBULANCE";
+        else category = "HELPDESK";
+      } else {
+        if (contactRole === "DOCTOR") category = "DOCTORS";
+        else if (contactRole === "STAFF") category = "HELPDESK";
+        else if (contactRole === "AMBULANCE") category = "AMBULANCE";
+        else category = "DOCTORS";
+      }
+
+      let avatarBg = "bg-teal-100 text-teal-800";
+      if (contactRole === "AMBULANCE") avatarBg = "bg-rose-100 text-rose-800";
+      else if (contactRole === "DOCTOR") avatarBg = "bg-purple-100 text-purple-800";
+      else if (contactRole === "STAFF") avatarBg = "bg-blue-100 text-blue-800";
+      
+      const unreadCount = !isOutgoing && !msg.read ? 1 : 0;
+      
+      let lastMessageTimeStr = "Just now";
+      if (msg.createdAt) {
+          const date = new Date(msg.createdAt);
+          lastMessageTimeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+
+      if (threadMap.has(msg.threadId)) {
+        const existing = threadMap.get(msg.threadId)!;
+        existing.lastMessage = msg.content;
+        existing.lastMessageTime = lastMessageTimeStr;
+        existing.unreadCount = !isOutgoing && !msg.read ? existing.unreadCount + 1 : existing.unreadCount;
+      } else {
+        threadMap.set(msg.threadId, {
+          id: msg.threadId,
+          contactId: contactId,
+          contactName: contactName,
+          contactRole: contactRole as Thread["contactRole"],
+          lastMessage: msg.content,
+          lastMessageTime: lastMessageTimeStr,
+          unreadCount: unreadCount,
+          online: true,
+          category: category as Thread["category"],
+          avatarBg: avatarBg,
+        });
+      }
+    }
+    
+    // Sort threads by most recent message (reverse chronological)
+    return Array.from(threadMap.values()).sort((a, b) => b.lastMessageTime.localeCompare(a.lastMessageTime));
+  }, [allMessages, currentUser?.id, isDoctor, isStaff]);
 
   // Set default selected thread
   useEffect(() => {
-    if (currentRoleThreads.length > 0) {
+    if (currentRoleThreads.length > 0 && !selectedThreadId) {
       setSelectedThreadId(currentRoleThreads[0].id);
     }
-  }, [currentRoleThreads]);
-
-  // Seeded messages per thread
-  const threadMessagesMap: Record<string, Message[]> = useMemo(() => ({
-    // Patient Threads
-    "pat-thread-1": [
-      {
-        id: "pm-1",
-        senderId: "pat-1",
-        senderName: currentUser?.name || "Patient",
-        senderRole: "PATIENT",
-        recipientId: "doc-1",
-        recipientName: "Dr. Priya Sharma",
-        recipientRole: "DOCTOR",
-        threadId: "pat-thread-1",
-        content: "Good morning Doctor. Should I continue taking Aspirin 75mg before breakfast or after?",
-        read: true,
-        createdAt: "2026-08-24T05:00:00Z",
-      },
-      {
-        id: "pm-2",
-        senderId: "doc-1",
-        senderName: "Dr. Priya Sharma",
-        senderRole: "DOCTOR",
-        recipientId: "pat-1",
-        recipientName: currentUser?.name || "Patient",
-        recipientRole: "PATIENT",
-        threadId: "pat-thread-1",
-        content: "Good morning! Always take Aspirin strictly after breakfast to prevent gastric irritation. I have attached your updated digital prescription slip below.",
-        attachmentType: "PRESCRIPTION",
-        attachmentData: JSON.stringify({ rxNumber: "RX-8842", drugs: "Aspirin 75mg, Atorvastatin 40mg, Metoprolol 50mg" }),
-        read: true,
-        createdAt: "2026-08-24T05:05:00Z",
-      },
-      {
-        id: "pm-3",
-        senderId: "pat-1",
-        senderName: currentUser?.name || "Patient",
-        senderRole: "PATIENT",
-        recipientId: "doc-1",
-        recipientName: "Dr. Priya Sharma",
-        recipientRole: "DOCTOR",
-        threadId: "pat-thread-1",
-        content: "Thank you doctor, noted. I took the morning dosage and am feeling much better.",
-        read: true,
-        createdAt: "2026-08-24T05:15:00Z",
-      },
-    ],
-    "pat-thread-2": [
-      {
-        id: "pm-4",
-        senderId: "doc-2",
-        senderName: "Dr. Rajesh Kumar",
-        senderRole: "DOCTOR",
-        recipientId: "pat-1",
-        recipientName: currentUser?.name || "Patient",
-        recipientRole: "PATIENT",
-        threadId: "pat-thread-2",
-        content: "Your blood test results show normal fasting glucose levels (94 mg/dL). Keep up the dietary plan.",
-        attachmentType: "LAB_REPORT",
-        attachmentData: JSON.stringify({ testName: "Fasting Blood Glucose", result: "94 mg/dL (Normal)" }),
-        read: true,
-        createdAt: "2026-08-23T14:30:00Z",
-      },
-    ],
-    "pat-thread-3": [
-      {
-        id: "pm-5",
-        senderId: "staff-1",
-        senderName: "AIIMS OPD Helpdesk",
-        senderRole: "STAFF",
-        recipientId: "pat-1",
-        recipientName: currentUser?.name || "Patient",
-        recipientRole: "PATIENT",
-        threadId: "pat-thread-3",
-        content: "Namaste! Your OPD Token #24 is confirmed for Room 102 tomorrow morning at 10:30 AM. Please arrive 15 minutes prior for ABHA verification.",
-        read: true,
-        createdAt: "2026-08-23T16:00:00Z",
-      },
-    ],
-    "pat-thread-4": [
-      {
-        id: "pm-6",
-        senderId: "amb-1",
-        senderName: "108 Emergency Control",
-        senderRole: "AMBULANCE",
-        recipientId: "pat-1",
-        recipientName: currentUser?.name || "Patient",
-        recipientRole: "PATIENT",
-        threadId: "pat-thread-4",
-        content: "108 Emergency Helpdesk is active. For medical emergencies, tap the Call 108 button or message here.",
-        read: true,
-        createdAt: "2026-08-22T08:00:00Z",
-      },
-    ],
-
-    // Doctor Threads
-    "doc-thread-1": [
-      {
-        id: "dm-1",
-        senderId: "pat-1",
-        senderName: "Amit Sharma",
-        senderRole: "PATIENT",
-        recipientId: "doc-1",
-        recipientName: currentUser?.name || "Dr. Clinician",
-        recipientRole: "DOCTOR",
-        threadId: "doc-thread-1",
-        content: "Doctor, I took the morning dosage of Atorvastatin. Feeling much better.",
-        read: true,
-        createdAt: "2026-08-24T05:15:00Z",
-      },
-    ],
-    "doc-thread-2": [
-      {
-        id: "dm-2",
-        senderId: "pat-2",
-        senderName: "Ramesh Yadav",
-        senderRole: "PATIENT",
-        recipientId: "doc-1",
-        recipientName: currentUser?.name || "Dr. Clinician",
-        recipientRole: "DOCTOR",
-        threadId: "doc-thread-2",
-        content: "Doctor, chest tightness has decreased after nebulization. Oxygen saturation is 96%.",
-        read: false,
-        createdAt: "2026-08-24T03:45:00Z",
-      },
-    ],
-    "doc-thread-3": [
-      {
-        id: "dm-3",
-        senderId: "doc-3",
-        senderName: "Dr. Vikram Sethi",
-        senderRole: "DOCTOR",
-        recipientId: "doc-1",
-        recipientName: currentUser?.name || "Dr. Clinician",
-        recipientRole: "DOCTOR",
-        threadId: "doc-thread-3",
-        content: "Please review the X-Ray hip joint views for Ramesh Yadav before scheduling arthroscopy tomorrow.",
-        attachmentType: "LAB_REPORT",
-        attachmentData: JSON.stringify({ testName: "Pelvic X-Ray AP/Lat", result: "Joint space narrowing Grade 2" }),
-        read: false,
-        createdAt: "2026-08-24T03:00:00Z",
-      },
-    ],
-    "doc-thread-4": [
-      {
-        id: "dm-4",
-        senderId: "staff-2",
-        senderName: "ICU Coordinator",
-        senderRole: "STAFF",
-        recipientId: "doc-1",
-        recipientName: currentUser?.name || "Dr. Clinician",
-        recipientRole: "DOCTOR",
-        threadId: "doc-thread-4",
-        content: "ICU Bed #4 allocated and prepared for incoming cardiology transfer with ventilator standby.",
-        read: true,
-        createdAt: "2026-08-23T18:00:00Z",
-      },
-    ],
-
-    // Staff Threads
-    "staff-thread-1": [
-      {
-        id: "sm-1",
-        senderId: "amb-1",
-        senderName: "Ambulance Unit DL-01",
-        senderRole: "AMBULANCE",
-        recipientId: "staff-1",
-        recipientName: currentUser?.name || "Hospital Staff",
-        recipientRole: "STAFF",
-        threadId: "staff-thread-1",
-        content: "Trauma case en-route with driver Manoj. ETA 8 minutes to Emergency Bay 2. Patient BP 110/70, SpO2 94%.",
-        read: false,
-        createdAt: "2026-08-24T05:32:00Z",
-      },
-    ],
-    "staff-thread-2": [
-      {
-        id: "sm-2",
-        senderId: "doc-1",
-        senderName: "Dr. Priya Sharma",
-        senderRole: "DOCTOR",
-        recipientId: "staff-1",
-        recipientName: currentUser?.name || "Hospital Staff",
-        recipientRole: "STAFF",
-        threadId: "staff-thread-2",
-        content: "Requesting 1 ICU Bed reservation for incoming acute MI patient transfer from Primary Health Centre.",
-        read: true,
-        createdAt: "2026-08-24T04:45:00Z",
-      },
-    ],
-    "staff-thread-3": [
-      {
-        id: "sm-3",
-        senderId: "staff-desk",
-        senderName: "OPD Registration Desk",
-        senderRole: "STAFF",
-        recipientId: "staff-1",
-        recipientName: currentUser?.name || "Hospital Staff",
-        recipientRole: "STAFF",
-        threadId: "staff-thread-3",
-        content: "142 OPD tokens generated today. 28 verified via Ayushman Bharat ABHA ID. System synchronized.",
-        read: true,
-        createdAt: "2026-08-24T04:10:00Z",
-      },
-    ],
-    "staff-thread-4": [
-      {
-        id: "sm-4",
-        senderId: "pat-12",
-        senderName: "Sunita Devi",
-        senderRole: "PATIENT",
-        recipientId: "staff-1",
-        recipientName: currentUser?.name || "Hospital Staff",
-        recipientRole: "STAFF",
-        threadId: "staff-thread-4",
-        content: "Can we get an estimate for the General Ward bed occupancy for tomorrow morning?",
-        read: true,
-        createdAt: "2026-08-23T19:00:00Z",
-      },
-    ],
-  }), [currentUser]);
+  }, [currentRoleThreads, selectedThreadId]);
 
   // Sync active message stream
   useEffect(() => {
-    if (selectedThreadId && threadMessagesMap[selectedThreadId]) {
-      setMessages(threadMessagesMap[selectedThreadId]);
+    if (selectedThreadId) {
+      setMessages(allMessages.filter(m => m.threadId === selectedThreadId));
     } else {
       setMessages([]);
     }
-  }, [selectedThreadId, threadMessagesMap]);
+  }, [selectedThreadId, allMessages]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -483,6 +183,7 @@ export default function MessagesPage() {
 
   const activeThread = currentRoleThreads.find((t) => t.id === selectedThreadId) || currentRoleThreads[0] || {
     id: "empty",
+    contactId: "empty",
     contactName: "Select Conversation",
     contactRole: "DOCTOR",
     lastMessage: "",
@@ -495,26 +196,29 @@ export default function MessagesPage() {
   const activePatient = patients.find((p) => p.name === activeThread.contactName) || patients[0];
 
   // Send Message Handler
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() || !currentUser) return;
 
-    const newMsg: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: currentUser?.id || "user-1",
-      senderName: currentUser?.name || (isDoctor ? "Dr. Clinician" : isStaff ? "Hospital Staff" : "Patient"),
-      senderRole: (isDoctor ? "DOCTOR" : isStaff ? "STAFF" : "PATIENT") as "DOCTOR" | "PATIENT" | "STAFF" | "ADMIN",
-      recipientId: activeThread.id,
+    const payload = {
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderRole: role,
+      recipientId: activeThread.contactId || "unknown",
       recipientName: activeThread.contactName,
-      recipientRole: (activeThread.contactRole === "AMBULANCE" ? "STAFF" : activeThread.contactRole) as "DOCTOR" | "PATIENT" | "STAFF" | "ADMIN",
+      recipientRole: activeThread.contactRole,
       threadId: selectedThreadId,
       content: messageInput.trim(),
-      read: true,
-      createdAt: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
-    setMessageInput("");
+    try {
+      const { apiPost } = await import("@/lib/api");
+      const newMsg = await apiPost<Message>("/api/messages", payload);
+      setAllMessages((prev) => [...prev, newMsg]);
+      setMessageInput("");
+    } catch (err) {
+      console.error("Failed to send message:", err);
+    }
   };
 
   // Filter tabs per role
@@ -696,11 +400,15 @@ export default function MessagesPage() {
               );
             })}
 
-            {filteredThreads.length === 0 && (
+            {isLoading ? (
+              <div className="p-8 text-center text-xs text-slate-400 animate-pulse">
+                Loading conversations...
+              </div>
+            ) : filteredThreads.length === 0 ? (
               <div className="p-8 text-center text-xs text-slate-400">
                 No active conversations found matching your filter.
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 

@@ -170,6 +170,10 @@ model Appointment {
   patient      Patient  @relation(fields: [patientId], references: [id])
   doctor       Doctor   @relation(fields: [doctorId], references: [id])
   encounter    Encounter?
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
 }
 
 model Encounter {
@@ -373,6 +377,9 @@ model Referral {
 
   patient         Patient  @relation("PatientReferrals", fields: [patientId], references: [id])
   toHospital      Hospital @relation(fields: [toHospitalId], references: [id])
+
+  @@index([patientId])
+  @@index([status])
 }
 
 // ============================================================
@@ -430,6 +437,10 @@ model Message {
   attachmentData String?
   read           Boolean  @default(false)
   createdAt      DateTime @default(now())
+
+  @@index([threadId])
+  @@index([senderId])
+  @@index([recipientId])
 }
 
 model Interaction {
@@ -457,4 +468,8 @@ model Notification {
   urgency   String   @default("NORMAL") // NORMAL, HIGH, EMERGENCY
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([role])
 }

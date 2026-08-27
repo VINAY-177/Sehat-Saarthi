@@ -50,7 +50,7 @@ export default function ReferralsPage() {
     }
   };
 
-  const handleCreateReferral = () => {
+  const handleCreateReferral = async () => {
     if (!selectedPatientId || !selectedFacilityId || !reason.trim()) {
       toast.error('Please select patient, destination facility, and state referral reason.');
       return;
@@ -59,7 +59,7 @@ export default function ReferralsPage() {
     const patient = patients.find(p => p.id === selectedPatientId);
     const toFac = facilities.find(f => f.id === selectedFacilityId);
 
-    const newRef = addReferral({
+    const newRef = await addReferral({
       patientId: selectedPatientId,
       patientName: patient?.name || 'Unknown Patient',
       fromFacilityId: null,
@@ -78,7 +78,9 @@ export default function ReferralsPage() {
     setReason('');
     
     // Automatically preview slip
-    setSelectedReferralForSlip(newRef);
+    if (newRef) {
+      setSelectedReferralForSlip(newRef);
+    }
   };
 
   const renderActionButtons = (referralId: string, currentStatus: ReferralStatus) => {

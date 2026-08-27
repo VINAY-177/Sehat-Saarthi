@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Notification, Role } from "@/lib/types";
 import { useStore } from "@/lib/store";
@@ -21,81 +21,32 @@ import {
 } from "lucide-react";
 
 export default function NotificationsPage() {
-  const { role } = useStore();
+  const { role, currentUser } = useStore();
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "notif-1",
-      role: "DOCTOR",
-      category: "EMERGENCY",
-      title: "Critical Triage Alert: High Risk Patient Inbound",
-      message: "Patient Ramesh Yadav (62 yrs, Male) evaluated with SpO2 88% and Acute COPD Exacerbation. Immediate ICU triage advised.",
-      link: "/patients",
-      urgency: "EMERGENCY",
-      read: false,
-      createdAt: "10 mins ago",
-    },
-    {
-      id: "notif-2",
-      role: "PATIENT",
-      category: "APPOINTMENT",
-      title: "Appointment Confirmed with Dr. Priya Sharma",
-      message: "Your cardiac follow-up appointment has been confirmed for tomorrow at 10:30 AM at AIIMS New Delhi.",
-      link: "/scheduling",
-      urgency: "NORMAL",
-      read: false,
-      createdAt: "45 mins ago",
-    },
-    {
-      id: "notif-3",
-      role: "DOCTOR",
-      category: "LAB",
-      title: "Diagnostic Pathology Results Available",
-      message: "HbA1c and Lipid Profile laboratory results uploaded for Amit Sharma (MRN-2025-0001). Observed HbA1c: 7.2%.",
-      link: "/patients",
-      urgency: "HIGH",
-      read: false,
-      createdAt: "2 hours ago",
-    },
-    {
-      id: "notif-4",
-      role: "HOSPITAL_STAFF",
-      category: "REFERRAL",
-      title: "New Incoming Referral: Safdarjung Hospital",
-      message: "Emergency referral created for ICU bed transfer with ambulance dispatch en-route (ETA 12 mins).",
-      link: "/referrals",
-      urgency: "HIGH",
-      read: true,
-      createdAt: "4 hours ago",
-    },
-    {
-      id: "notif-5",
-      role: "PATIENT",
-      category: "SYSTEM",
-      title: "Ayushman Bharat PM-JAY Eligibility Verified",
-      message: "Your ABHA Health ID has been verified with ₹5,00,000 annual health cover eligibility.",
-      link: "/schemes",
-      urgency: "NORMAL",
-      read: true,
-      createdAt: "Yesterday",
-    },
-    {
-      id: "notif-6",
-      role: "HOSPITAL_STAFF",
-      category: "SYSTEM",
-      title: "Ward 4 Bed Telemetry Synchronized",
-      message: "8 ICU beds and 24 General ward beds are available for admissions.",
-      link: "/facilities",
-      urgency: "NORMAL",
-      read: false,
-      createdAt: "5 hours ago",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Strictly filter notifications by the current user's role
   const isDoctor = role === Role.DOCTOR;
   const isStaff = role === Role.HOSPITAL_STAFF;
   const targetRole = isDoctor ? "DOCTOR" : isStaff ? "HOSPITAL_STAFF" : "PATIENT";
+
+  useEffect(() => {
+    async function loadNotifications() {
+      if (!currentUser?.id) return;
+      try {
+        setIsLoading(true);
+        const { apiGet } = await import("@/lib/api");
+        const data = await apiGet<Notification[]>(`/api/notifications?userId=${currentUser.id}&role=${targetRole}`);
+        setNotifications(data);
+      } catch (error) {
+        console.error("Failed to load notifications", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadNotifications();
+  }, [currentUser?.id, targetRole]);
 
   const roleScopedNotifications = useMemo(() => {
     return notifications.filter((n) => n.role === targetRole);
@@ -103,12 +54,24 @@ export default function NotificationsPage() {
 
   const unreadCount = roleScopedNotifications.filter((n) => !n.read).length;
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => (n.role === targetRole ? { ...n, read: true } : n)));
+  const markAllAsRead = async () => {
+    try {
+      const { apiPut } = await import("@/lib/api");
+      await apiPut("/api/notifications/read-all", {});
+      setNotifications((prev) => prev.map((n) => (n.role === targetRole ? { ...n, read: true } : n)));
+    } catch (error) {
+      console.error("Failed to mark all as read", error);
+    }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAsRead = async (id: string) => {
+    try {
+      const { apiPut } = await import("@/lib/api");
+      await apiPut(`/api/notifications/${id}/read`, { read: true });
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
   };
 
   const deleteNotification = (id: string) => {
@@ -184,7 +147,11 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notification Stream */}
-      {filteredNotifications.length === 0 ? (
+      {isLoading ? (
+        <Card className="border-dashed border-2 border-slate-200 shadow-sm bg-slate-50/50 rounded-3xl py-20 text-center">
+          <h3 className="font-bold text-slate-800 text-lg animate-pulse">Loading notifications...</h3>
+        </Card>
+      ) : filteredNotifications.length === 0 ? (
         <Card className="border-dashed border-2 border-slate-200 shadow-sm bg-slate-50/50 rounded-3xl py-20 text-center">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm mb-3">
             <Bell className="w-8 h-8 text-slate-400" />

@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Appointment, Doctor, Patient } from "@/lib/types";
+import { useStore } from "@/lib/store";
+import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,7 @@ const STATUS_CONFIG: Record<
 };
 
 export default function SchedulingPage() {
+  const { refreshAppointments } = useStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -62,21 +65,18 @@ export default function SchedulingPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const [apptsRes, docsRes, patsRes] = await Promise.all([
-        fetch(`${API}/api/appointments`),
-        fetch(`${API}/api/doctors`),
-        fetch(`${API}/api/patients`),
+      const [appts, docs, pats] = await Promise.all([
+        apiGet<Appointment[]>("/api/appointments").catch(() => []),
+        apiGet<Doctor[]>("/api/doctors").catch(() => []),
+        apiGet<Patient[]>("/api/patients").catch(() => []),
       ]);
 
-      if (apptsRes.ok) setAppointments(await apptsRes.json());
-      if (docsRes.ok) {
-        const docs = await docsRes.json();
+      if (Array.isArray(appts)) setAppointments(appts);
+      if (Array.isArray(docs)) {
         setDoctors(docs);
         if (docs.length > 0 && !bookDoctorId) setBookDoctorId(docs[0].id);
       }
-      if (patsRes.ok) {
-        const pats = await patsRes.json();
+      if (Array.isArray(pats)) {
         setPatients(pats);
         if (pats.length > 0 && !bookPatientId) setBookPatientId(pats[0].id);
       }
@@ -110,18 +110,13 @@ export default function SchedulingPage() {
   // Update Status Action
   const handleUpdateStatus = async (appointmentId: string, newStatus: string) => {
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/appointments/${appointmentId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (res.ok) {
+      const updated = await apiPut<Appointment>(`/api/appointments/${appointmentId}`, { status: newStatus });
+      if (updated) {
         setAppointments((prev) => prev.map((a) => (a.id === appointmentId ? { ...a, status: newStatus } : a)));
         if (selectedAppointment?.id === appointmentId) {
           setSelectedAppointment((prev) => (prev ? { ...prev, status: newStatus } : null));
         }
+        refreshAppointments();
       }
     } catch (err) {
       console.error("Error updating appointment status:", err);
@@ -138,26 +133,22 @@ export default function SchedulingPage() {
 
     setBooking(true);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patientId: bookPatientId,
-          doctorId: bookDoctorId,
-          dateTime: new Date(bookDateTime).toISOString(),
-          visitType: bookVisitType,
-          reason: bookReason,
-          notes: bookNotes,
-          status: "CONFIRMED",
-        }),
+      const created = await apiPost<Appointment>("/api/appointments", {
+        patientId: bookPatientId,
+        doctorId: bookDoctorId,
+        dateTime: new Date(bookDateTime).toISOString(),
+        visitType: bookVisitType,
+        reason: bookReason,
+        notes: bookNotes,
+        status: "CONFIRMED",
       });
 
-      if (res.ok) {
+      if (created) {
         setShowBookModal(false);
         setBookReason("");
         setBookNotes("");
         fetchData();
+        refreshAppointments();
       }
     } catch (err) {
       console.error("Error booking appointment:", err);

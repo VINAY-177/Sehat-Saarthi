@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react";
 import {
   Patient, Screening, Facility, Referral, Role,
-  ReferralStatus, Urgency, AuthUser,
+  ReferralStatus, Urgency, AuthUser, Appointment, Notification,
 } from "@/lib/types";
 import { Language, translations, Translations } from "@/lib/i18n";
 
@@ -48,8 +48,8 @@ interface StoreState {
 
   // Referrals
   referrals: Referral[];
-  addReferral: (referral: Omit<Referral, "id" | "createdAt">) => Referral;
-  updateReferralStatus: (id: string, status: ReferralStatus) => void;
+  addReferral: (referral: Omit<Referral, "id" | "createdAt">) => Promise<Referral>;
+  updateReferralStatus: (id: string, status: ReferralStatus) => Promise<void>;
   refreshReferrals: () => Promise<void>;
 
   // Stats
@@ -63,6 +63,17 @@ interface StoreState {
     totalGeneralAvailable: number;
     totalPrivateRoomsAvailable: number;
   };
+
+  // Appointments
+  appointments: Appointment[];
+  refreshAppointments: () => Promise<void>;
+  createAppointment: (data: Partial<Appointment>) => Promise<Appointment>;
+
+  // Notifications
+  notifications: Notification[];
+  refreshNotifications: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreState | null>(null);
@@ -483,6 +494,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>(DEFAULT_DELHI_HOSPITALS);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // Language translation helper
   const toggleLanguage = useCallback(() => {
@@ -751,12 +764,112 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Fetch appointments from PostgreSQL backend
+  const refreshAppointments = useCallback(async () => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    try {
+      const res = await fetch(`${API}/api/appointments`, {
+        headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAppointments(data);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch appointments from API:", err);
+    }
+  }, [token]);
+
+  const createAppointment = useCallback(async (appointmentData: Partial<Appointment>): Promise<Appointment> => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    const res = await fetch(`${API}/api/appointments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+      },
+      body: JSON.stringify(appointmentData),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error || 'Failed to create appointment');
+    }
+    const created = await res.json();
+    await refreshAppointments();
+    return created;
+  }, [token, refreshAppointments]);
+
+  const refreshNotifications = useCallback(async () => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    if (!activeToken) return;
+    try {
+      const userId = currentUser?.id;
+      const role = currentUser?.role;
+      const params = new URLSearchParams();
+      if (userId) params.set('userId', userId);
+      if (role) params.set('role', role);
+      const res = await fetch(`${API}/api/notifications?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setNotifications(data);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch notifications from API:", err);
+    }
+  }, [token, currentUser]);
+
+  const markNotificationRead = useCallback(async (id: string) => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    try {
+      await fetch(`${API}/api/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+        body: JSON.stringify({ read: true }),
+      });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    } catch (err) {
+      console.warn("Failed to mark notification as read:", err);
+    }
+  }, [token]);
+
+  const markAllNotificationsRead = useCallback(async () => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    try {
+      await fetch(`${API}/api/notifications/read-all`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      console.warn("Failed to mark all notifications as read:", err);
+    }
+  }, [token]);
+
   // Sync store with backend on mount
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
     refreshPatients();
     refreshReferrals();
+    refreshAppointments();
+    refreshNotifications();
 
     interface ApiHospital {
       id: string;
@@ -800,7 +913,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setFacilities(mapped);
       }
     }).catch(() => {});
-  }, [refreshPatients, refreshReferrals]);
+  }, [refreshPatients, refreshReferrals, refreshAppointments, refreshNotifications]);
 
   // ---------- Patient operations ----------
 
@@ -840,25 +953,84 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setFacilities(prev =>
       prev.map(f => (f.id === id ? { ...f, ...updates } : f))
     );
-  }, []);
+    // Sync to backend
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    const dbUpdates: Record<string, number | string | boolean> = {};
+    if (updates.icuBedsUsed !== undefined) dbUpdates.availableIcu = (updates.icuBeds ?? 0) - updates.icuBedsUsed;
+    if (updates.generalBedsUsed !== undefined) dbUpdates.availableBeds = (updates.generalBeds ?? 0) - updates.generalBedsUsed;
+    if (Object.keys(dbUpdates).length > 0) {
+      fetch(`${API}/api/hospitals/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+        body: JSON.stringify(dbUpdates),
+      }).catch(err => console.warn('Failed to sync facility update:', err));
+    }
+  }, [token]);
 
   // ---------- Referral operations ----------
 
-  const addReferral = useCallback((data: Omit<Referral, "id" | "createdAt">): Referral => {
+  const addReferral = useCallback(async (data: Omit<Referral, "id" | "createdAt">): Promise<Referral> => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    try {
+      const res = await fetch(`${API}/api/referrals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+        body: JSON.stringify({
+          patientId: data.patientId,
+          patientName: data.patientName,
+          toHospitalId: data.toHospitalId || data.toFacilityId || '',
+          toHospitalName: data.toHospitalName || data.toFacilityName || 'General Hospital',
+          doctorName: data.doctorName,
+          specialty: data.specialty,
+          urgency: data.urgency,
+          reason: data.reason,
+          status: data.status || 'PENDING',
+        }),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        await refreshReferrals();
+        return created;
+      }
+    } catch (err) {
+      console.warn("Failed to create referral via API:", err);
+    }
+    // Fallback to client-side
     const referral: Referral = {
       ...data,
-      id: generateId("ref"),
+      id: `ref-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       createdAt: new Date().toISOString(),
     };
     setReferrals(prev => [referral, ...prev]);
     return referral;
-  }, []);
+  }, [token, refreshReferrals]);
 
-  const updateReferralStatus = useCallback((id: string, status: ReferralStatus) => {
-    setReferrals(prev =>
-      prev.map(r => (r.id === id ? { ...r, status } : r))
-    );
-  }, []);
+  const updateReferralStatus = useCallback(async (id: string, status: ReferralStatus) => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+    // Optimistic update
+    setReferrals(prev => prev.map(r => (r.id === id ? { ...r, status } : r)));
+    try {
+      await fetch(`${API}/api/referrals/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+        },
+        body: JSON.stringify({ status }),
+      });
+    } catch (err) {
+      console.warn("Failed to update referral status via API:", err);
+    }
+  }, [token]);
 
   // Computed aggregate stats
   const stats = useMemo(() => {
@@ -902,6 +1074,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateReferralStatus,
     refreshReferrals,
     stats,
+    appointments,
+    refreshAppointments,
+    createAppointment,
+    notifications,
+    refreshNotifications,
+    markNotificationRead,
+    markAllNotificationsRead,
   };
 
   return (

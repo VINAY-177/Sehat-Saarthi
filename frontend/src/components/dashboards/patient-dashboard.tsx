@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -22,7 +23,7 @@ import {
 } from "lucide-react";
 
 export function PatientDashboard() {
-  const { currentUser, t, language } = useStore();
+  const { currentUser, t, language, appointments = [], notifications = [] } = useStore();
 
   const currentHour = new Date().getHours();
   let greeting = t("goodEvening");
@@ -38,26 +39,48 @@ export function PatientDashboard() {
 
   const firstName = currentUser?.name?.split(" ")[0] || (language === "hi" ? "आरव" : "Aarav");
 
-  // Next Upcoming Appointment (Defaulting to the interconnected SIH demo appointment)
-  const nextAppt = {
-    doctorName: "Dr. Priya Mehta",
-    specialty: "General Medicine",
-    facilityName: "Government General Hospital — Delhi",
-    date: "28 August 2026",
-    time: "10:30 AM",
-    status: "CONFIRMED",
-    type: "General Consultation",
-  };
+  // Derive next appointment from database
+  const myAppointments = appointments.filter(
+    (a) => a.patientId === currentUser?.patientId && !['COMPLETED', 'CANCELLED', 'DECLINED'].includes(a.status)
+  ).sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
+  const nextApptData = myAppointments[0];
+  const nextAppt = nextApptData ? {
+    doctorName: nextApptData.doctor?.name || 'Doctor',
+    specialty: nextApptData.doctor?.specialty || 'General Medicine',
+    facilityName: nextApptData.doctor?.facility?.name || 'Government General Hospital — Delhi',
+    date: new Date(nextApptData.dateTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+    time: new Date(nextApptData.dateTime).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }),
+    status: nextApptData.status,
+    type: nextApptData.reason || nextApptData.visitType || 'General Consultation',
+  } : null;
+
+  const upcomingCount = myAppointments.length;
+  const pastCount = appointments.filter(
+    (a) => a.patientId === currentUser?.patientId && a.status === 'COMPLETED'
+  ).length;
+  const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
       
+      {/* Visible Healthcare Background Image & Protective Gradient Overlay */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+        <Image
+          src="/patient-bg.jpg"
+          alt="Healthcare background"
+          fill
+          priority
+          className="object-cover object-top opacity-20 mix-blend-multiply"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-slate-50/85 to-[#F8FAFC]" />
+      </div>
+
       {/* Subtle Ambient Healthcare Corner Gradients & Vector Motifs */}
       <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-teal-500/10 via-emerald-500/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-teal-500/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
       <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-500/8 via-teal-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
+        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-500/12 via-teal-500/6 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
       />
       {/* Subtle Dot Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
@@ -88,59 +111,74 @@ export function PatientDashboard() {
         </div>
 
         {/* 2. Primary Hero Feature: Next Appointment Spotlight Card */}
-        <div className="bg-white border border-teal-100 rounded-2xl p-5 sm:p-6 shadow-xs relative overflow-hidden card-hover section-enter stagger-1">
-          {/* Subtle teal accent border on top */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500" />
+        {nextAppt ? (
+          <div className="bg-white border border-teal-100 rounded-2xl p-5 sm:p-6 shadow-xs relative overflow-hidden card-hover section-enter stagger-1">
+            {/* Subtle teal accent border on top */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500" />
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-            
-            {/* Left: Next Appointment Details */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-100/80">
-                  {language === "hi" ? "अगला अपॉइंटमेंट" : "NEXT APPOINTMENT"}
-                </span>
-                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0.5">
-                  <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600 inline" />
-                  {nextAppt.status}
-                </Badge>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+              
+              {/* Left: Next Appointment Details */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-100/80">
+                    {language === "hi" ? "अगला अपॉइंटमेंट" : "NEXT APPOINTMENT"}
+                  </span>
+                  <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0.5">
+                    <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600 inline" />
+                    {nextAppt.status}
+                  </Badge>
+                </div>
+
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Stethoscope className="w-5 h-5 text-teal-700" />
+                    {nextAppt.doctorName}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    {nextAppt.specialty} • {nextAppt.facilityName}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-700 pt-1">
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                    <Calendar className="w-3.5 h-3.5 text-teal-700" />
+                    <span>{nextAppt.date}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                    <Clock className="w-3.5 h-3.5 text-teal-700" />
+                    <span>{nextAppt.time}</span>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <Stethoscope className="w-5 h-5 text-teal-700" />
-                  {nextAppt.doctorName}
-                </h3>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  {nextAppt.specialty} • {nextAppt.facilityName}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-700 pt-1">
-                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                  <Calendar className="w-3.5 h-3.5 text-teal-700" />
-                  <span>{nextAppt.date}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                  <Clock className="w-3.5 h-3.5 text-teal-700" />
-                  <span>{nextAppt.time}</span>
-                </div>
+              {/* Right Action Button */}
+              <div className="flex items-center gap-3 shrink-0">
+                <Link href="/scheduling">
+                  <Button 
+                    className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-11 px-5 rounded-xl shadow-xs transition-all flex items-center gap-2 btn-press"
+                  >
+                    {language === "hi" ? "अपॉइंटमेंट देखें" : "View Appointment"}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
               </div>
             </div>
-
-            {/* Right Action Button */}
-            <div className="flex items-center gap-3 shrink-0">
-              <Link href="/scheduling">
-                <Button 
-                  className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-11 px-5 rounded-xl shadow-xs transition-all flex items-center gap-2 btn-press"
-                >
-                  {language === "hi" ? "अपॉइंटमेंट देखें" : "View Appointment"}
-                  <ArrowRight className="w-3.5 h-3.5" />
+          </div>
+        ) : (
+          <Card className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs card-hover section-enter stagger-1">
+            <div className="text-center py-8 text-slate-500">
+              <Calendar className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+              <p className="font-semibold text-slate-700">{language === "hi" ? "कोई आगामी अपॉइंटमेंट नहीं" : "No upcoming appointments"}</p>
+              <p className="text-sm mt-1">{language === "hi" ? "शुरू करने के लिए अपना पहला अपॉइंटमेंट बुक करें" : "Book your first appointment to get started"}</p>
+              <Link href="/scheduling" className="inline-block mt-4">
+                <Button variant="outline" className="text-xs font-bold rounded-xl border-teal-200 hover:bg-teal-50 text-teal-700 btn-press">
+                  {language === "hi" ? "अपॉइंटमेंट बुक करें" : "Book Appointment"}
                 </Button>
               </Link>
             </div>
-          </div>
-        </div>
+          </Card>
+        )}
 
         {/* 3. Patient Statistics — 4 Compact Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -154,8 +192,8 @@ export function PatientDashboard() {
                 <Calendar className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">2</div>
-            <p className="text-[11px] text-slate-400 font-medium mt-0.5">28 Aug & 04 Sep</p>
+            <div className="text-xl font-black text-slate-900 mt-1">{upcomingCount}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "कुल निर्धारित" : "Total scheduled"}</p>
           </Card>
 
           <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4 stagger-2">
@@ -167,8 +205,8 @@ export function PatientDashboard() {
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">1</div>
-            <p className="text-[11px] text-slate-400 font-medium mt-0.5">18 Aug (Completed)</p>
+            <div className="text-xl font-black text-slate-900 mt-1">{pastCount || 1}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "सफलतापूर्वक पूर्ण" : "Completed successfully"}</p>
           </Card>
 
           <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4 stagger-3">
@@ -193,8 +231,8 @@ export function PatientDashboard() {
                 <Bell className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">2</div>
-            <p className="text-[11px] text-slate-400 font-medium mt-0.5">Appointment reminder</p>
+            <div className="text-xl font-black text-slate-900 mt-1">{unreadNotifCount || 2}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "अपठित अलर्ट" : "Unread alerts"}</p>
           </Card>
 
         </div>
@@ -298,29 +336,29 @@ export function PatientDashboard() {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">{currentUser?.name || "Aarav Sharma"}</h3>
-                  <p className="text-xs text-slate-400 font-medium">ABHA ID: 91-8821-4402-9102</p>
+                  <p className="text-xs text-slate-400 font-medium">ABHA ID: {currentUser?.abhaId || 'Not linked'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Age / Gender</span>
-                  <span className="font-bold text-slate-800 text-xs">28 Yrs • Male</span>
+                  <span className="font-bold text-slate-800 text-xs">{currentUser?.age || '-'} Yrs • {currentUser?.gender || '-'}</span>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Blood Group</span>
-                  <span className="font-bold text-teal-700 text-xs">B +ve</span>
+                  <span className="font-bold text-teal-700 text-xs">{currentUser?.bloodGroup || 'Not recorded'}</span>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Active Condition</span>
-                  <span className="font-bold text-slate-800 text-xs">Hypertension — Mild (Monitored)</span>
+                  <span className="font-bold text-slate-800 text-xs">{currentUser?.conditions?.join(', ') || 'No active conditions'}</span>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Primary Hospital</span>
-                  <span className="font-bold text-slate-800 text-xs">Government General Hospital — Delhi</span>
+                  <span className="font-bold text-slate-800 text-xs">{currentUser?.facilityName || 'Government General Hospital — Delhi'}</span>
                 </div>
               </div>
 
