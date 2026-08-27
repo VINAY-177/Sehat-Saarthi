@@ -8,7 +8,7 @@ import { apiPost } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Users, Stethoscope, Building2, Mail, Lock, Eye, EyeOff, ArrowRight, Shield, Siren, Loader2 } from "lucide-react";
+import { Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight, Shield, Siren, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
