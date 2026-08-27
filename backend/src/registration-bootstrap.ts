@@ -9,6 +9,16 @@ const prismaModule = require('@prisma/client');
 const OriginalPrismaClient = prismaModule.PrismaClient;
 const JWT_SECRET = process.env.JWT_SECRET || 'sehat_saathi_sih_jwt_secret_key_2026';
 
+async function ensureDemoAccounts() {
+  if (process.env.SEED_DEMO_ACCOUNTS !== 'true') return;
+  try {
+    const { execFileSync } = require('child_process');
+    execFileSync('npx', ['tsx', 'prisma/demo-seed.ts'], { stdio: 'inherit', cwd: process.cwd() });
+  } catch (error) {
+    console.error('Demo seed failed during startup. Backend will continue:', error);
+  }
+}
+
 function freshMrn(): string {
   return `MRN-2026-${Math.floor(100000 + Math.random() * 900000)}`;
 }
@@ -23,50 +33,22 @@ async function signupHandler(req: any, res: any) {
     const email = typeof raw.email === 'string' && raw.email.trim() ? raw.email.trim().toLowerCase() : null;
     const password = typeof raw.password === 'string' ? raw.password : '';
     const role = typeof raw.role === 'string' ? raw.role : 'PATIENT';
-    const specialty = typeof raw.specialty === 'string' && raw.specialty.trim()
-      ? raw.specialty.trim()
-      : 'General Medicine';
-    const facilityId = typeof raw.facilityId === 'string' && raw.facilityId.trim()
-      ? raw.facilityId.trim()
-      : null;
+    const specialty = typeof raw.specialty === 'string' && raw.specialty.trim() ? raw.specialty.trim() : 'General Medicine';
+    const facilityId = typeof raw.facilityId === 'string' && raw.facilityId.trim() ? raw.facilityId.trim() : null;
 
-    if (!name || !phone || !password) {
-      return res.status(400).json({ error: 'Name, phone number, and password are required' });
-    }
-    if (password.length < 4) {
-      return res.status(400).json({ error: 'Password must be at least 4 characters long' });
-    }
+    if (!name || !phone || !password) return res.status(400).json({ error: 'Name, phone number, and password are required' });
+    if (password.length < 4) return res.status(400).json({ error: 'Password must be at least 4 characters long' });
 
     const allowedRoles = new Set(['PATIENT', 'CITIZEN', 'DOCTOR', 'HOSPITAL_STAFF']);
-    if (!allowedRoles.has(role)) {
-      return res.status(400).json({ error: 'Invalid account role' });
-    }
+    if (!allowedRoles.has(role)) return res.status(400).json({ error: 'Invalid account role' });
 
-    // Fail early with a clear database error rather than converting a database
-    // outage into an ambiguous registration failure.
     await prisma.$connect();
-
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { phone },
-          ...(email ? [{ email }] : []),
-        ],
-      },
-      select: { id: true },
-    });
-
-    if (existingUser) {
-      return res.status(409).json({ error: 'An account with this phone number or email already exists' });
-    }
+    const existingUser = await prisma.user.findFirst({ where: { OR: [{ phone }, ...(email ? [{ email }] : [])] }, select: { id: true } });
+    if (existingUser) return res.status(409).json({ error: 'An account with this phone number or email already exists' });
 
     const passwordHash = await bcrypt.hash(password, 10);
-
     const result = await prisma.$transaction(async (tx: any) => {
-      const user = await tx.user.create({
-        data: { name, phone, email, passwordHash, role },
-      });
-
+      const user = await tx.user.create({ data: { name, phone, email, passwordHash, role } });
       let patientId: string | undefined;
       let doctorId: string | undefined;
       let staffId: string | undefined;
@@ -76,19 +58,7 @@ async function signupHandler(req: any, res: any) {
         let patient: any;
         for (let attempt = 0; attempt < 5; attempt += 1) {
           try {
-            patient = await tx.patient.create({
-              data: {
-                userId: user.id,
-                mrn: freshMrn(),
-                name,
-                phone,
-                email,
-                age: 30,
-                gender: 'Other',
-                district: 'New Delhi',
-                state: 'Delhi',
-              },
-            });
+            patient = await tx.patient.create({ data: { userId: user.id, mrn: freshMrn(), name, phone, email, age: 30, gender: 'Other', district: 'New Delhi', state: 'Delhi' } });
             break;
           } catch (err: any) {
             if (err?.code !== 'P2002' || attempt === 4) throw err;
@@ -100,17 +70,7 @@ async function signupHandler(req: any, res: any) {
           const facility = await tx.hospital.findUnique({ where: { id: facilityId }, select: { id: true } });
           if (!facility) throw Object.assign(new Error('Selected facility was not found'), { code: 'FACILITY_NOT_FOUND' });
         }
-        const doctor = await tx.doctor.create({
-          data: {
-            userId: user.id,
-            name,
-            specialty,
-            phone,
-            email,
-            facilityId,
-            available: true,
-          },
-        });
+        const doctor = await tx.doctor.create({ data: { userId: user.id, name, specialty, phone, email, facilityId, available: true } });
         doctorId = doctor.id;
         linkedFacilityId = doctor.facilityId || undefined;
       } else {
@@ -118,77 +78,25 @@ async function signupHandler(req: any, res: any) {
           const facility = await tx.hospital.findUnique({ where: { id: facilityId }, select: { id: true } });
           if (!facility) throw Object.assign(new Error('Selected facility was not found'), { code: 'FACILITY_NOT_FOUND' });
         }
-        const staff = await tx.staff.create({
-          data: {
-            userId: user.id,
-            name,
-            phone,
-            email,
-            facilityId,
-            role: 'NURSE',
-          },
-        });
+        const staff = await tx.staff.create({ data: { userId: user.id, name, phone, email, facilityId, role: 'NURSE' } });
         staffId = staff.id;
         linkedFacilityId = staff.facilityId || undefined;
       }
-
       return { user, patientId, doctorId, staffId, facilityId: linkedFacilityId || facilityId || undefined };
     });
 
-    const tokenPayload = {
-      userId: result.user.id,
-      name: result.user.name,
-      role: result.user.role,
-      phone: result.user.phone,
-      email: result.user.email,
-      patientId: result.patientId,
-      doctorId: result.doctorId,
-      staffId: result.staffId,
-      facilityId: result.facilityId,
-    };
-
+    const tokenPayload = { userId: result.user.id, name: result.user.name, role: result.user.role, phone: result.user.phone, email: result.user.email, patientId: result.patientId, doctorId: result.doctorId, staffId: result.staffId, facilityId: result.facilityId };
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
-    return res.status(201).json({
-      message: 'Account created successfully',
-      token,
-      user: tokenPayload,
-    });
+    return res.status(201).json({ message: 'Account created successfully', token, user: tokenPayload });
   } catch (error: any) {
-    console.error('Signup error:', {
-      code: error?.code,
-      message: error?.message,
-      meta: error?.meta,
-      correlationId: req.correlationId,
-    });
-
+    console.error('Signup error:', { code: error?.code, message: error?.message, meta: error?.meta, correlationId: req.correlationId });
     if (error?.code === 'P2002') {
       const target = Array.isArray(error?.meta?.target) ? error.meta.target.join(', ') : '';
-      return res.status(409).json({
-        error: target.includes('phone')
-          ? 'An account with this phone number already exists'
-          : target.includes('email')
-            ? 'An account with this email already exists'
-            : 'This account information is already registered',
-      });
+      return res.status(409).json({ error: target.includes('phone') ? 'An account with this phone number already exists' : target.includes('email') ? 'An account with this email already exists' : 'This account information is already registered' });
     }
-
-    if (error?.code === 'FACILITY_NOT_FOUND') {
-      return res.status(400).json({ error: 'Selected facility was not found' });
-    }
-
-    if (error?.code === 'P2003') {
-      return res.status(400).json({ error: 'One of the selected account details is invalid' });
-    }
-
-    // Prisma connection/schema errors are actionable deployment problems.
-    // Return a safe category to the client without exposing DATABASE_URL or
-    // other secrets. The full diagnostic remains in server logs.
-    if (typeof error?.code === 'string' && /^P10\d+|^P20\d+$/.test(error.code)) {
-      return res.status(503).json({
-        error: `Database error (${error.code}). Please check the backend database configuration and migrations.`,
-      });
-    }
-
+    if (error?.code === 'FACILITY_NOT_FOUND') return res.status(400).json({ error: 'Selected facility was not found' });
+    if (error?.code === 'P2003') return res.status(400).json({ error: 'One of the selected account details is invalid' });
+    if (typeof error?.code === 'string' && /^P10\d+|^P20\d+$/.test(error.code)) return res.status(503).json({ error: `Database error (${error.code}). Please check the backend database configuration and migrations.` });
     return res.status(503).json({ error: 'Registration service is temporarily unavailable. Please try again.' });
   } finally {
     await prisma.$disconnect().catch(() => undefined);
@@ -197,10 +105,9 @@ async function signupHandler(req: any, res: any) {
 
 const originalPost = expressModule.application.post;
 expressModule.application.post = function patchedPost(this: any, path: any, ...handlers: any[]) {
-  if (path === '/api/auth/signup') {
-    return originalPost.call(this, path, signupHandler);
-  }
+  if (path === '/api/auth/signup') return originalPost.call(this, path, signupHandler);
   return originalPost.call(this, path, ...handlers);
 };
 
+void ensureDemoAccounts();
 require('./index');
