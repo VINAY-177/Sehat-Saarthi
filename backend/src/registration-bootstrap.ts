@@ -42,6 +42,10 @@ async function signupHandler(req: any, res: any) {
       return res.status(400).json({ error: 'Invalid account role' });
     }
 
+    // Fail early with a clear database error rather than converting a database
+    // outage into an ambiguous registration failure.
+    await prisma.$connect();
+
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -176,14 +180,21 @@ async function signupHandler(req: any, res: any) {
       return res.status(400).json({ error: 'One of the selected account details is invalid' });
     }
 
+    // Prisma connection/schema errors are actionable deployment problems.
+    // Return a safe category to the client without exposing DATABASE_URL or
+    // other secrets. The full diagnostic remains in server logs.
+    if (typeof error?.code === 'string' && /^P10\d+|^P20\d+$/.test(error.code)) {
+      return res.status(503).json({
+        error: `Database error (${error.code}). Please check the backend database configuration and migrations.`,
+      });
+    }
+
     return res.status(503).json({ error: 'Registration service is temporarily unavailable. Please try again.' });
   } finally {
     await prisma.$disconnect().catch(() => undefined);
   }
 }
 
-// Intercept only the signup registration route before the existing backend is
-// loaded. Every other route remains exactly as implemented in index.ts.
 const originalPost = expressModule.application.post;
 expressModule.application.post = function patchedPost(this: any, path: any, ...handlers: any[]) {
   if (path === '/api/auth/signup') {
