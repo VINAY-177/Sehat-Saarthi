@@ -53,9 +53,9 @@ export function FloatingChatbotWidget() {
         </button>
       </div>
 
-      {/* Floating Chat Modal */}
+      {/* Spacious Chat Modal — desktop workspace with near-full-screen mobile layout */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-3xl border-0 shadow-2xl bg-transparent">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl h-[min(92vh,900px)] max-h-[92vh] p-0 overflow-hidden rounded-3xl border-0 shadow-2xl bg-transparent [&>button]:z-50 [&>button]:text-white [&>button]:bg-slate-900/60 [&>button]:rounded-full [&>button]:p-1.5 [&>button]:right-4 [&>button]:top-4">
           <DialogHeader className="sr-only">
             <DialogTitle>Sehat Saathi AI Voice Assistant</DialogTitle>
           </DialogHeader>
