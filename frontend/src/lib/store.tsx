@@ -6,6 +6,7 @@ import {
   ReferralStatus, Urgency, AuthUser, Appointment, Notification,
 } from "@/lib/types";
 import { Language, translations, Translations } from "@/lib/i18n";
+import { apiGet, apiPost } from "@/lib/api";
 
 // ============================================================
 // Sehat Saathi AI — Reactive Data Store & Language Context
@@ -766,42 +767,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Fetch appointments from PostgreSQL backend
   const refreshAppointments = useCallback(async () => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
     try {
-      const res = await fetch(`${API}/api/appointments`, {
-        headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setAppointments(data);
-        }
+      const data = await apiGet<Appointment[]>("/api/appointments");
+      if (Array.isArray(data)) {
+        setAppointments(data);
       }
     } catch (err) {
       console.warn("Failed to fetch appointments from API:", err);
     }
-  }, [token]);
+  }, []);
 
   const createAppointment = useCallback(async (appointmentData: Partial<Appointment>): Promise<Appointment> => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
-    const res = await fetch(`${API}/api/appointments`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
-      },
-      body: JSON.stringify(appointmentData),
-    });
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error || 'Failed to create appointment');
-    }
-    const created = await res.json();
-    await refreshAppointments();
+    const created = await apiPost<Appointment>("/api/appointments", appointmentData);
+    setAppointments((previous) => [created, ...previous.filter((appointment) => appointment.id !== created.id)]);
     return created;
-  }, [token, refreshAppointments]);
+  }, []);
 
   const refreshNotifications = useCallback(async () => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";

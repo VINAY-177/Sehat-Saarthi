@@ -4,7 +4,14 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Appointment, Doctor, Patient } from "@/lib/types";
 import { useStore } from "@/lib/store";
-import { apiGet, apiPost, apiPut } from "@/lib/api";
+import { apiGet, apiPost, apiPut, isAuthenticationError } from "@/lib/api";
+import {
+  appointmentDateTimeInputToIso,
+  formatAppointmentDate,
+  formatAppointmentDateTime,
+  formatAppointmentTime,
+  getDefaultAppointmentDateTime,
+} from "@/lib/appointment-time";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +28,11 @@ import {
   RefreshCw,
   Check,
   X,
+  AlertTriangle,
+  UserPlus,
+  LogIn,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<
   string,
@@ -36,12 +47,16 @@ const STATUS_CONFIG: Record<
   CANCELLED: { label: "Cancelled", bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", step: 0 },
 };
 
+
 export default function SchedulingPage() {
-  const { refreshAppointments } = useStore();
+  const { refreshAppointments, currentUser } = useStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [bookingDataError, setBookingDataError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<boolean>(false);
 
   // Filters & Views
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,27 +76,81 @@ export default function SchedulingPage() {
   const [bookReason, setBookReason] = useState("");
   const [bookNotes, setBookNotes] = useState("");
   const [booking, setBooking] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
+    setFetchError(null);
+    setBookingDataError(null);
+    setAuthError(false);
+
     try {
-      const [appts, docs, pats] = await Promise.all([
-        apiGet<Appointment[]>("/api/appointments").catch(() => []),
-        apiGet<Doctor[]>("/api/doctors").catch(() => []),
-        apiGet<Patient[]>("/api/patients").catch(() => []),
+      const [apptsRes, docsRes, patsRes] = await Promise.allSettled([
+        apiGet<Appointment[]>("/api/appointments"),
+        apiGet<Doctor[]>("/api/doctors"),
+        apiGet<Patient[]>("/api/patients"),
       ]);
 
-      if (Array.isArray(appts)) setAppointments(appts);
-      if (Array.isArray(docs)) {
-        setDoctors(docs);
-        if (docs.length > 0 && !bookDoctorId) setBookDoctorId(docs[0].id);
+      const errors: string[] = [];
+      let bookingDataFailed = false;
+      let authenticationFailed = false;
+
+      if (apptsRes.status === "fulfilled" && Array.isArray(apptsRes.value)) {
+        setAppointments(apptsRes.value);
+      } else if (apptsRes.status === "rejected") {
+        const msg = apptsRes.reason?.message || "Failed to load appointments";
+        console.error("Error loading appointments:", apptsRes.reason);
+        errors.push(msg);
+        authenticationFailed ||= isAuthenticationError(apptsRes.reason);
       }
-      if (Array.isArray(pats)) {
-        setPatients(pats);
-        if (pats.length > 0 && !bookPatientId) setBookPatientId(pats[0].id);
+
+      if (docsRes.status === "fulfilled" && Array.isArray(docsRes.value)) {
+        setDoctors(docsRes.value);
+        if (docsRes.value.length > 0) {
+          setBookDoctorId((prev) => prev || docsRes.value[0].id);
+        }
+      } else if (docsRes.status === "rejected") {
+        const msg = docsRes.reason?.message || "Failed to load doctors";
+        console.error("Error loading doctors:", docsRes.reason);
+        errors.push(msg);
+        bookingDataFailed = true;
+        authenticationFailed ||= isAuthenticationError(docsRes.reason);
       }
-    } catch (err) {
+
+      if (patsRes.status === "fulfilled" && Array.isArray(patsRes.value)) {
+        setPatients(patsRes.value);
+        if (patsRes.value.length > 0) {
+          setBookPatientId((prev) => prev || patsRes.value[0].id);
+        }
+      } else if (patsRes.status === "rejected") {
+        const msg = patsRes.reason?.message || "Failed to load patients";
+        console.error("Error loading patients:", patsRes.reason);
+        errors.push(msg);
+        bookingDataFailed = true;
+        authenticationFailed ||= isAuthenticationError(patsRes.reason);
+      }
+
+      if (errors.length > 0) {
+        setFetchError(errors.includes("NEXT_PUBLIC_API_URL is not configured")
+          ? "NEXT_PUBLIC_API_URL is not configured"
+          : "We couldn't load scheduling data from the server.");
+      }
+      if (bookingDataFailed) {
+        setBookingDataError("We couldn't load patients and clinicians from the server.");
+      }
+      if (authenticationFailed) {
+        setAuthError(true);
+      }
+    } catch (err: unknown) {
       console.error("Error fetching scheduling data:", err);
+      const msg = err instanceof Error ? err.message : "";
+      setFetchError(msg === "NEXT_PUBLIC_API_URL is not configured"
+        ? msg
+        : "We couldn't load scheduling data from the server.");
+      setBookingDataError("We couldn't load patients and clinicians from the server.");
+      if (isAuthenticationError(err)) {
+        setAuthError(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -91,6 +160,23 @@ export default function SchedulingPage() {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Helper to open booking modal with defaults
+  const handleOpenBookingModal = () => {
+    setBookingError(null);
+    if (patients.length > 0 && !bookPatientId) {
+      // If current user is a patient, select them by default
+      const currentPat = patients.find((p) => p.id === currentUser?.patientId);
+      setBookPatientId(currentPat ? currentPat.id : patients[0].id);
+    }
+    if (doctors.length > 0 && !bookDoctorId) {
+      setBookDoctorId(doctors[0].id);
+    }
+    if (!bookDateTime) {
+      setBookDateTime(getDefaultAppointmentDateTime());
+    }
+    setShowBookModal(true);
+  };
 
   // Filtered Appointments
   const filteredAppointments = useMemo(() => {
@@ -117,17 +203,28 @@ export default function SchedulingPage() {
           setSelectedAppointment((prev) => (prev ? { ...prev, status: newStatus } : null));
         }
         refreshAppointments();
+        toast.success(`Appointment status updated to ${newStatus}`);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error updating appointment status:", err);
+      toast.error((err instanceof Error ? err.message : null) || "Failed to update appointment status");
     }
   };
 
   // Book Appointment Submit
   const handleBookSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBookingError(null);
+
     if (!bookPatientId || !bookDoctorId || !bookDateTime) {
-      alert("Please fill all required fields.");
+      const msg = "Please select a patient, attending clinician, and appointment date/time.";
+      setBookingError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (bookingDataError) {
+      setBookingError("Unable to book appointment. Please try again.");
       return;
     }
 
@@ -136,22 +233,32 @@ export default function SchedulingPage() {
       const created = await apiPost<Appointment>("/api/appointments", {
         patientId: bookPatientId,
         doctorId: bookDoctorId,
-        dateTime: new Date(bookDateTime).toISOString(),
+        dateTime: appointmentDateTimeInputToIso(bookDateTime),
         visitType: bookVisitType,
-        reason: bookReason,
-        notes: bookNotes,
+        reason: bookReason.trim() || undefined,
+        notes: bookNotes.trim() || undefined,
         status: "CONFIRMED",
       });
 
-      if (created) {
+      if (created && created.id) {
+        toast.success("Appointment booked successfully.");
         setShowBookModal(false);
         setBookReason("");
         setBookNotes("");
-        fetchData();
+        setBookingError(null);
+        // Immediately add to local appointment state and trigger store refresh
+        setAppointments((prev) => [created, ...prev.filter((a) => a.id !== created.id)]);
         refreshAppointments();
+      } else {
+        throw new Error("Server did not return a valid appointment record.");
       }
-    } catch (err) {
-      console.error("Error booking appointment:", err);
+    } catch (err: unknown) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Error booking appointment:", err);
+      }
+      const msg = "Unable to book appointment. Please try again.";
+      setBookingError(msg);
+      toast.error(msg);
     } finally {
       setBooking(false);
     }
@@ -198,7 +305,8 @@ export default function SchedulingPage() {
           </Button>
 
           <Button
-            onClick={() => setShowBookModal(true)}
+            onClick={handleOpenBookingModal}
+            disabled={loading || Boolean(bookingDataError)}
             className="h-11 px-5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-md font-bold gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -206,6 +314,46 @@ export default function SchedulingPage() {
           </Button>
         </div>
       </div>
+
+      {/* Authentication Error Banner */}
+      {authError && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+          <div className="p-2 bg-amber-100 rounded-xl">
+            <LogIn className="w-5 h-5 text-amber-700" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-amber-900 text-sm">Authentication Required</h3>
+            <p className="text-amber-700 text-xs mt-1">
+              You need to log in to view patients and book appointments. The patient registry requires a valid session token.
+            </p>
+            <Link href="/login">
+              <Button className="mt-3 h-9 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 gap-2">
+                <LogIn className="w-3.5 h-3.5" /> Log In to Continue
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Fetch Error Banner */}
+      {fetchError && !authError && (
+        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex items-start gap-4">
+          <div className="p-2 bg-rose-100 rounded-xl">
+            <AlertTriangle className="w-5 h-5 text-rose-700" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-rose-900 text-sm">Unable to load booking data</h3>
+            <p className="text-rose-700 text-xs mt-1 break-words">{fetchError}</p>
+            <Button
+              onClick={fetchData}
+              variant="outline"
+              className="mt-3 h-9 rounded-xl border-rose-300 text-rose-700 hover:bg-rose-100 font-bold text-xs px-4 gap-2"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Retry
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Appointment Lifecycle Metric Pills */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -348,7 +496,7 @@ export default function SchedulingPage() {
             <p className="text-slate-500 max-w-sm mb-6">
               No clinical visits match your filter parameters. Book an intake to populate the roster.
             </p>
-            <Button onClick={() => setShowBookModal(true)} className="h-11 px-6 rounded-xl bg-teal-600 hover:bg-teal-700">
+            <Button onClick={handleOpenBookingModal} className="h-11 px-6 rounded-xl bg-teal-600 hover:bg-teal-700">
               Book First Appointment
             </Button>
           </CardContent>
@@ -371,8 +519,6 @@ export default function SchedulingPage() {
               <tbody className="divide-y divide-slate-100 text-sm">
                 {filteredAppointments.map((appt) => {
                   const statusCfg = STATUS_CONFIG[appt.status] || STATUS_CONFIG.REQUESTED;
-                  const dateObj = new Date(appt.dateTime);
-
                   return (
                     <tr
                       key={appt.id}
@@ -387,10 +533,10 @@ export default function SchedulingPage() {
                           </div>
                           <div>
                             <span className="font-bold text-slate-900 block text-xs">
-                              {dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                              {formatAppointmentDate(appt.dateTime)}
                             </span>
                             <span className="text-[11px] font-semibold text-teal-700">
-                              {dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              {formatAppointmentTime(appt.dateTime)}
                             </span>
                           </div>
                         </div>
@@ -550,7 +696,7 @@ export default function SchedulingPage() {
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-500">
                             <Clock className="w-3.5 h-3.5 text-teal-600" />
-                            <span>{new Date(appt.dateTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            <span>{formatAppointmentTime(appt.dateTime)}</span>
                             <span>•</span>
                             <span className="truncate">{appt.reason || "Consultation"}</span>
                           </div>
@@ -629,7 +775,7 @@ export default function SchedulingPage() {
                   <span className="font-bold text-slate-900 text-sm block">{selectedAppointment.doctor?.name}</span>
                   <span className="text-slate-500">{selectedAppointment.doctor?.specialty}</span>
                   <span className="text-[10px] text-slate-500 block mt-1">
-                    Time: {new Date(selectedAppointment.dateTime).toLocaleString()}
+                    Time: {formatAppointmentDateTime(selectedAppointment.dateTime)} IST
                   </span>
                 </div>
               </div>
@@ -708,37 +854,86 @@ export default function SchedulingPage() {
 
             <CardContent className="p-6">
               <form onSubmit={handleBookSubmit} className="space-y-4">
+                {/* Booking Error Banner */}
+                {bookingError && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-start gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" />
+                    <p className="text-rose-700 text-xs font-medium">{bookingError}</p>
+                  </div>
+                )}
+
+                {/* Select Patient */}
                 <div>
                   <Label className="text-xs font-bold text-slate-700 block mb-1">Select Patient *</Label>
-                  <select
-                    value={bookPatientId}
-                    onChange={(e) => setBookPatientId(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:ring-2 focus:ring-teal-500"
-                    required
-                  >
-                    {patients.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.mrn} • {p.age} yrs • {p.district})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-bold text-slate-700 block mb-1">Attending Clinician *</Label>
+                  {bookingDataError ? (
+                    <div className="w-full p-4 rounded-xl border border-rose-200 bg-rose-50 text-center">
+                      <p className="text-rose-800 text-sm font-semibold">Unable to load booking data</p>
+                      <p className="text-rose-700 text-xs mt-1">{bookingDataError}</p>
+                      <Button
+                        type="button"
+                        onClick={fetchData}
+                        variant="outline"
+                        className="mt-3 h-8 rounded-lg border-rose-300 text-rose-700 hover:bg-rose-100 font-bold text-xs px-4 gap-1.5"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" /> Retry
+                      </Button>
+                    </div>
+                  ) : patients.length === 0 ? (
+                    <div className="w-full p-4 rounded-xl border border-amber-200 bg-amber-50 text-center">
+                      <p className="text-amber-800 text-sm font-semibold">No registered patients found</p>
+                      <p className="text-amber-600 text-xs mt-1">Register a patient first to book an appointment.</p>
+                      <Link href="/register">
+                        <Button type="button" className="mt-3 h-8 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 gap-1.5">
+                          <UserPlus className="w-3.5 h-3.5" /> Register Patient
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
                     <select
-                      value={bookDoctorId}
-                      onChange={(e) => setBookDoctorId(e.target.value)}
+                      value={bookPatientId}
+                      onChange={(e) => setBookPatientId(e.target.value)}
                       className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:ring-2 focus:ring-teal-500"
                       required
                     >
-                      {doctors.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name} ({d.specialty})
+                      <option value="" disabled>— Choose a patient —</option>
+                      {patients.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.mrn || "MRN-N/A"} • {p.age ?? "?"} yrs • {p.city || p.district || p.village || "Delhi"})
                         </option>
                       ))}
                     </select>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Attending Clinician */}
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700 block mb-1">Attending Clinician *</Label>
+                    {bookingDataError ? (
+                      <div className="w-full p-4 rounded-xl border border-rose-200 bg-rose-50 text-center">
+                        <p className="text-rose-800 text-sm font-semibold">Booking data is unavailable</p>
+                        <p className="text-rose-700 text-xs mt-1">Retry loading patients and clinicians before booking.</p>
+                      </div>
+                    ) : doctors.length === 0 ? (
+                      <div className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 text-center">
+                        <p className="text-slate-600 text-sm font-semibold">No clinicians available</p>
+                        <p className="text-slate-400 text-xs mt-1">No doctors are registered in the system.</p>
+                      </div>
+                    ) : (
+                      <select
+                        value={bookDoctorId}
+                        onChange={(e) => setBookDoctorId(e.target.value)}
+                        className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:ring-2 focus:ring-teal-500"
+                        required
+                      >
+                        <option value="" disabled>— Choose a clinician —</option>
+                        {doctors.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name} ({d.specialty || "General Medicine"})
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
 
                   <div>
@@ -797,8 +992,8 @@ export default function SchedulingPage() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={booking}
-                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl h-11 px-6 shadow-sm"
+                    disabled={booking || Boolean(bookingDataError) || patients.length === 0 || doctors.length === 0 || !bookPatientId || !bookDoctorId}
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl h-11 px-6 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {booking ? "Booking..." : "Confirm Booking"}
                   </Button>

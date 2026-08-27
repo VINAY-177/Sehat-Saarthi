@@ -31,6 +31,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The frontend needs the public URL of the separately deployed Express API at build time. In the Vercel project, set `NEXT_PUBLIC_API_URL` for Production, Preview, and Development to the public HTTPS backend URL (for example, `https://api.example.com`). Redeploy after changing it.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Do not set this value to `localhost`, and do not commit a production URL or credentials to source control. The application deliberately reports `NEXT_PUBLIC_API_URL is not configured` on a non-local deployment instead of silently calling localhost.

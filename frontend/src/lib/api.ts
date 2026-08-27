@@ -1,6 +1,43 @@
 "use client";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const LOCAL_API_URL = "http://localhost:5000";
+
+function isLocalBrowser(): boolean {
+  if (typeof window === "undefined") return process.env.NODE_ENV !== "production";
+
+  return ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+}
+
+export function getApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+
+  // Local development can use the local backend. A deployed browser must be
+  // configured explicitly and must never fall back to localhost.
+  return isLocalBrowser() ? LOCAL_API_URL : "";
+}
+
+export class ApiError extends Error {
+  constructor(message: string, public readonly status?: number) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+export function isAuthenticationError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
+function getApiErrorMessage(data: unknown): string | undefined {
+  if (!data || typeof data !== "object") return undefined;
+
+  const errorData = data as { error?: unknown; message?: unknown };
+  if (typeof errorData.error === "string") return errorData.error;
+  if (typeof errorData.message === "string") return errorData.message;
+  return undefined;
+}
 
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -16,11 +53,20 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const baseUrl = getApiBaseUrl();
+
+  if (!baseUrl) {
+    throw new ApiError("NEXT_PUBLIC_API_URL is not configured");
+  }
+
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const fullUrl = `${baseUrl}${normalizedPath}`;
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const res = await fetch(`${API_BASE}${path}`, {
+    const res = await fetch(fullUrl, {
       ...options,
       headers: {
         ...getAuthHeaders(),
@@ -30,11 +76,33 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     });
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData?.error || errorData?.message || `Request failed with status ${res.status}`);
+      let errorData: unknown = {};
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = {};
+      }
+      const errorMessage = getApiErrorMessage(errorData);
+
+      if (res.status === 401) {
+        throw new ApiError(
+          errorMessage || "Authentication required. Please log in to view and book appointments.",
+          res.status
+        );
+      }
+
+      throw new ApiError(
+        errorMessage || `Request to ${path} failed with status ${res.status}`,
+        res.status
+      );
     }
 
     return res.json();
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new ApiError(`Request to ${path} timed out after 30 seconds.`);
+    }
+    throw err;
   } finally {
     clearTimeout(timeout);
   }

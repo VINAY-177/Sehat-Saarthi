@@ -418,7 +418,7 @@ async function main() {
       dateOfBirth: '1998-04-15',
       address: 'Flat 302, Green View Apartments',
       village: 'Civil Lines',
-      city: 'Delhi',
+      city: 'New Delhi',
       district: 'Central Delhi',
       state: 'Delhi',
       pincode: '110054',
@@ -535,12 +535,12 @@ async function main() {
   // ============================================================
   console.log('📅 Seeding Interconnected Appointments...');
 
-  // Main SIH Demo Appointment: 28 Aug 2026, 10:30 AM (Confirmed)
+  // Main SIH Demo Appointment: 28 Aug 2026, 10:30 AM IST (Confirmed)
   await prisma.appointment.create({
     data: {
       patientId: patient.id,
       doctorId: doctor.id,
-      dateTime: '2026-08-28T10:30:00.000Z',
+      dateTime: '2026-08-28T05:00:00.000Z',
       status: 'CONFIRMED',
       visitType: 'NEW',
       reason: 'General Consultation & Hypertension Evaluation',
@@ -548,12 +548,12 @@ async function main() {
     },
   });
 
-  // Follow-up: 04 Sep 2026, 11:00 AM (Scheduled)
+  // Follow-up: 04 Sep 2026, 11:00 AM IST (Scheduled)
   await prisma.appointment.create({
     data: {
       patientId: patient.id,
       doctorId: doctor.id,
-      dateTime: '2026-09-04T11:00:00.000Z',
+      dateTime: '2026-09-04T05:30:00.000Z',
       status: 'REQUESTED',
       visitType: 'FOLLOW_UP',
       reason: 'Follow-up blood pressure review and lifestyle check',
@@ -561,12 +561,12 @@ async function main() {
     },
   });
 
-  // Completed: 18 Aug 2026, 02:00 PM
+  // Completed: 18 Aug 2026, 02:00 PM IST
   await prisma.appointment.create({
     data: {
       patientId: patient.id,
       doctorId: doctor.id,
-      dateTime: '2026-08-18T14:00:00.000Z',
+      dateTime: '2026-08-18T08:30:00.000Z',
       status: 'COMPLETED',
       visitType: 'NEW',
       reason: 'Initial intake consultation and baseline vitals recording',

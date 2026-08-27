@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useStore } from "@/lib/store";
+import { formatAppointmentDate, formatAppointmentTime } from "@/lib/appointment-time";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +49,8 @@ export function PatientDashboard() {
     doctorName: nextApptData.doctor?.name || 'Doctor',
     specialty: nextApptData.doctor?.specialty || 'General Medicine',
     facilityName: nextApptData.doctor?.facility?.name || 'Government General Hospital — Delhi',
-    date: new Date(nextApptData.dateTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-    time: new Date(nextApptData.dateTime).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }),
+    date: formatAppointmentDate(nextApptData.dateTime, { day: 'numeric', month: 'long', year: 'numeric' }),
+    time: formatAppointmentTime(nextApptData.dateTime, { hour: 'numeric', minute: '2-digit', hour12: true }),
     status: nextApptData.status,
     type: nextApptData.reason || nextApptData.visitType || 'General Consultation',
   } : null;

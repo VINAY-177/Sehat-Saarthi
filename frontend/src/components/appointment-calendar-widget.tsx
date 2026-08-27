@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { Role, Appointment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { useStore } from "@/lib/store";
+import { formatAppointmentTime, getAppointmentDateParts } from "@/lib/appointment-time";
 
 interface AppointmentCalendarWidgetProps {
   role?: Role;
@@ -35,11 +36,9 @@ const DAY_NAMES_EN = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const DAY_NAMES_HI = ["रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"];
 
 export function AppointmentCalendarWidget({ 
-  patientName = "Patient",
   onScheduleClick 
 }: AppointmentCalendarWidgetProps) {
-  const { t, language } = useStore();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const { t, language, appointments = [] } = useStore();
   
   // Current viewing month and year
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -50,20 +49,6 @@ export function AppointmentCalendarWidget({
 
   const monthNames = language === "hi" ? MONTH_NAMES_HI : MONTH_NAMES_EN;
   const dayNames = language === "hi" ? DAY_NAMES_HI : DAY_NAMES_EN;
-
-  useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    fetch(`${API}/api/appointments`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: Appointment[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setAppointments(data);
-        }
-      })
-      .catch((err) => {
-        console.warn("Appointments fetch error:", err);
-      });
-  }, [patientName]);
 
   // Navigate Months
   const handlePrevMonth = () => {
@@ -94,9 +79,9 @@ export function AppointmentCalendarWidget({
   const appointmentDays = useMemo(() => {
     const map = new Map<number, Appointment[]>();
     appointments.forEach((appt) => {
-      const d = new Date(appt.dateTime);
-      if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
-        const day = d.getDate();
+      const date = getAppointmentDateParts(appt.dateTime);
+      if (date && date.year === currentYear && date.month === currentMonth) {
+        const day = date.day;
         if (!map.has(day)) {
           map.set(day, []);
         }
@@ -230,8 +215,7 @@ export function AppointmentCalendarWidget({
             {selectedDayAppointments.length > 0 ? (
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {selectedDayAppointments.map((appt) => {
-                  const d = new Date(appt.dateTime);
-                  const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const timeStr = formatAppointmentTime(appt.dateTime);
                   return (
                     <div
                       key={appt.id}

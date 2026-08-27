@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { StatCard } from "@/components/stat-card";
+import { formatAppointmentTime, getAppointmentDateKey } from "@/lib/appointment-time";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,9 +23,9 @@ import {
 export function StaffDashboard() {
   const { currentUser, facilities, referrals = [], patients = [], stats, language, appointments = [] } = useStore();
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getAppointmentDateKey(new Date());
   const todayAppointments = appointments
-    .filter((a) => a.dateTime?.startsWith(today) && !['CANCELLED', 'DECLINED'].includes(a.status))
+    .filter((a) => getAppointmentDateKey(a.dateTime) === today && !['CANCELLED', 'DECLINED'].includes(a.status))
     .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
 
   const userFacility = currentUser?.facilityId 
@@ -308,7 +309,7 @@ export function StaffDashboard() {
                       <div className="space-y-0.5">
                         <span className="font-bold text-slate-900">{appt.patient?.name || 'Patient'}</span>
                         <p className="text-[11px] text-slate-500">
-                          {appt.doctor?.name || 'Doctor'} • {new Date(appt.dateTime).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                          {appt.doctor?.name || 'Doctor'} • {formatAppointmentTime(appt.dateTime, { hour: 'numeric', minute: '2-digit', hour12: true })}
                         </p>
                       </div>
                       <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">

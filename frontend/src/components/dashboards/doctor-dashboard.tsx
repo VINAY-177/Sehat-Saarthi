@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useStore } from "@/lib/store";
 import { Urgency } from "@/lib/types";
+import { formatAppointmentTime, getAppointmentDateKey } from "@/lib/appointment-time";
 import { StatCard } from "@/components/stat-card";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { Button } from "@/components/ui/button";
@@ -38,10 +39,10 @@ export function DoctorDashboard() {
     greeting = "Good night";
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getAppointmentDateKey(new Date());
   const todayAppointments = appointments
     .filter((a) => {
-      const apptDate = a.dateTime?.split('T')[0];
+      const apptDate = getAppointmentDateKey(a.dateTime);
       return a.doctorId === currentUser?.doctorId && apptDate === today && !['CANCELLED', 'DECLINED'].includes(a.status);
     })
     .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
@@ -51,7 +52,7 @@ export function DoctorDashboard() {
       patientId: a.patient?.id || '',
       age: a.patient?.age || '-',
       gender: a.patient?.gender || '-',
-      time: new Date(a.dateTime).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      time: formatAppointmentTime(a.dateTime, { hour: 'numeric', minute: '2-digit', hour12: true }),
       type: a.visitType || 'NEW',
       status: a.status,
       reason: a.reason || 'General Consultation',

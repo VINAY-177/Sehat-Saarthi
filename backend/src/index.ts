@@ -255,7 +255,8 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     const query = String(emailOrMobile).trim();
     let authenticatedUser: any = null;
 
-    // 1. Try querying PostgreSQL database
+    // Authenticate against the PostgreSQL-backed user record. Demo accounts
+    // are seeded in Prisma; do not mint sessions from frontend-only data.
     try {
       const user = await prisma.user.findFirst({
         where: {
@@ -290,30 +291,8 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         }
       }
     } catch (dbErr) {
-      console.warn('PostgreSQL database query fallback to demo accounts:', dbErr);
-    }
-
-    // 2. If user was not in DB or DB is starting up, check demo accounts
-    if (!authenticatedUser) {
-      const demoMatch = DEMO_ACCOUNTS.find(
-        (acc) =>
-          (acc.phone === query || acc.email === query) &&
-          (password === acc.password || password === acc.altPassword || password === 'Demo@1234')
-      );
-
-      if (demoMatch) {
-        authenticatedUser = {
-          userId: demoMatch.userId,
-          name: demoMatch.name,
-          role: demoMatch.role,
-          phone: demoMatch.phone,
-          email: demoMatch.email,
-          patientId: demoMatch.patientId,
-          doctorId: demoMatch.doctorId,
-          staffId: demoMatch.staffId,
-          facilityId: demoMatch.facilityId,
-        };
-      }
+      console.error('PostgreSQL database query failed during login:', dbErr);
+      return res.status(503).json({ error: 'Authentication service is temporarily unavailable' });
     }
 
     if (!authenticatedUser) {
@@ -1074,6 +1053,15 @@ app.get('/api/patients', requireAuth, async (req: AuthRequest, res: Response) =>
 
     const whereClause: any = {};
 
+    // A patient may access only their own protected registry record. Staff and
+    // clinicians retain the existing registry view required for scheduling.
+    if (req.user?.role === 'PATIENT') {
+      if (!req.user.patientId) {
+        return res.status(403).json({ error: 'Patient account is not linked to a patient record' });
+      }
+      whereClause.id = req.user.patientId;
+    }
+
     if (search && typeof search === 'string') {
       const q = search.trim();
       whereClause.OR = [
@@ -1451,13 +1439,44 @@ app.post('/api/patients/:id/encounters', requireAuth, async (req: AuthRequest, r
 // 5. Appointments & Referrals
 // ============================================================
 
+const APPOINTMENT_STATUSES = [
+  'REQUESTED', 'CONFIRMED', 'CHECKED_IN', 'IN_CONSULTATION',
+  'COMPLETED', 'DECLINED', 'CANCELLED',
+];
+const APPOINTMENT_VISIT_TYPES = ['NEW', 'FOLLOW_UP', 'EMERGENCY'];
+const appointmentInclude = {
+  patient: true,
+  doctor: {
+    include: {
+      facility: true,
+    },
+  },
+};
+
 // Appointments List
 app.get('/api/appointments', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { doctorId, patientId, status, date } = req.query;
     const where: any = {};
-    if (doctorId && typeof doctorId === 'string') where.doctorId = doctorId;
-    if (patientId && typeof patientId === 'string') where.patientId = patientId;
+    const requestedDoctorId = doctorId && typeof doctorId === 'string' ? doctorId : undefined;
+    const requestedPatientId = patientId && typeof patientId === 'string' ? patientId : undefined;
+
+    if (req.user?.role === 'PATIENT') {
+      if (!req.user.patientId) {
+        return res.status(403).json({ error: 'Patient account is not linked to a patient record' });
+      }
+      where.patientId = req.user.patientId;
+    } else if (req.user?.role === 'DOCTOR') {
+      if (!req.user.doctorId) {
+        return res.status(403).json({ error: 'Doctor account is not linked to a clinician record' });
+      }
+      where.doctorId = req.user.doctorId;
+    } else if (req.user?.role === 'HOSPITAL_STAFF' && req.user.facilityId) {
+      where.doctor = { facilityId: req.user.facilityId };
+    }
+
+    if (requestedDoctorId && !where.doctorId) where.doctorId = requestedDoctorId;
+    if (requestedPatientId && !where.patientId) where.patientId = requestedPatientId;
     if (status && typeof status === 'string') where.status = status;
     if (date && typeof date === 'string') {
       where.dateTime = { startsWith: date };
@@ -1465,14 +1484,7 @@ app.get('/api/appointments', requireAuth, async (req: AuthRequest, res: Response
 
     const appointments = await prisma.appointment.findMany({
       where,
-      include: {
-        patient: true,
-        doctor: {
-          include: {
-            facility: true,
-          },
-        },
-      },
+      include: appointmentInclude,
       orderBy: { dateTime: 'asc' },
     });
     res.json(appointments);
@@ -1484,64 +1496,57 @@ app.get('/api/appointments', requireAuth, async (req: AuthRequest, res: Response
 // Book Appointment
 app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    let { patientId, doctorId, dateTime, status, visitType, reason, notes, patientName, phone, specialty } = req.body;
+    const { patientId, doctorId, dateTime, status, visitType, reason, notes } = req.body;
 
-    let patient = patientId
-      ? await prisma.patient.findUnique({ where: { id: patientId } })
-      : null;
-
-    if (!patient && phone) {
-      patient = await prisma.patient.findFirst({ where: { phone: String(phone) } });
+    if (
+      typeof patientId !== 'string' || !patientId ||
+      typeof doctorId !== 'string' || !doctorId ||
+      typeof dateTime !== 'string' || !dateTime
+    ) {
+      return res.status(400).json({ error: 'patientId, doctorId, and dateTime are required' });
     }
 
-    if (!patient && (patientName || phone)) {
-      const count = await prisma.patient.count();
-      patient = await prisma.patient.create({
-        data: {
-          mrn: `MRN-2026-${String(count + 1).padStart(4, '0')}`,
-          name: patientName || 'Walk-in Patient',
-          age: 30,
-          gender: 'Other',
-          phone: phone || null,
-          district: 'New Delhi',
-          state: 'Delhi',
-        },
-      });
+    const parsedDateTime = new Date(dateTime);
+    if (Number.isNaN(parsedDateTime.getTime())) {
+      return res.status(400).json({ error: 'dateTime must be a valid ISO date-time' });
     }
 
+    if (status && !APPOINTMENT_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Invalid appointment status' });
+    }
+    if (visitType && !APPOINTMENT_VISIT_TYPES.includes(visitType)) {
+      return res.status(400).json({ error: 'Invalid appointment visit type' });
+    }
+
+    if (req.user?.role === 'PATIENT' && req.user.patientId !== patientId) {
+      return res.status(403).json({ error: 'Patients can only book appointments for their own record' });
+    }
+    if (req.user?.role === 'DOCTOR' && req.user.doctorId !== doctorId) {
+      return res.status(403).json({ error: 'Clinicians can only book appointments assigned to themselves' });
+    }
+
+    const [patient, doctor] = await Promise.all([
+      prisma.patient.findUnique({ where: { id: patientId } }),
+      prisma.doctor.findUnique({ where: { id: doctorId } }),
+    ]);
     if (!patient) {
-      return res.status(400).json({ error: 'A registered patient is required to book an appointment' });
+      return res.status(404).json({ error: 'Selected patient was not found' });
     }
-
-    let doctor = doctorId
-      ? await prisma.doctor.findUnique({ where: { id: doctorId } })
-      : null;
-
-    if (!doctor && specialty) {
-      doctor = await prisma.doctor.findFirst({
-        where: { specialty: { contains: String(specialty), mode: 'insensitive' } },
-      });
-    }
-
     if (!doctor) {
-      doctor = await prisma.doctor.findFirst();
-    }
-
-    if (!doctor) {
-      return res.status(400).json({ error: 'No clinician is available for booking' });
+      return res.status(404).json({ error: 'Selected clinician was not found' });
     }
 
     const appt = await prisma.appointment.create({
       data: {
-        patientId: patient.id,
-        doctorId: doctor.id,
-        dateTime: dateTime || new Date(Date.now() + 86400000).toISOString(),
+        patientId,
+        doctorId,
+        dateTime: parsedDateTime.toISOString(),
         status: status || 'CONFIRMED',
         visitType: visitType || 'NEW',
         reason: reason || null,
         notes: notes || null,
       },
-      include: { patient: true, doctor: true },
+      include: appointmentInclude,
     });
     // Auto-create notifications for appointment
     try {
