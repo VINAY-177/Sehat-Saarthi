@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "tsx src/registration-bootstrap.ts",
-    "dev": "tsx src/registration-bootstrap.ts"
+    "dev": "tsx src/registration-bootstrap.ts",
+    "seed:demo": "tsx prisma/demo-seed.ts"
   },
   "keywords": [],
   "author": "",
