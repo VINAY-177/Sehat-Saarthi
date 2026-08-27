@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useState } from "react";
 import { Menu, Bell, User as UserIcon, LogOut, ChevronDown, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,8 +20,10 @@ export function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { currentUser, logout, language, setLanguage, t } = useStore();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const handleLogout = () => {
+    setProfileMenuOpen(false);
     logout();
     router.push('/login');
   };
@@ -43,6 +46,11 @@ export function Header({ onMenuClick }: HeaderProps) {
     if (role === "DOCTOR") return "bg-blue-50 text-blue-700 border-blue-200";
     if (role === "HOSPITAL_STAFF") return "bg-indigo-50 text-indigo-700 border-indigo-200";
     return "bg-teal-50 text-teal-700 border-teal-200";
+  };
+
+  const navigateFromProfileMenu = (path: string) => {
+    setProfileMenuOpen(false);
+    router.push(path);
   };
 
   return (
@@ -118,8 +126,13 @@ export function Header({ onMenuClick }: HeaderProps) {
         <div className="w-px h-6 bg-slate-200 mx-0.5 hidden sm:block"></div>
         
         {currentUser && (
-          <DropdownMenu>
-            <DropdownMenuTrigger className="h-10 pl-2 pr-2 sm:pr-3 gap-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-center border border-slate-200/80 bg-white shadow-2xs outline-none cursor-pointer">
+          <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+            <DropdownMenuTrigger
+              type="button"
+              aria-label="Open profile menu"
+              aria-haspopup="menu"
+              className="h-10 pl-2 pr-2 sm:pr-3 gap-2.5 rounded-xl hover:bg-slate-50 transition-colors flex items-center border border-slate-200/80 bg-white shadow-2xs outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+            >
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-xs shadow-xs shrink-0">
                 {getUserInitials(currentUser.name)}
               </div>
@@ -131,9 +144,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                   {(currentUser.role || "Patient").toLowerCase().replace(/_/g, " ")}
                 </span>
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              <ChevronDown className={`h-3.5 w-3.5 text-slate-400 shrink-0 transition-transform duration-150 ${profileMenuOpen ? "rotate-180" : ""}`} />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-2xl p-2 shadow-xl border-slate-200 bg-white">
+            <DropdownMenuContent align="end" sideOffset={8} className="w-64 rounded-2xl p-2 shadow-xl border-slate-200 bg-white z-[100]">
               <DropdownMenuLabel className="p-3 bg-slate-50/80 rounded-xl border border-slate-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
@@ -152,21 +165,21 @@ export function Header({ onMenuClick }: HeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-100 my-1.5" />
               <DropdownMenuItem 
-                onClick={() => router.push('/profile')} 
+                onClick={() => navigateFromProfileMenu('/profile')} 
                 className="cursor-pointer text-slate-700 font-semibold p-2.5 rounded-xl hover:bg-teal-50 hover:text-teal-900 focus:bg-teal-50 focus:text-teal-900 transition-colors"
               >
                 <UserIcon className="mr-2.5 h-4 w-4 text-teal-600" />
                 <span>{t("myProfile")}</span>
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => router.push('/profile#settings')} 
+                onClick={() => navigateFromProfileMenu('/profile#settings')} 
                 className="cursor-pointer text-slate-700 font-semibold p-2.5 rounded-xl hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900 transition-colors"
               >
                 <Settings className="mr-2.5 h-4 w-4 text-slate-400" />
                 <span>Settings &amp; Preferences</span>
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => router.push('/login')} 
+                onClick={() => navigateFromProfileMenu('/login')} 
                 className="cursor-pointer text-slate-700 font-semibold p-2.5 rounded-xl hover:bg-slate-50 hover:text-slate-900 focus:bg-slate-50 focus:text-slate-900 transition-colors"
               >
                 <UserIcon className="mr-2.5 h-4 w-4 text-slate-400" />
