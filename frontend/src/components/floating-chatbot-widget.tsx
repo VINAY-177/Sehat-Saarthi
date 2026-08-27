@@ -15,20 +15,11 @@ export function FloatingChatbotWidget() {
 
   // The appointment booking assistant is strictly for Patients / Citizens.
   // Hide completely for Doctor and Hospital Staff, as well as on auth and chatbot pages.
-  if (
-    role !== Role.PATIENT &&
-    role !== Role.CITIZEN
-  ) {
-    return null;
-  }
-
-  if (pathname === "/chatbot" || pathname === "/login" || pathname === "/signup") {
-    return null;
-  }
+  if (role !== Role.PATIENT && role !== Role.CITIZEN) return null;
+  if (pathname === "/chatbot" || pathname === "/login" || pathname === "/signup") return null;
 
   return (
     <>
-      {/* Floating Trigger Button */}
       <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <button
           type="button"
@@ -42,7 +33,6 @@ export function FloatingChatbotWidget() {
             <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-300 border-2 border-teal-700 animate-ping" />
             <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-teal-700" />
           </div>
-
           <div className="text-left">
             <div className="flex items-center gap-1">
               <span className="text-xs font-black tracking-tight leading-none text-white">{t("bookWithAi")}</span>
@@ -53,13 +43,14 @@ export function FloatingChatbotWidget() {
         </button>
       </div>
 
-      {/* Spacious Chat Modal — desktop workspace with near-full-screen mobile layout */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl h-[min(92vh,900px)] max-h-[92vh] p-0 overflow-hidden rounded-3xl border-0 shadow-2xl bg-transparent [&>button]:z-50 [&>button]:text-white [&>button]:bg-slate-900/60 [&>button]:rounded-full [&>button]:p-1.5 [&>button]:right-4 [&>button]:top-4">
+        <DialogContent className="!w-[calc(100vw-2rem)] !max-w-[1400px] !h-[calc(100vh-2rem)] !max-h-[94vh] p-0 overflow-hidden rounded-3xl border-0 shadow-2xl bg-transparent [&>button]:z-50 [&>button]:text-white [&>button]:bg-slate-900/60 [&>button]:rounded-full [&>button]:p-1.5 [&>button]:right-4 [&>button]:top-4">
           <DialogHeader className="sr-only">
             <DialogTitle>Sehat Saathi AI Voice Assistant</DialogTitle>
           </DialogHeader>
-          <BookingChatbot onBackToDashboard={() => setIsOpen(false)} />
+          <div className="h-full w-full min-w-0 overflow-hidden">
+            <BookingChatbot onBackToDashboard={() => setIsOpen(false)} />
+          </div>
         </DialogContent>
       </Dialog>
     </>
