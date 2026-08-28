@@ -6,7 +6,7 @@ import {
   ReferralStatus, Urgency, AuthUser, Appointment, Notification,
 } from "@/lib/types";
 import { Language, translations, Translations } from "@/lib/i18n";
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, apiPatch } from "@/lib/api";
 
 // ============================================================
 // Sehat Saathi AI — Reactive Data Store & Language Context
@@ -69,6 +69,7 @@ interface StoreState {
   appointments: Appointment[];
   refreshAppointments: () => Promise<void>;
   createAppointment: (data: Partial<Appointment>) => Promise<Appointment>;
+  updateAppointmentStatus: (id: string, status: string) => Promise<Appointment>;
 
   // Notifications
   notifications: Notification[];
@@ -706,16 +707,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return false;
   }, [currentUser, token]);
 
-  // Fetch patients from PostgreSQL backend
+  // Fetch patients from PostgreSQL backend (authenticated)
   const refreshPatients = useCallback(async () => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     try {
-      const res = await fetch(`${API}/api/patients`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setPatients(data);
-        }
+      const data = await apiGet<Patient[]>("/api/patients");
+      if (Array.isArray(data)) {
+        setPatients(data);
       }
     } catch (err) {
       console.warn("Failed to fetch patients from API:", err);
@@ -724,10 +721,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Fetch referrals from backend
   const refreshReferrals = useCallback(async () => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     try {
-      const res = await fetch(`${API}/api/referrals`);
-      if (res.ok) {
+      const data = await apiGet<Referral[]>("/api/referrals");
+      if (Array.isArray(data)) {
         interface ApiReferralItem {
           id: string;
           patientId?: string;
@@ -741,24 +737,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
           status?: ReferralStatus;
           createdAt?: string;
         }
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          const mapped: Referral[] = data.map((ref: ApiReferralItem) => ({
-            id: ref.id,
-            patientId: ref.patientId ?? "",
-            patientName: ref.patientName ?? "",
-            fromFacility: "",
-            toFacility: ref.toHospitalName ?? "",
-            toHospitalId: ref.toHospitalId ?? "",
-            doctorName: ref.doctorName ?? "",
-            specialty: ref.specialty ?? "",
-            urgency: ref.urgency || Urgency.MODERATE,
-            reason: ref.reason ?? "",
-            status: ref.status || ReferralStatus.PENDING,
-            createdAt: ref.createdAt ?? new Date().toISOString(),
-          }));
-          setReferrals(mapped);
-        }
+        const mapped: Referral[] = (data as unknown as ApiReferralItem[]).map((ref: ApiReferralItem) => ({
+          id: ref.id,
+          patientId: ref.patientId ?? "",
+          patientName: ref.patientName ?? "",
+          fromFacility: "",
+          toFacility: ref.toHospitalName ?? "",
+          toHospitalId: ref.toHospitalId ?? "",
+          doctorName: ref.doctorName ?? "",
+          specialty: ref.specialty ?? "",
+          urgency: ref.urgency || Urgency.MODERATE,
+          reason: ref.reason ?? "",
+          status: ref.status || ReferralStatus.PENDING,
+          createdAt: ref.createdAt ?? new Date().toISOString(),
+        }));
+        setReferrals(mapped);
       }
     } catch (err) {
       console.warn("Failed to fetch referrals from API:", err);
@@ -781,6 +774,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const created = await apiPost<Appointment>("/api/appointments", appointmentData);
     setAppointments((previous) => [created, ...previous.filter((appointment) => appointment.id !== created.id)]);
     return created;
+  }, []);
+
+  const updateAppointmentStatus = useCallback(async (id: string, newStatus: string): Promise<Appointment> => {
+    const updated = await apiPatch<Appointment>(`/api/appointments/${id}/status`, { status: newStatus });
+    setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, ...updated } : a));
+    return updated;
   }, []);
 
   const refreshNotifications = useCallback(async () => {
@@ -842,14 +841,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  // Sync store with backend on mount
+  // Sync store with backend on mount and auth change
   useEffect(() => {
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
     refreshPatients();
     refreshReferrals();
     refreshAppointments();
     refreshNotifications();
+  }, [token, isAuthenticated, refreshPatients, refreshReferrals, refreshAppointments, refreshNotifications]);
+
+  // Load facilities from backend
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
     interface ApiHospital {
       id: string;
@@ -1057,6 +1059,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     appointments,
     refreshAppointments,
     createAppointment,
+    updateAppointmentStatus,
     notifications,
     refreshNotifications,
     markNotificationRead,

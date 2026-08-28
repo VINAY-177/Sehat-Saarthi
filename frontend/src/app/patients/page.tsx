@@ -22,8 +22,12 @@ import { Patient, Urgency } from "@/lib/types";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { apiGet } from "@/lib/api";
+import { useStore } from "@/lib/store";
+
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const { patients: storePatients } = useStore();
+  const [patients, setPatients] = useState<Patient[]>(storePatients || []);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRisk, setFilterRisk] = useState<string>("ALL");
@@ -40,14 +44,17 @@ export default function PatientsPage() {
       if (filterDistrict !== "ALL") params.append("district", filterDistrict);
       if (filterGender !== "ALL") params.append("gender", filterGender);
 
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/patients?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
+      const qs = params.toString();
+      const path = qs ? `/api/patients?${qs}` : "/api/patients";
+      const data = await apiGet<Patient[]>(path);
+      if (Array.isArray(data)) {
         setPatients(data);
       }
     } catch (err) {
       console.error("Failed to fetch patients from API:", err);
+      if (storePatients && storePatients.length > 0) {
+        setPatients(storePatients);
+      }
     } finally {
       setLoading(false);
     }

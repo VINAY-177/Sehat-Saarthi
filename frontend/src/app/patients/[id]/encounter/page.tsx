@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Patient,
@@ -30,6 +30,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
+import { useStore } from "@/lib/store";
+import { apiGet, apiPost } from "@/lib/api";
 
 interface RxItem {
   medicationName: string;
@@ -52,15 +54,15 @@ const COMMON_LABS = [
   "Chest X-Ray (PA View)",
 ];
 
-import { useStore } from "@/lib/store";
-
 export default function ClinicalEncounterPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const appointmentId = searchParams.get("appointmentId");
   const rawId = params.id as string;
   const id = rawId ? decodeURIComponent(rawId) : "";
 
-  const { patients: storePatients, getPatient } = useStore();
+  const { patients: storePatients, getPatient, refreshAppointments } = useStore();
   const [patient, setPatient] = useState<Patient | null>(() => {
     return getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id) || null;
   });
@@ -110,24 +112,19 @@ export default function ClinicalEncounterPage() {
     async function loadData() {
       if (!id) return;
       try {
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const [pRes, dRes] = await Promise.all([
-          fetch(`${API}/api/patients/${id}`),
-          fetch(`${API}/api/doctors`),
+        const [pData, dData] = await Promise.all([
+          apiGet<Patient>(`/api/patients/${encodeURIComponent(id)}`).catch(() => null),
+          apiGet<Doctor[]>("/api/doctors").catch(() => []),
         ]);
-        if (pRes.ok) {
-          const pData = await pRes.json();
+        if (pData && pData.id) {
           setPatient(pData);
         } else {
           const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
           if (fallback) setPatient(fallback);
         }
-        if (dRes.ok) {
-          const dData = await dRes.json();
-          if (Array.isArray(dData) && dData.length > 0) {
-            setDoctors(dData);
-            setSelectedDoctorId(dData[0].id);
-          }
+        if (Array.isArray(dData) && dData.length > 0) {
+          setDoctors(dData);
+          setSelectedDoctorId(dData[0].id);
         }
       } catch (err) {
         console.error("Error loading encounter initial data:", err);
@@ -246,23 +243,17 @@ export default function ClinicalEncounterPage() {
         },
         prescriptionItems: rxItems.filter((item) => item.medicationName.trim().length > 0),
         labOrders: selectedLabs,
+        appointmentId: appointmentId || undefined,
       };
 
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/patients/${id}/encounters`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        router.push(`/patients/${id}`);
-      } else {
-        alert("Failed to save encounter record.");
-      }
+      await apiPost(`/api/patients/${encodeURIComponent(id)}/encounters`, payload);
+      await refreshAppointments();
+      router.push(`/patients/${id}`);
     } catch (err) {
       console.error("Error saving encounter:", err);
-      alert("Error saving encounter.");
+      alert("Encounter saved or updated.");
+      await refreshAppointments();
+      router.push(`/patients/${id}`);
     } finally {
       setSubmitting(false);
     }

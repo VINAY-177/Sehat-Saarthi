@@ -13,6 +13,7 @@ import {
   Edit3, XCircle, ArrowLeft, Download, Calendar as CalendarIcon
 } from "lucide-react";
 import { toast } from "sonner";
+import { apiPost } from "@/lib/api";
 
 // Chatbot Flow Step Enum
 export enum ChatStep {
@@ -180,7 +181,7 @@ interface ISpeechRecognitionConstructor {
 
 export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () => void }) {
   const router = useRouter();
-  const { currentUser, language, setLanguage, t } = useStore();
+  const { currentUser, language, setLanguage, t, refreshAppointments, refreshPatients } = useStore();
 
   const [currentStep, setCurrentStep] = useState<ChatStep>(ChatStep.GREETING);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -401,10 +402,20 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
     switch (currentStep) {
       case ChatStep.NAME: {
+        if (cleanInput.length < 2 || /^\d+$/.test(cleanInput)) {
+          addBotMessage(
+            isHindi 
+              ? "कृपया अपना मान्य पूरा नाम दर्ज करें (उदा. राहुल शर्मा):" 
+              : "Please enter your valid full name (e.g. Rahul Sharma):",
+            currentUser?.name ? [currentUser.name] : undefined,
+            ChatStep.NAME
+          );
+          return;
+        }
         setBooking((prev) => ({ ...prev, fullName: cleanInput }));
         setCurrentStep(ChatStep.PHONE);
         addBotMessage(
-          isHindi ? `आपसे मिलकर खुशी हुई, ${cleanInput}! कृपया मोबाइल नंबर दर्ज करें:` : `Nice to meet you, ${cleanInput}! Please enter your mobile number:`,
+          isHindi ? `आपसे मिलकर खुशी हुई, ${cleanInput}! कृपया 10 अंकों का मोबाइल नंबर दर्ज करें:` : `Nice to meet you, ${cleanInput}! Please enter your 10-digit mobile number:`,
           currentUser?.phone ? [currentUser.phone] : undefined,
           ChatStep.PHONE
         );
@@ -412,7 +423,18 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       }
 
       case ChatStep.PHONE: {
-        setBooking((prev) => ({ ...prev, phone: cleanInput }));
+        const digits = cleanInput.replace(/\D/g, "");
+        if (digits.length < 10) {
+          addBotMessage(
+            isHindi 
+              ? "कृपया एक मान्य 10-अंकीय मोबाइल नंबर प्रदान करें ताकि हम पुष्टिकरण SMS भेज सकें:" 
+              : "Please provide a valid 10-digit mobile number so we can send your appointment details:",
+            currentUser?.phone ? [currentUser.phone] : undefined,
+            ChatStep.PHONE
+          );
+          return;
+        }
+        setBooking((prev) => ({ ...prev, phone: digits.slice(-10) }));
         setCurrentStep(ChatStep.LOCATION);
         addBotMessage(
           isHindi ? "धन्यवाद। आप किस शहर या इलाके में हैं?" : "Got it. Which city or area are you in?",
@@ -426,7 +448,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         setBooking((prev) => ({ ...prev, location: cleanInput }));
         setCurrentStep(ChatStep.SYMPTOMS);
         addBotMessage(
-          isHindi ? "कृपया अपने लक्षण बताएं या नीचे दिए गए विकल्पों में से चुनें:" : "Please describe your symptoms, or pick from common examples:",
+          isHindi ? "कृपया अपने मुख्य लक्षण बताएं या नीचे दिए गए विकल्पों में से चुनें:" : "Please describe your symptoms, or pick from common examples:",
           symptomExamples,
           ChatStep.SYMPTOMS
         );
@@ -468,7 +490,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         setBooking((prev) => ({ ...prev, severity: cleanInput }));
         setCurrentStep(ChatStep.DOCTOR_TYPE);
 
-        const aiRec = suggestDoctorForSymptoms(booking.symptoms);
+        const aiRec = suggestDoctorForSymptoms(booking.symptoms.length > 0 ? booking.symptoms : [cleanInput]);
         addBotMessage(
           isHindi 
             ? `AI सुझाव: ${aiRec.specialty}। आप किस डॉक्टर से मिलना चाहते हैं?` 
@@ -487,7 +509,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           ? (isHindi ? "डॉ. अंजलि वर्मा (बाल रोग)" : "Dr. Anjali Verma (Pediatrics)")
           : chosenSpecialty.includes("Orthopedic") || chosenSpecialty.includes("हड्डी")
           ? (isHindi ? "डॉ. विक्रम सेठी (ऑर्थोपेडिक्स)" : "Dr. Vikram Sethi (Orthopedics)")
-          : (isHindi ? "डॉ. राजेश कुमार (सामान्य चिकित्सक)" : "Dr. Rajesh Kumar (General Physician)");
+          : (isHindi ? "डॉ. प्रिया मेहता (सामान्य चिकित्सक)" : "Dr. Priya Mehta (General Physician)");
 
         setBooking((prev) => ({
           ...prev,
@@ -506,7 +528,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
       case ChatStep.HOSPITAL: {
         const chosenHospital = cleanInput.includes("Auto-Match") 
-          ? (booking.location.toLowerCase().includes("varanasi") || booking.location.includes("वाराणसी") ? (isHindi ? "जिला अस्पताल, वाराणसी" : "District Hospital, Varanasi") : (isHindi ? "एम्स नई दिल्ली" : "AIIMS New Delhi")) 
+          ? (booking.location.toLowerCase().includes("varanasi") || booking.location.includes("वाराणसी") ? (isHindi ? "जिला अस्पताल, वाराणसी" : "District Hospital, Varanasi") : (isHindi ? "गवर्नमेंट जनरल हॉस्पिटल, दिल्ली" : "Government General Hospital — Delhi")) 
           : cleanInput;
 
         setBooking((prev) => ({ ...prev, hospital: chosenHospital }));
@@ -530,6 +552,38 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       }
 
       case ChatStep.DATE_TIME: {
+        // Conversational Validation: Detect if user entered symptoms or specialty instead of date/time
+        const isSymptomOrDoctor = /(chest pain|pain|fever|cough|vomit|headache|heart|doctor|cardiologist|physician|orthopedic|pediatrician|दर्द|बुखार|खांसी|उल्टी|सिरदर्द|डॉक्टर|छाती)/i.test(cleanInput);
+        const isDateTime = /(today|tomorrow|morning|afternoon|evening|am|pm|mon|tue|wed|thu|fri|sat|sun|आज|कल|परसों|बजे|सुबह|शाम|दोपहर|\d{1,2}:\d{2}|\d{1,2}\/\d{1,2}|\d{1,2}-\d{1,2})/i.test(cleanInput);
+
+        if (isSymptomOrDoctor && !isDateTime) {
+          const aiRec = suggestDoctorForSymptoms([cleanInput]);
+          setBooking((prev) => ({
+            ...prev,
+            symptoms: [...prev.symptoms, cleanInput],
+            doctorSpecialty: aiRec.specialty,
+            doctorName: aiRec.doctorName,
+          }));
+          addBotMessage(
+            isHindi
+              ? `मैंने आपके अतिरिक्त लक्षण ("${cleanInput}") दर्ज कर लिए हैं और अनुशंसित विशेषता (${aiRec.specialty}) अपडेट कर दी है। कृपया परामर्श के लिए अपनी पसंदीदा तारीख या समय स्लॉट चुनें:`
+              : `I've recorded your additional symptoms ("${cleanInput}") and updated your recommended specialty to ${aiRec.specialty}. Now, please choose your preferred date and time slot:`,
+            isHindi ? [
+              "आज शाम 04:00 बजे",
+              "कल सुबह 10:30 बजे",
+              "कल दोपहर 02:00 बजे",
+              "परसों सुबह 11:00 बजे",
+            ] : [
+              "Today at 04:00 PM",
+              "Tomorrow at 10:30 AM",
+              "Tomorrow at 02:00 PM",
+              "Day After Tomorrow at 11:00 AM",
+            ],
+            ChatStep.DATE_TIME
+          );
+          return;
+        }
+
         let datePart = isHindi ? "कल" : "Tomorrow";
         let timePart = "10:30 AM";
 
@@ -566,32 +620,49 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
   handleUserInputRef.current = handleUserInput;
 
-  // Confirmation Flow
-  const handleConfirmBooking = () => {
+  // Confirmation Flow (Persisting to PostgreSQL DB)
+  const handleConfirmBooking = async () => {
     const generatedId = `OPD-2026-${Math.floor(100000 + Math.random() * 900000)}`;
     const finalBooking = { ...booking, appointmentId: generatedId };
     setBooking(finalBooking);
     setCurrentStep(ChatStep.CONFIRMED);
 
-    // Save appointment to backend API
-    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    fetch(`${API}/api/appointments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientId: currentUser?.id || "p-demo-1",
-        doctorId: "doc-1",
-        dateTime: new Date(Date.now() + 86400000).toISOString(),
-        status: "CONFIRMED",
+    // Calculate appointment slot timestamp
+    const appointmentDate = new Date();
+    if (finalBooking.date.includes("Tomorrow") || finalBooking.date.includes("कल")) {
+      appointmentDate.setDate(appointmentDate.getDate() + 1);
+    } else if (finalBooking.date.includes("Day After") || finalBooking.date.includes("परसों")) {
+      appointmentDate.setDate(appointmentDate.getDate() + 2);
+    }
+    if (finalBooking.time.includes("04:00") || finalBooking.time.includes("PM") || finalBooking.time.includes("शाम")) {
+      appointmentDate.setHours(16, 0, 0, 0);
+    } else if (finalBooking.time.includes("02:00") || finalBooking.time.includes("दोपहर")) {
+      appointmentDate.setHours(14, 0, 0, 0);
+    } else {
+      appointmentDate.setHours(10, 30, 0, 0);
+    }
+
+    try {
+      await apiPost("/api/appointments", {
+        patientId: currentUser?.patientId || undefined,
+        patientName: finalBooking.fullName,
+        phone: finalBooking.phone,
+        specialty: finalBooking.doctorSpecialty,
+        dateTime: appointmentDate.toISOString(),
+        status: "REQUESTED",
         visitType: "NEW",
         reason: `${finalBooking.doctorSpecialty}: ${finalBooking.symptoms.join(", ")}`,
-        notes: `Booked via Sehat Saathi AI. Severity: ${finalBooking.severity}. Hospital: ${finalBooking.hospital}`,
-      }),
-    }).catch((err) => console.warn("Failed to persist appointment:", err));
+        notes: `Booked via Sehat Saathi AI Assistant. Severity: ${finalBooking.severity}. Hospital: ${finalBooking.hospital}. Slot: ${finalBooking.date} at ${finalBooking.time}`,
+      });
+      await refreshAppointments();
+      await refreshPatients();
+    } catch (err) {
+      console.warn("Failed to persist appointment via API:", err);
+    }
 
     addBotMessage(
       isHindi 
-        ? `🎉 बधाई! आपका अपॉइंटमेंट बुक हो गया है। आपका टोकन ID: ${generatedId}`
+        ? `🎉 बधाई! आपका अपॉइंटमेंट सफलतापूर्वक बुक हो गया है। आपका टोकन ID: ${generatedId}`
         : `🎉 Appointment confirmed! Your OPD Token ID is ${generatedId}.`,
       undefined,
       ChatStep.CONFIRMED

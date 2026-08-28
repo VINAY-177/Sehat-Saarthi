@@ -304,17 +304,35 @@ export function StaffDashboard() {
               </CardHeader>
               <CardContent className="p-4 space-y-2.5">
                 {todayAppointments && todayAppointments.length > 0 ? (
-                  todayAppointments.slice(0, 4).map((appt) => (
-                    <div key={appt.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                  todayAppointments.slice(0, 5).map((appt) => (
+                    <div key={appt.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs hover:bg-slate-100/70 transition-colors">
                       <div className="space-y-0.5">
                         <span className="font-bold text-slate-900">{appt.patient?.name || 'Patient'}</span>
                         <p className="text-[11px] text-slate-500">
                           {appt.doctor?.name || 'Doctor'} • {formatAppointmentTime(appt.dateTime, { hour: 'numeric', minute: '2-digit', hour12: true })}
                         </p>
                       </div>
-                      <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
-                        {appt.status}
-                      </Badge>
+                      {appt.status === "CONFIRMED" ? (
+                        <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold">
+                          Confirmed
+                        </Badge>
+                      ) : appt.status === "CHECKED_IN" ? (
+                        <Badge className="bg-sky-50 text-sky-800 border-sky-200 text-[10px] font-bold">
+                          Checked In
+                        </Badge>
+                      ) : appt.status === "IN_CONSULTATION" ? (
+                        <Badge className="bg-indigo-50 text-indigo-800 border-indigo-200 text-[10px] font-bold">
+                          In Consultation
+                        </Badge>
+                      ) : appt.status === "REQUESTED" ? (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold">
+                          Requested
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] font-medium">
+                          {appt.status}
+                        </Badge>
+                      )}
                     </div>
                   ))
                 ) : (

@@ -1496,17 +1496,58 @@ app.get('/api/appointments', requireAuth, async (req: AuthRequest, res: Response
 // Book Appointment
 app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const { patientId, doctorId, dateTime, status, visitType, reason, notes } = req.body;
+    let { patientId, doctorId, dateTime, status, visitType, reason, notes, phone, patientName, specialty } = req.body;
+
+    // 1. Resolve Patient ID
+    if (!patientId && req.user?.role === 'PATIENT' && req.user.patientId) {
+      patientId = req.user.patientId;
+    }
+
+    if (!patientId && phone) {
+      // Find or create patient by phone
+      let patientRecord = await prisma.patient.findFirst({ where: { phone: String(phone).trim() } });
+      if (!patientRecord) {
+        const mrn = `MRN-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+        patientRecord = await prisma.patient.create({
+          data: {
+            mrn,
+            name: patientName ? String(patientName).trim() : 'Patient',
+            phone: String(phone).trim(),
+            age: 30,
+            gender: 'Other',
+            district: 'Central Delhi',
+            state: 'Delhi',
+          },
+        });
+      }
+      patientId = patientRecord.id;
+    }
+
+    // 2. Resolve Doctor ID
+    if (!doctorId) {
+      if (specialty) {
+        const matchingDoc = await prisma.doctor.findFirst({
+          where: { specialty: { contains: String(specialty), mode: 'insensitive' } },
+        });
+        if (matchingDoc) doctorId = matchingDoc.id;
+      }
+      if (!doctorId) {
+        const defaultDoc = await prisma.doctor.findFirst({
+          where: { available: true },
+          orderBy: { createdAt: 'asc' },
+        });
+        if (defaultDoc) doctorId = defaultDoc.id;
+      }
+    }
 
     if (
       typeof patientId !== 'string' || !patientId ||
-      typeof doctorId !== 'string' || !doctorId ||
-      typeof dateTime !== 'string' || !dateTime
+      typeof doctorId !== 'string' || !doctorId
     ) {
-      return res.status(400).json({ error: 'patientId, doctorId, and dateTime are required' });
+      return res.status(400).json({ error: 'patientId and doctorId are required' });
     }
 
-    const parsedDateTime = new Date(dateTime);
+    const parsedDateTime = dateTime ? new Date(dateTime) : new Date(Date.now() + 86400000);
     if (Number.isNaN(parsedDateTime.getTime())) {
       return res.status(400).json({ error: 'dateTime must be a valid ISO date-time' });
     }
@@ -1518,10 +1559,10 @@ app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Respons
       return res.status(400).json({ error: 'Invalid appointment visit type' });
     }
 
-    if (req.user?.role === 'PATIENT' && req.user.patientId !== patientId) {
+    if (req.user?.role === 'PATIENT' && req.user.patientId && req.user.patientId !== patientId) {
       return res.status(403).json({ error: 'Patients can only book appointments for their own record' });
     }
-    if (req.user?.role === 'DOCTOR' && req.user.doctorId !== doctorId) {
+    if (req.user?.role === 'DOCTOR' && req.user.doctorId && req.user.doctorId !== doctorId) {
       return res.status(403).json({ error: 'Clinicians can only book appointments assigned to themselves' });
     }
 
@@ -1548,6 +1589,7 @@ app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Respons
       },
       include: appointmentInclude,
     });
+
     // Auto-create notifications for appointment
     try {
       await prisma.notification.createMany({
@@ -1556,8 +1598,8 @@ app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Respons
             userId: appt.patient?.userId || null,
             role: 'PATIENT',
             category: 'APPOINTMENT',
-            title: 'Appointment Confirmed',
-            message: `Your appointment with ${appt.doctor?.name || 'your doctor'} has been scheduled.`,
+            title: 'Appointment Scheduled',
+            message: `Your appointment with ${appt.doctor?.name || 'your doctor'} has been scheduled for ${new Date(appt.dateTime).toLocaleString()}.`,
             link: '/scheduling',
             urgency: 'NORMAL',
           },
@@ -1593,13 +1635,46 @@ app.post('/api/appointments', requireAuth, async (req: AuthRequest, res: Respons
 app.put('/api/appointments/:id', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
+    const { status, visitType, reason, notes, dateTime } = req.body;
+    const updateData: any = {};
+    if (status && APPOINTMENT_STATUSES.includes(status)) updateData.status = status;
+    if (visitType && APPOINTMENT_VISIT_TYPES.includes(visitType)) updateData.visitType = visitType;
+    if (reason !== undefined) updateData.reason = reason;
+    if (notes !== undefined) updateData.notes = notes;
+    if (dateTime) {
+      const parsed = new Date(dateTime);
+      if (!Number.isNaN(parsed.getTime())) updateData.dateTime = parsed.toISOString();
+    }
+
     const appt = await prisma.appointment.update({
       where: { id },
-      data: req.body,
+      data: updateData,
+      include: appointmentInclude,
     });
     res.json(appt);
   } catch (error) {
+    console.error('Error updating appointment:', error);
     res.status(500).json({ error: 'Failed to update appointment' });
+  }
+});
+
+app.patch('/api/appointments/:id/status', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const { status } = req.body;
+    if (!status || !APPOINTMENT_STATUSES.includes(status)) {
+      return res.status(400).json({ error: 'Valid status is required' });
+    }
+
+    const appt = await prisma.appointment.update({
+      where: { id },
+      data: { status },
+      include: appointmentInclude,
+    });
+    res.json(appt);
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    res.status(500).json({ error: 'Failed to update appointment status' });
   }
 });
 

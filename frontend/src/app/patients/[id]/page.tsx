@@ -28,6 +28,7 @@ import { MedicationsTab } from "@/components/patient-360/medications-tab";
 import { VitalsTab } from "@/components/patient-360/vitals-tab";
 import { EncountersTab } from "@/components/patient-360/encounters-tab";
 import { useStore } from "@/lib/store";
+import { apiGet } from "@/lib/api";
 import { PrescriptionsTab } from "@/components/patient-360/prescriptions-tab";
 import { LabReportsTab } from "@/components/patient-360/lab-reports-tab";
 import { InsuranceTab } from "@/components/patient-360/insurance-tab";
@@ -48,13 +49,10 @@ export default function PatientDetailPage() {
   const fetchPatient = async () => {
     if (!id) return;
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/patients/${id}`);
-      if (res.ok) {
-        const data = await res.json();
+      const data = await apiGet<Patient>(`/api/patients/${encodeURIComponent(id)}`);
+      if (data && data.id) {
         setPatient(data);
       } else {
-        // Fallback to store
         const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
         if (fallback) setPatient(fallback);
       }

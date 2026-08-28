@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 export function DoctorDashboard() {
-  const { patients, screenings, referrals, currentUser, language, appointments = [] } = useStore();
+  const { patients = [], screenings = [], referrals = [], currentUser, language, appointments = [] } = useStore();
 
   const emergencyScreenings = screenings.filter((s) => s.urgency === Urgency.EMERGENCY);
   const pendingReferrals = referrals.filter((r) => r.status === "PENDING");
@@ -43,20 +43,24 @@ export function DoctorDashboard() {
   const todayAppointments = appointments
     .filter((a) => {
       const apptDate = getAppointmentDateKey(a.dateTime);
-      return a.doctorId === currentUser?.doctorId && apptDate === today && !['CANCELLED', 'DECLINED'].includes(a.status);
+      const isDoctorMatch = currentUser?.doctorId ? a.doctorId === currentUser.doctorId : true;
+      return isDoctorMatch && apptDate === today && !['CANCELLED', 'DECLINED'].includes(a.status);
     })
     .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
     .map((a) => ({
       id: a.id,
       patientName: a.patient?.name || 'Patient',
-      patientId: a.patient?.id || '',
-      age: a.patient?.age || '-',
+      patientId: a.patient?.id || a.patientId || '',
+      age: a.patient?.age ? `${a.patient.age} yrs` : '-',
       gender: a.patient?.gender || '-',
+      bloodGroup: a.patient?.bloodGroup || '',
       time: formatAppointmentTime(a.dateTime, { hour: 'numeric', minute: '2-digit', hour12: true }),
       type: a.visitType || 'NEW',
       status: a.status,
       reason: a.reason || 'General Consultation',
     }));
+
+  const triagePatient = patients.find((p) => p.riskLevel === "HIGH" || p.riskLevel === "EMERGENCY") || patients.find((p) => p.riskLevel === "MODERATE") || patients[0];
 
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
@@ -103,7 +107,7 @@ export function DoctorDashboard() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-subtle" />
               <span>On Duty</span>
               <span className="text-slate-300">•</span>
-              <span className="text-slate-500 font-medium">{currentUser?.specialty || "General Medicine"}</span>
+              <span className="text-slate-600 font-bold">{currentUser?.specialty || "General Physician"}</span>
             </div>
 
             <Link href="/assess">
@@ -126,23 +130,23 @@ export function DoctorDashboard() {
           />
           <StatCard
             title={language === "hi" ? "लंबित समीक्षाएं" : "Pending Reviews"}
-            value={emergencyScreenings.length > 0 ? emergencyScreenings.length : "1"}
+            value={emergencyScreenings.length > 0 ? emergencyScreenings.length.toString() : "1"}
             icon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
             description="Clinical triage cases"
             className="stagger-2"
           />
           <StatCard
             title={language === "hi" ? "रेफरल केस" : "Outbound Referrals"}
-            value={pendingReferrals.length > 0 ? pendingReferrals.length : "1"}
+            value={pendingReferrals.length > 0 ? pendingReferrals.length.toString() : "1"}
             icon={<Ambulance className="h-4 w-4 text-teal-700" />}
             description="AIIMS Cardiology dispatch"
             className="stagger-3"
           />
           <StatCard
             title={language === "hi" ? "कुल पंजीकृत मरीज" : "Total Patients"}
-            value={patients.length > 0 ? patients.length : "1"}
+            value={patients.length > 0 ? patients.length.toString() : "8"}
             icon={<Users className="h-4 w-4 text-slate-700" />}
-            description="Under primary care"
+            description="Under primary care roster"
             className="stagger-4"
           />
         </div>
@@ -171,7 +175,7 @@ export function DoctorDashboard() {
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-100">
                   {todayAppointments.length === 0 ? (
-                    <div className="p-8 text-center text-slate-500 text-sm">
+                    <div className="p-8 text-center text-slate-500 text-sm font-medium">
                       No appointments scheduled for today.
                     </div>
                   ) : (
@@ -184,29 +188,35 @@ export function DoctorDashboard() {
                           </div>
 
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-extrabold text-sm text-slate-900">{appt.patientName}</span>
-                              <span className="text-[11px] text-slate-400 font-medium">({appt.age})</span>
+                              <span className="text-[11px] text-slate-400 font-medium">({appt.age} • {appt.gender})</span>
                               
-                              {/* Status Indicators: Green=Completed, Amber=Waiting, Slate=Upcoming */}
+                              {/* Status Indicators */}
+                              {appt.status === "IN_CONSULTATION" && (
+                                <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 text-[10px] font-bold py-0 flex items-center gap-1 animate-pulse">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                                  In Consultation
+                                </Badge>
+                              )}
+                              {appt.status === "CHECKED_IN" && (
+                                <Badge className="bg-sky-50 text-sky-800 border-sky-200 text-[10px] font-bold py-0">
+                                  Checked In
+                                </Badge>
+                              )}
                               {appt.status === "CONFIRMED" && (
                                 <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0">
                                   Confirmed
                                 </Badge>
                               )}
-                              {appt.status === "WAITING" && (
-                                <Badge className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold py-0">
-                                  Waiting
+                              {appt.status === "REQUESTED" && (
+                                <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold py-0">
+                                  Requested
                                 </Badge>
                               )}
-                              {appt.status === "CHECKED_IN" && (
-                                <Badge className="bg-blue-50 text-blue-800 border-blue-200 text-[10px] font-bold py-0">
-                                  Checked In
-                                </Badge>
-                              )}
-                              {(appt.status === "REQUESTED" || appt.status === "UPCOMING") && (
-                                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[10px] font-medium py-0">
-                                  Upcoming
+                              {appt.status === "COMPLETED" && (
+                                <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[10px] font-medium py-0">
+                                  Completed
                                 </Badge>
                               )}
                             </div>
@@ -218,10 +228,31 @@ export function DoctorDashboard() {
                         </div>
 
                         <div className="flex items-center gap-2 sm:self-center shrink-0">
+                          {appt.status === "IN_CONSULTATION" ? (
+                            <Link href={`/patients/${appt.patientId}/encounter?appointmentId=${appt.id}`}>
+                              <Button 
+                                size="sm" 
+                                className="h-8 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+                              >
+                                Resume Consult
+                              </Button>
+                            </Link>
+                          ) : (appt.status === "CONFIRMED" || appt.status === "CHECKED_IN") ? (
+                            <Link href={`/patients/${appt.patientId}/encounter?appointmentId=${appt.id}`}>
+                              <Button 
+                                size="sm" 
+                                className="h-8 text-xs font-bold rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-xs"
+                              >
+                                Start Consult
+                              </Button>
+                            </Link>
+                          ) : null}
+
                           <Link href={`/patients/${appt.patientId}`}>
                             <Button 
                               size="sm" 
-                              className="h-8 text-xs font-bold rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 shadow-xs"
+                              variant="outline"
+                              className="h-8 text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs"
                             >
                               View Patient
                             </Button>
@@ -247,22 +278,29 @@ export function DoctorDashboard() {
                 </Link>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-slate-900">Aarav Sharma</span>
-                      <UrgencyBadge urgency={Urgency.MODERATE} size="sm" />
+                {triagePatient ? (
+                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-slate-900">{triagePatient.name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({triagePatient.mrn})</span>
+                        <UrgencyBadge urgency={triagePatient.riskLevel === "HIGH" || triagePatient.riskLevel === "EMERGENCY" ? Urgency.HIGH : Urgency.MODERATE} size="sm" />
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        {triagePatient.age} yrs • {triagePatient.gender} • Blood: {triagePatient.bloodGroup || "—"} • {triagePatient.district}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-slate-500">
-                      Hypertension mild (BP 138/88 mmHg) • Score: 45/100
-                    </p>
+                    <Link href={`/patients/${triagePatient.id}`}>
+                      <Button size="sm" variant="ghost" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
+                        Review Profile
+                      </Button>
+                    </Link>
                   </div>
-                  <Link href="/patients/pat-aarav-001">
-                    <Button size="sm" variant="ghost" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
-                      Review
-                    </Button>
-                  </Link>
-                </div>
+                ) : (
+                  <div className="py-4 text-center text-xs text-slate-400">
+                    No urgent clinical triage alerts
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -311,7 +349,7 @@ export function DoctorDashboard() {
               <CardContent className="p-4 space-y-3">
                 <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 space-y-2">
                   <div className="flex justify-between items-start gap-2">
-                    <span className="font-bold text-xs text-slate-900">Aarav Sharma</span>
+                    <span className="font-bold text-xs text-slate-900">{patients[0]?.name || "Aarav Sharma"}</span>
                     <UrgencyBadge urgency={Urgency.MODERATE} size="sm" />
                   </div>
                   
@@ -320,8 +358,8 @@ export function DoctorDashboard() {
                     <span className="font-medium">To: AIIMS New Delhi (Cardiology)</span>
                   </div>
 
-                  <p className="text-[11px] text-slate-500">
-                    Reason: Further 24h ambulatory BP monitoring & cardio review
+                  <p className="text-[11px] text-slate-500 italic">
+                    &quot;Stage 1 hypertension evaluation; recommended 24h Holter BP monitoring.&quot;
                   </p>
 
                   <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
@@ -335,6 +373,94 @@ export function DoctorDashboard() {
             </Card>
 
           </div>
+        </div>
+
+        {/* 4. Doctor Patient Registry Roster (Full Width Section) */}
+        <div className="space-y-4 pt-2">
+          <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
+            <CardHeader className="py-3.5 px-5 bg-slate-50/70 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  {language === "hi" ? "डॉक्टर रोगी रजिस्ट्री" : "Doctor Patient Registry"}
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500 font-medium">
+                  {language === "hi" 
+                    ? "प्राथमिक देखभाल और ओपीडी के तहत पंजीकृत मरीजों की सूची" 
+                    : "Longitudinal electronic health records of patients under primary care"}
+                </CardDescription>
+              </div>
+
+              <Link href="/patients">
+                <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-teal-600" />
+                  <span>View All ({patients.length})</span>
+                </Button>
+              </Link>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead className="text-[11px] text-slate-400 uppercase bg-slate-50/50 border-b border-slate-100 font-bold">
+                    <tr>
+                      <th className="px-5 py-3">Patient</th>
+                      <th className="px-3 py-3">Age / Gender</th>
+                      <th className="px-3 py-3">Blood Group</th>
+                      <th className="px-4 py-3">Location</th>
+                      <th className="px-3 py-3">Risk Level</th>
+                      <th className="px-5 py-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {patients && patients.length > 0 ? (
+                      patients.slice(0, 6).map((pat) => (
+                        <tr key={pat.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="px-5 py-3.5">
+                            <div className="font-bold text-slate-900">{pat.name}</div>
+                            <div className="text-[10px] font-mono text-slate-400">{pat.mrn}</div>
+                          </td>
+                          <td className="px-3 py-3.5 text-slate-600 font-medium">
+                            {pat.age} yrs • {pat.gender}
+                          </td>
+                          <td className="px-3 py-3.5">
+                            <span className="font-bold text-rose-600">{pat.bloodGroup || "—"}</span>
+                          </td>
+                          <td className="px-4 py-3.5 text-slate-600 font-medium">
+                            {pat.district || pat.city || "New Delhi"}
+                          </td>
+                          <td className="px-3 py-3.5">
+                            <UrgencyBadge 
+                              urgency={
+                                pat.riskLevel === "HIGH" || pat.riskLevel === "EMERGENCY" 
+                                  ? Urgency.HIGH 
+                                  : pat.riskLevel === "MODERATE" 
+                                  ? Urgency.MODERATE 
+                                  : Urgency.LOW
+                              } 
+                              size="sm" 
+                            />
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <Link href={`/patients/${pat.id}`}>
+                              <Button size="sm" className="h-7 text-xs font-bold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg">
+                                View Patient
+                              </Button>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-5 py-8 text-center text-slate-400 font-medium">
+                          Loading patient registry...
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
       </div>

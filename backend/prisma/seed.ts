@@ -361,8 +361,8 @@ async function main() {
     data: {
       userId: doctorUser.id,
       name: 'Dr. Priya Mehta',
-      specialty: 'General Medicine',
-      department: 'General Medicine & Internal Care',
+      specialty: 'General Physician',
+      department: 'General Physician',
       licenseNumber: 'DEMO-DOC-001',
       phone: '9876500002',
       email: 'doctor.demo@sehatsaathi.test',
@@ -394,27 +394,20 @@ async function main() {
     },
   });
 
-  // 👤 Patient Demo: Aarav Sharma
-  const patientUser = await prisma.user.create({
-    data: {
-      name: 'Aarav Sharma',
+  // ============================================================
+  // 3. 8 Comprehensive Demo Patients Registry
+  // ============================================================
+  console.log('👤 Seeding 8 Comprehensive Demo Patients Registry...');
+
+  const demoPatientsData = [
+    {
       phone: '9876500001',
       email: 'patient.demo@sehatsaathi.test',
-      passwordHash: demoPasswordHash,
-      role: 'PATIENT',
-    },
-  });
-
-  const patient = await prisma.patient.create({
-    data: {
-      userId: patientUser.id,
-      mrn: 'MRN-2026-0001',
       name: 'Aarav Sharma',
+      mrn: 'MRN-2026-0001',
       age: 28,
       gender: 'Male',
       bloodGroup: 'B+',
-      phone: '9876500001',
-      email: 'patient.demo@sehatsaathi.test',
       dateOfBirth: '1998-04-15',
       address: 'Flat 302, Green View Apartments',
       village: 'Civil Lines',
@@ -429,52 +422,275 @@ async function main() {
       incomeCategory: 'APL',
       abhaLinked: true,
       abhaId: '91-2849-5820-1928',
+      conditions: [{ name: 'Essential Hypertension — Stage 1', icdCode: 'I10', status: 'ACTIVE', onsetDate: '2026-02-10', notes: 'Well controlled on low dose ARB' }],
+      allergies: [{ allergen: 'Dust Mites', type: 'ENVIRONMENTAL', severity: 'MILD', reaction: 'Morning sneezing' }],
+      vitals: { temperature: 36.8, bpSystolic: 138, bpDiastolic: 88, heartRate: 76, respiratoryRate: 16, spO2: 98.5, height: 176, weight: 73, bmi: 23.6 },
     },
-  });
-
-  // ============================================================
-  // 3. Clinical Data for Aarav Sharma
-  // ============================================================
-  console.log('🩺 Seeding Clinical Vitals, Conditions, & Past Encounter...');
-
-  // Vitals
-  await prisma.vital.create({
-    data: {
-      patientId: patient.id,
-      temperature: 36.8,
-      bpSystolic: 138,
-      bpDiastolic: 88,
-      heartRate: 76,
-      respiratoryRate: 16,
-      spO2: 98.5,
-      height: 176,
-      weight: 73,
-      bmi: 23.6,
+    {
+      phone: '9876500004',
+      email: 'sunita.devi@sehatsaathi.test',
+      name: 'Sunita Devi',
+      mrn: 'MRN-2026-0002',
+      age: 45,
+      gender: 'Female',
+      bloodGroup: 'O+',
+      dateOfBirth: '1981-08-22',
+      address: 'House 42, Sector 8',
+      village: 'Rohini',
+      city: 'Delhi',
+      district: 'North West Delhi',
+      state: 'Delhi',
+      pincode: '110085',
+      emergencyContactName: 'Ramesh Devi',
+      emergencyContactPhone: '9876500014',
+      emergencyContactRelation: 'Spouse',
+      riskLevel: 'HIGH',
+      incomeCategory: 'BPL',
+      abhaLinked: true,
+      abhaId: '91-3948-1029-4820',
+      conditions: [{ name: 'Type 2 Diabetes Mellitus', icdCode: 'E11.9', status: 'CHRONIC', onsetDate: '2023-05-14', notes: 'Fasting glucose 142 mg/dL, HbA1c 7.6%' }],
+      allergies: [{ allergen: 'Sulfonamides', type: 'DRUG', severity: 'SEVERE', reaction: 'Urticaria and facial rash' }],
+      vitals: { temperature: 37.0, bpSystolic: 142, bpDiastolic: 92, heartRate: 82, respiratoryRate: 18, spO2: 97.0, height: 158, weight: 68, bmi: 27.2 },
     },
-  });
-
-  // Active Condition
-  await prisma.medicalCondition.create({
-    data: {
-      patientId: patient.id,
-      name: 'Hypertension — mild',
-      icdCode: 'I10',
-      status: 'ACTIVE',
-      onsetDate: '2026-02-10',
-      notes: 'Stage 1 essential hypertension. Responding well to lifestyle modifications.',
+    {
+      phone: '9876500005',
+      email: 'ramesh.kumar@sehatsaathi.test',
+      name: 'Ramesh Kumar',
+      mrn: 'MRN-2026-0003',
+      age: 62,
+      gender: 'Male',
+      bloodGroup: 'A+',
+      dateOfBirth: '1964-11-03',
+      address: 'B-12, GT Road Extension',
+      village: 'Dilshad Garden',
+      city: 'Delhi',
+      district: 'East Delhi',
+      state: 'Delhi',
+      pincode: '110095',
+      emergencyContactName: 'Deepak Kumar',
+      emergencyContactPhone: '9876500015',
+      emergencyContactRelation: 'Son',
+      riskLevel: 'HIGH',
+      incomeCategory: 'EWS',
+      abhaLinked: true,
+      abhaId: '91-5820-9182-3847',
+      conditions: [{ name: 'Chronic Obstructive Pulmonary Disease (COPD)', icdCode: 'J44.9', status: 'CHRONIC', onsetDate: '2021-09-19', notes: 'Ex-smoker. Maintenance bronchodilator therapy.' }],
+      allergies: [{ allergen: 'Penicillin', type: 'DRUG', severity: 'SEVERE', reaction: 'Anaphylactoid wheezing' }],
+      vitals: { temperature: 36.6, bpSystolic: 130, bpDiastolic: 84, heartRate: 88, respiratoryRate: 22, spO2: 94.0, height: 168, weight: 61, bmi: 21.6 },
     },
-  });
-
-  // Allergy
-  await prisma.allergy.create({
-    data: {
-      patientId: patient.id,
-      allergen: 'Dust Mites',
-      type: 'ENVIRONMENTAL',
-      severity: 'MILD',
-      reaction: 'Occasional morning sneezing and mild rhinitis',
+    {
+      phone: '9876500006',
+      email: 'meera.patel@sehatsaathi.test',
+      name: 'Meera Patel',
+      mrn: 'MRN-2026-0004',
+      age: 34,
+      gender: 'Female',
+      bloodGroup: 'AB+',
+      dateOfBirth: '1992-06-18',
+      address: 'Pocket C-4, Press Enclave',
+      village: 'Saket',
+      city: 'New Delhi',
+      district: 'South Delhi',
+      state: 'Delhi',
+      pincode: '110017',
+      emergencyContactName: 'Anil Patel',
+      emergencyContactPhone: '9876500016',
+      emergencyContactRelation: 'Spouse',
+      riskLevel: 'LOW',
+      incomeCategory: 'APL',
+      abhaLinked: true,
+      abhaId: '91-1029-4857-2938',
+      conditions: [{ name: 'Antenatal Care — Second Trimester', icdCode: 'Z34.8', status: 'ACTIVE', onsetDate: '2026-04-01', notes: 'Routine prenatal screening normal' }],
+      allergies: [],
+      vitals: { temperature: 36.9, bpSystolic: 116, bpDiastolic: 74, heartRate: 74, respiratoryRate: 16, spO2: 99.0, height: 162, weight: 64, bmi: 24.4 },
     },
-  });
+    {
+      phone: '9876500007',
+      email: 'rajesh.verma@sehatsaathi.test',
+      name: 'Rajesh Verma',
+      mrn: 'MRN-2026-0005',
+      age: 51,
+      gender: 'Male',
+      bloodGroup: 'O-',
+      dateOfBirth: '1975-01-30',
+      address: 'Sector 6, DDA SFS Flats',
+      village: 'Dwarka',
+      city: 'New Delhi',
+      district: 'South West Delhi',
+      state: 'Delhi',
+      pincode: '110075',
+      emergencyContactName: 'Pooja Verma',
+      emergencyContactPhone: '9876500017',
+      emergencyContactRelation: 'Spouse',
+      riskLevel: 'MODERATE',
+      incomeCategory: 'APL',
+      abhaLinked: true,
+      abhaId: '91-8472-9182-4720',
+      conditions: [{ name: 'Primary Osteoarthritis of Bilateral Knees', icdCode: 'M17.0', status: 'ACTIVE', onsetDate: '2024-10-12', notes: 'Pain on climbing stairs, morning stiffness < 30 mins' }],
+      allergies: [{ allergen: 'NSAIDs / Ibuprofen', type: 'DRUG', severity: 'MODERATE', reaction: 'Gastric irritation' }],
+      vitals: { temperature: 36.7, bpSystolic: 128, bpDiastolic: 82, heartRate: 70, respiratoryRate: 15, spO2: 98.0, height: 172, weight: 82, bmi: 27.7 },
+    },
+    {
+      phone: '9876500008',
+      email: 'anita.singh@sehatsaathi.test',
+      name: 'Anita Singh',
+      mrn: 'MRN-2026-0006',
+      age: 24,
+      gender: 'Female',
+      bloodGroup: 'B-',
+      dateOfBirth: '2002-09-10',
+      address: '14/3 Ajmal Khan Road',
+      village: 'Karol Bagh',
+      city: 'Delhi',
+      district: 'Central Delhi',
+      state: 'Delhi',
+      pincode: '110005',
+      emergencyContactName: 'Suresh Singh',
+      emergencyContactPhone: '9876500018',
+      emergencyContactRelation: 'Father',
+      riskLevel: 'LOW',
+      incomeCategory: 'APL',
+      abhaLinked: true,
+      abhaId: '91-7291-3847-1928',
+      conditions: [{ name: 'Seasonal Allergic Rhinitis', icdCode: 'J30.2', status: 'ACTIVE', onsetDate: '2025-03-01', notes: 'Exacerbated by pollen during seasonal change' }],
+      allergies: [{ allergen: 'Tree Pollen', type: 'ENVIRONMENTAL', severity: 'MILD', reaction: 'Rhinitis and watery eyes' }],
+      vitals: { temperature: 36.8, bpSystolic: 112, bpDiastolic: 72, heartRate: 68, respiratoryRate: 14, spO2: 99.0, height: 165, weight: 55, bmi: 20.2 },
+    },
+    {
+      phone: '9876500010',
+      email: 'vikram.malhotra@sehatsaathi.test',
+      name: 'Vikram Malhotra',
+      mrn: 'MRN-2026-0007',
+      age: 39,
+      gender: 'Male',
+      bloodGroup: 'A-',
+      dateOfBirth: '1987-12-05',
+      address: 'Block E, Inner Circle',
+      village: 'Connaught Place',
+      city: 'New Delhi',
+      district: 'New Delhi',
+      state: 'Delhi',
+      pincode: '110001',
+      emergencyContactName: 'Neha Malhotra',
+      emergencyContactPhone: '9876500019',
+      emergencyContactRelation: 'Spouse',
+      riskLevel: 'MODERATE',
+      incomeCategory: 'APL',
+      abhaLinked: true,
+      abhaId: '91-4920-1847-5920',
+      conditions: [{ name: 'Acute Gastroenteritis', icdCode: 'A09', status: 'ACTIVE', onsetDate: '2026-08-26', notes: 'Abdominal cramps and mild dehydration' }],
+      allergies: [],
+      vitals: { temperature: 37.4, bpSystolic: 122, bpDiastolic: 78, heartRate: 84, respiratoryRate: 17, spO2: 98.0, height: 178, weight: 76, bmi: 24.0 },
+    },
+    {
+      phone: '9876500011',
+      email: 'kavita.joshi@sehatsaathi.test',
+      name: 'Kavita Joshi',
+      mrn: 'MRN-2026-0008',
+      age: 58,
+      gender: 'Female',
+      bloodGroup: 'B+',
+      dateOfBirth: '1968-03-25',
+      address: 'K-82, Central Market Road',
+      village: 'Lajpat Nagar II',
+      city: 'New Delhi',
+      district: 'South East Delhi',
+      state: 'Delhi',
+      pincode: '110024',
+      emergencyContactName: 'Vinod Joshi',
+      emergencyContactPhone: '9876500020',
+      emergencyContactRelation: 'Spouse',
+      riskLevel: 'MODERATE',
+      incomeCategory: 'APL',
+      abhaLinked: true,
+      abhaId: '91-3847-5920-1029',
+      conditions: [
+        { name: 'Primary Hypothyroidism', icdCode: 'E03.9', status: 'CHRONIC', onsetDate: '2020-01-15', notes: 'On Levothyroxine 50mcg daily' },
+        { name: 'Lumbar Spondylosis with Sciatalgia', icdCode: 'M47.8', status: 'CHRONIC', onsetDate: '2022-07-20', notes: 'L4-L5 disc degeneration on past MRI' }
+      ],
+      allergies: [{ allergen: 'Peanuts', type: 'FOOD', severity: 'MODERATE', reaction: 'Skin urticaria' }],
+      vitals: { temperature: 36.6, bpSystolic: 134, bpDiastolic: 86, heartRate: 72, respiratoryRate: 16, spO2: 98.0, height: 155, weight: 66, bmi: 27.5 },
+    },
+  ];
+
+  const createdPatientsMap: Record<string, any> = {};
+
+  for (const item of demoPatientsData) {
+    const user = await prisma.user.create({
+      data: {
+        name: item.name,
+        phone: item.phone,
+        email: item.email,
+        passwordHash: demoPasswordHash,
+        role: 'PATIENT',
+      },
+    });
+
+    const pat = await prisma.patient.create({
+      data: {
+        userId: user.id,
+        mrn: item.mrn,
+        name: item.name,
+        age: item.age,
+        gender: item.gender,
+        bloodGroup: item.bloodGroup,
+        phone: item.phone,
+        email: item.email,
+        dateOfBirth: item.dateOfBirth,
+        address: item.address,
+        village: item.village,
+        city: item.city,
+        district: item.district,
+        state: item.state,
+        pincode: item.pincode,
+        emergencyContactName: item.emergencyContactName,
+        emergencyContactPhone: item.emergencyContactPhone,
+        emergencyContactRelation: item.emergencyContactRelation,
+        riskLevel: item.riskLevel,
+        incomeCategory: item.incomeCategory,
+        abhaLinked: item.abhaLinked,
+        abhaId: item.abhaId,
+      },
+    });
+
+    createdPatientsMap[item.mrn] = pat;
+
+    // Vitals
+    await prisma.vital.create({
+      data: {
+        patientId: pat.id,
+        ...item.vitals,
+      },
+    });
+
+    // Conditions
+    for (const cond of item.conditions) {
+      await prisma.medicalCondition.create({
+        data: {
+          patientId: pat.id,
+          ...cond,
+        },
+      });
+    }
+
+    // Allergies
+    for (const allg of item.allergies) {
+      await prisma.allergy.create({
+        data: {
+          patientId: pat.id,
+          ...allg,
+        },
+      });
+    }
+  }
+
+  const patient = createdPatientsMap['MRN-2026-0001'];
+  const sunita = createdPatientsMap['MRN-2026-0002'];
+  const ramesh = createdPatientsMap['MRN-2026-0003'];
+  const meera = createdPatientsMap['MRN-2026-0004'];
+  const rajesh = createdPatientsMap['MRN-2026-0005'];
+  const anita = createdPatientsMap['MRN-2026-0006'];
+  const vikram = createdPatientsMap['MRN-2026-0007'];
 
   // Past Encounter (18 Aug 2026)
   const pastEncounter = await prisma.encounter.create({
@@ -490,7 +706,7 @@ async function main() {
       treatmentPlan: 'Prescribed Telmisartan 20mg OD in morning. Advised 30 min daily brisk walking and low sodium diet.',
       riskScore: 42,
       urgency: 'MODERATE',
-      suggestedDepartment: 'General Medicine',
+      suggestedDepartment: 'General Physician',
       status: 'COMPLETED',
     },
   });
@@ -531,47 +747,92 @@ async function main() {
   });
 
   // ============================================================
-  // 4. Interconnected Appointments
+  // 4. Interconnected Appointments Roster (Covering All Lifecycles)
   // ============================================================
-  console.log('📅 Seeding Interconnected Appointments...');
+  console.log('📅 Seeding Interconnected Appointments Across All Lifecycles...');
 
-  // Main SIH Demo Appointment: 28 Aug 2026, 10:30 AM IST (Confirmed)
-  await prisma.appointment.create({
-    data: {
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const fullAppointmentsRoster = [
+    {
+      patientId: ramesh.id,
+      doctorId: doctor.id,
+      dateTime: `${todayStr}T04:00:00.000Z`,
+      status: 'COMPLETED',
+      visitType: 'FOLLOW_UP',
+      reason: 'Chronic COPD respiratory assessment and inhaler technique review',
+      notes: 'Consultation concluded. SpO2 maintained at 94% on room air.',
+    },
+    {
       patientId: patient.id,
       doctorId: doctor.id,
-      dateTime: '2026-08-28T05:00:00.000Z',
+      dateTime: `${todayStr}T05:00:00.000Z`,
       status: 'CONFIRMED',
       visitType: 'NEW',
-      reason: 'General Consultation & Hypertension Evaluation',
+      reason: 'General Consultation & Essential Hypertension Evaluation',
       notes: 'Patient to present home blood pressure logs.',
     },
-  });
-
-  // Follow-up: 04 Sep 2026, 11:00 AM IST (Scheduled)
-  await prisma.appointment.create({
-    data: {
-      patientId: patient.id,
+    {
+      patientId: sunita.id,
       doctorId: doctor.id,
-      dateTime: '2026-09-04T05:30:00.000Z',
+      dateTime: `${todayStr}T06:00:00.000Z`,
+      status: 'CHECKED_IN',
+      visitType: 'FOLLOW_UP',
+      reason: 'Type 2 Diabetes glucose control and HbA1c review',
+      notes: 'Patient arrived at clinic waiting lounge. Triaged by Staff Neha.',
+    },
+    {
+      patientId: rajesh.id,
+      doctorId: doctor.id,
+      dateTime: `${todayStr}T06:30:00.000Z`,
+      status: 'IN_CONSULTATION',
+      visitType: 'NEW',
+      reason: 'Bilateral knee pain management and mobility assessment',
+      notes: 'Active consultation in progress with Dr. Priya Mehta in OPD Room 104.',
+    },
+    {
+      patientId: meera.id,
+      doctorId: doctor.id,
+      dateTime: `${todayStr}T08:30:00.000Z`,
       status: 'REQUESTED',
       visitType: 'FOLLOW_UP',
-      reason: 'Follow-up blood pressure review and lifestyle check',
-      notes: 'Review response to Telmisartan 20mg.',
+      reason: 'Second trimester routine prenatal review and nutritional advice',
+      notes: 'Requested online via Sehat Saathi patient portal. Awaiting staff confirmation.',
     },
-  });
-
-  // Completed: 18 Aug 2026, 02:00 PM IST
-  await prisma.appointment.create({
-    data: {
+    {
+      patientId: anita.id,
+      doctorId: doctor.id,
+      dateTime: `${todayStr}T09:30:00.000Z`,
+      status: 'REQUESTED',
+      visitType: 'NEW',
+      reason: 'Seasonal allergic rhinitis flare-up and antihistamine review',
+      notes: 'Booked via AI Voice Chatbot assistant.',
+    },
+    {
+      patientId: vikram.id,
+      doctorId: doctor.id,
+      dateTime: `${todayStr}T10:30:00.000Z`,
+      status: 'CONFIRMED',
+      visitType: 'EMERGENCY',
+      reason: 'Acute gastroenteritis follow-up and oral rehydration review',
+      notes: 'Confirmed by hospital operations lead.',
+    },
+    {
       patientId: patient.id,
       doctorId: doctor.id,
       dateTime: '2026-08-18T08:30:00.000Z',
       status: 'COMPLETED',
       visitType: 'NEW',
       reason: 'Initial intake consultation and baseline vitals recording',
+      notes: 'Diagnosed with Stage 1 Hypertension. Prescribed Telmisartan 20mg.',
     },
-  });
+  ];
+
+  for (const appt of fullAppointmentsRoster) {
+    await prisma.appointment.create({
+      data: appt,
+    });
+  }
 
   // ============================================================
   // 5. Interconnected Referral (Doctor -> AIIMS Cardiology)
