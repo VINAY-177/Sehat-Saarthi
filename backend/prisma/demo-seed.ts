@@ -35,7 +35,7 @@ async function main() {
     create: { name: 'Dr. Priya Mehta', phone: '9876500002', email: 'doctor.demo@sehatsaathi.test', passwordHash, role: 'DOCTOR' },
   });
 
-  await prisma.doctor.upsert({
+  const doctor = await prisma.doctor.upsert({
     where: { userId: doctorUser.id },
     update: { name: 'Dr. Priya Mehta', specialty: 'General Physician', department: 'General Physician', licenseNumber: 'DEMO-DOC-001', phone: '9876500002', email: 'doctor.demo@sehatsaathi.test', facilityId: hospital.id, experience: '8 years', available: true },
     create: { userId: doctorUser.id, name: 'Dr. Priya Mehta', specialty: 'General Physician', department: 'General Physician', licenseNumber: 'DEMO-DOC-001', phone: '9876500002', email: 'doctor.demo@sehatsaathi.test', facilityId: hospital.id, experience: '8 years', available: true },
@@ -47,7 +47,7 @@ async function main() {
     create: { name: 'Neha Kapoor', phone: '9876500003', email: 'staff.demo@sehatsaathi.test', passwordHash, role: 'HOSPITAL_STAFF' },
   });
 
-  await prisma.staff.upsert({
+  const staff = await prisma.staff.upsert({
     where: { userId: staffUser.id },
     update: { name: 'Neha Kapoor', role: 'Hospital Operations', phone: '9876500003', email: 'staff.demo@sehatsaathi.test', facilityId: hospital.id },
     create: { userId: staffUser.id, name: 'Neha Kapoor', role: 'Hospital Operations', phone: '9876500003', email: 'staff.demo@sehatsaathi.test', facilityId: hospital.id },
@@ -59,7 +59,7 @@ async function main() {
     create: { name: 'Aarav Sharma', phone: '9876500001', email: 'patient.demo@sehatsaathi.test', passwordHash, role: 'PATIENT' },
   });
 
-  await prisma.patient.upsert({
+  const patient = await prisma.patient.upsert({
     where: { userId: patientUser.id },
     update: { mrn: 'MRN-2026-0001', name: 'Aarav Sharma', age: 28, gender: 'Male', bloodGroup: 'B+', phone: '9876500001', email: 'patient.demo@sehatsaathi.test', dateOfBirth: '1998-04-15', address: 'Flat 302, Green View Apartments', village: 'Civil Lines', city: 'New Delhi', district: 'Central Delhi', state: 'Delhi', pincode: '110054', emergencyContactName: 'Kavita Sharma', emergencyContactPhone: '9876500009', emergencyContactRelation: 'Mother', riskLevel: 'MODERATE', incomeCategory: 'APL', abhaLinked: true, abhaId: '91-2849-5820-1928' },
     create: { userId: patientUser.id, mrn: 'MRN-2026-0001', name: 'Aarav Sharma', age: 28, gender: 'Male', bloodGroup: 'B+', phone: '9876500001', email: 'patient.demo@sehatsaathi.test', dateOfBirth: '1998-04-15', address: 'Flat 302, Green View Apartments', village: 'Civil Lines', city: 'New Delhi', district: 'Central Delhi', state: 'Delhi', pincode: '110054', emergencyContactName: 'Kavita Sharma', emergencyContactPhone: '9876500009', emergencyContactRelation: 'Mother', riskLevel: 'MODERATE', incomeCategory: 'APL', abhaLinked: true, abhaId: '91-2849-5820-1928' },
@@ -97,7 +97,52 @@ async function main() {
     });
   }
 
-  console.log('✅ Demo accounts and 12 specialties / 4 clinicians each are ready.');
+  // Interconnected demo appointment schedule for the doctor, patient and hospital staff views.
+  // Existing appointments are updated by stable date/time + doctor/patient identity so this script is safe to rerun.
+  const demoAppointments = [
+    { dateTime: '2026-08-28T05:00:00.000Z', status: 'CONFIRMED', visitType: 'NEW', reason: 'General consultation and hypertension evaluation', notes: 'Patient to bring home BP readings.' },
+    { dateTime: '2026-08-28T06:00:00.000Z', status: 'CHECKED_IN', visitType: 'FOLLOW_UP', reason: 'Blood pressure follow-up', notes: 'Patient checked in; awaiting consultation.' },
+    { dateTime: '2026-08-28T07:00:00.000Z', status: 'IN_CONSULTATION', visitType: 'NEW', reason: 'General health consultation', notes: 'Consultation currently in progress.' },
+    { dateTime: '2026-08-28T08:00:00.000Z', status: 'REQUESTED', visitType: 'FOLLOW_UP', reason: 'Lifestyle and medication review', notes: 'Awaiting staff/doctor confirmation.' },
+    { dateTime: '2026-08-18T08:30:00.000Z', status: 'COMPLETED', visitType: 'NEW', reason: 'Initial intake consultation', notes: 'Completed demo consultation.' },
+  ];
+
+  for (const item of demoAppointments) {
+    const existing = await prisma.appointment.findFirst({ where: { patientId: patient.id, doctorId: doctor.id, dateTime: item.dateTime } });
+    if (existing) {
+      await prisma.appointment.update({ where: { id: existing.id }, data: { status: item.status, visitType: item.visitType, reason: item.reason, notes: item.notes } });
+    } else {
+      await prisma.appointment.create({ data: { patientId: patient.id, doctorId: doctor.id, ...item } });
+    }
+  }
+
+  // Additional demo patients give the doctor and staff screens a realistic queue.
+  const extraPatients = [
+    { phone: '9876500011', email: 'demo.patient1@sehatsaathi.test', name: 'Riya Verma', mrn: 'MRN-2026-0011', age: 34, gender: 'Female', reason: 'Migraine and recurrent headache', status: 'REQUESTED', dateTime: '2026-08-29T05:30:00.000Z' },
+    { phone: '9876500012', email: 'demo.patient2@sehatsaathi.test', name: 'Vikram Singh', mrn: 'MRN-2026-0012', age: 46, gender: 'Male', reason: 'Blood pressure review', status: 'CONFIRMED', dateTime: '2026-08-29T06:30:00.000Z' },
+    { phone: '9876500013', email: 'demo.patient3@sehatsaathi.test', name: 'Ananya Kapoor', mrn: 'MRN-2026-0013', age: 24, gender: 'Female', reason: 'General wellness consultation', status: 'COMPLETED', dateTime: '2026-08-27T05:30:00.000Z' },
+  ];
+
+  for (const item of extraPatients) {
+    const user = await prisma.user.upsert({
+      where: { phone: item.phone },
+      update: { name: item.name, email: item.email, passwordHash, role: 'PATIENT' },
+      create: { name: item.name, phone: item.phone, email: item.email, passwordHash, role: 'PATIENT' },
+    });
+    const extraPatient = await prisma.patient.upsert({
+      where: { userId: user.id },
+      update: { mrn: item.mrn, name: item.name, age: item.age, gender: item.gender, phone: item.phone, email: item.email, district: 'Central Delhi', state: 'Delhi', city: 'New Delhi' },
+      create: { userId: user.id, mrn: item.mrn, name: item.name, age: item.age, gender: item.gender, phone: item.phone, email: item.email, district: 'Central Delhi', state: 'Delhi', city: 'New Delhi' },
+    });
+    const existing = await prisma.appointment.findFirst({ where: { patientId: extraPatient.id, doctorId: doctor.id, dateTime: item.dateTime } });
+    if (existing) {
+      await prisma.appointment.update({ where: { id: existing.id }, data: { status: item.status, reason: item.reason, visitType: 'NEW' } });
+    } else {
+      await prisma.appointment.create({ data: { patientId: extraPatient.id, doctorId: doctor.id, dateTime: item.dateTime, status: item.status, visitType: 'NEW', reason: item.reason } });
+    }
+  }
+
+  console.log('✅ Demo accounts, 12 specialties / 4 clinicians each, and interconnected appointment schedule are ready.');
   console.log('   Password for demo accounts: Demo@1234');
   console.log('   Patient: 9876500001 | Doctor: 9876500002 | Staff: 9876500003');
 }
