@@ -72,6 +72,13 @@ export default function FacilityDetailPage() {
               <span className="flex items-center"><Phone className="h-4 w-4 mr-1" /> {facility.phone}</span>
             </div>
           </div>
+          <div className="flex items-center gap-3">
+            <Link href={`/scheduling?facilityId=${facility.id}`}>
+              <Button className="bg-teal-600 hover:bg-teal-700 text-white font-semibold">
+                Book Appointment
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

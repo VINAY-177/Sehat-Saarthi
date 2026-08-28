@@ -332,6 +332,16 @@ export interface Facility {
   bloodStock: BloodStock;
   pmjayEmpanelled: boolean;
   phone: string;
+  address?: string;
+  area?: string;
+  city?: string;
+  location?: string;
+  rating?: number;
+  emergencyAvailable?: boolean;
+  specialties?: string[];
+  bedCapacity?: number;
+  availableBeds?: number;
+  availableIcuBeds?: number;
 }
 
 export interface Referral {

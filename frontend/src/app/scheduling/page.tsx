@@ -49,7 +49,7 @@ const STATUS_CONFIG: Record<
 
 
 export default function SchedulingPage() {
-  const { refreshAppointments, currentUser } = useStore();
+  const { refreshAppointments, currentUser, facilities } = useStore();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -69,6 +69,7 @@ export default function SchedulingPage() {
   const [showBookModal, setShowBookModal] = useState(false);
 
   // Book Form State
+  const [bookFacilityId, setBookFacilityId] = useState("");
   const [bookPatientId, setBookPatientId] = useState("");
   const [bookDoctorId, setBookDoctorId] = useState("");
   const [bookDateTime, setBookDateTime] = useState("");
@@ -158,6 +159,14 @@ export default function SchedulingPage() {
 
   useEffect(() => {
     fetchData();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const facId = params.get("facilityId") || params.get("hospitalId");
+      if (facId) {
+        setBookFacilityId(facId);
+        setShowBookModal(true);
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -233,6 +242,7 @@ export default function SchedulingPage() {
       const created = await apiPost<Appointment>("/api/appointments", {
         patientId: bookPatientId,
         doctorId: bookDoctorId,
+        facilityId: bookFacilityId || undefined,
         dateTime: appointmentDateTimeInputToIso(bookDateTime),
         visitType: bookVisitType,
         reason: bookReason.trim() || undefined,
@@ -903,6 +913,23 @@ export default function SchedulingPage() {
                       ))}
                     </select>
                   )}
+                </div>
+
+                {/* Select Healthcare Facility */}
+                <div>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">Hospital / Healthcare Facility</Label>
+                  <select
+                    value={bookFacilityId}
+                    onChange={(e) => setBookFacilityId(e.target.value)}
+                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:ring-2 focus:ring-teal-500"
+                  >
+                    <option value="">— All Network Facilities —</option>
+                    {facilities.map((fac) => (
+                      <option key={fac.id} value={fac.id}>
+                        {fac.name} ({fac.city || fac.district}, {fac.state})
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

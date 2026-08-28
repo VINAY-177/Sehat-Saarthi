@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import FacilityMapWrapper from '@/components/facility-map-wrapper';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,23 +13,97 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Link from 'next/link';
-import { MapPin, Phone, ShieldCheck, Hospital, Edit2, Bed, Filter as FilterIcon } from 'lucide-react';
+import { MapPin, Phone, ShieldCheck, Hospital, Edit2, Bed, Filter as FilterIcon, Search, Star, Ambulance } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Region definitions for filtering
+const REGIONS = [
+  { value: 'All', label: 'All Regions' },
+  { value: 'Delhi', label: 'Delhi' },
+  { value: 'Noida', label: 'Noida' },
+  { value: 'Greater Noida', label: 'Greater Noida' },
+  { value: 'Ghaziabad', label: 'Ghaziabad' },
+  { value: 'Gurugram', label: 'Gurugram' },
+  { value: 'Faridabad', label: 'Faridabad' },
+] as const;
+
+function getRegion(facility: { district: string; state: string; city?: string; area?: string }): string {
+  const city = (facility.city || '').toLowerCase();
+  const district = (facility.district || '').toLowerCase();
+  const state = (facility.state || '').toLowerCase();
+  
+  if (city === 'greater noida' || (city === 'noida' && (facility.area || '').toLowerCase().includes('greater'))) return 'Greater Noida';
+  if (city === 'noida') return 'Noida';
+  if (city === 'ghaziabad' || district === 'ghaziabad') return 'Ghaziabad';
+  if (city === 'gurugram' || district === 'gurugram' || city === 'gurgaon' || district === 'gurgaon') return 'Gurugram';
+  if (city === 'faridabad' || district === 'faridabad') return 'Faridabad';
+  if (state === 'delhi' || district.includes('delhi') || district === 'new delhi' || district === 'shahdara') return 'Delhi';
+  // Fallback: check state
+  if (state === 'uttar pradesh') {
+    if (district.includes('gautam')) return 'Noida';
+    if (district.includes('ghaziabad')) return 'Ghaziabad';
+  }
+  if (state === 'haryana') {
+    if (district.includes('gurugram') || district.includes('gurgaon')) return 'Gurugram';
+    if (district.includes('faridabad')) return 'Faridabad';
+  }
+  return 'Delhi';
+}
 
 export default function FacilitiesPage() {
   const { facilities, updateFacility } = useStore();
   const [selectedType, setSelectedType] = useState<string>('All');
+  const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [pmjayOnly, setPmjayOnly] = useState(false);
   const [hasIcuOnly, setHasIcuOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | undefined>();
   const [editFacilityId, setEditFacilityId] = useState<string | null>(null);
 
-  const filteredFacilities = facilities.filter((f) => {
-    if (selectedType !== 'All' && f.type !== selectedType) return false;
-    if (pmjayOnly && !f.pmjayEmpanelled) return false;
-    if (hasIcuOnly && (f.icuBeds - f.icuBedsUsed) <= 0) return false;
-    return true;
-  });
+  const filteredFacilities = useMemo(() => {
+    return facilities.filter((f) => {
+      if (selectedType !== 'All' && f.type !== selectedType) return false;
+      if (pmjayOnly && !f.pmjayEmpanelled) return false;
+      if (hasIcuOnly && (f.icuBeds - f.icuBedsUsed) <= 0) return false;
+      
+      // Region filter
+      if (selectedRegion !== 'All') {
+        const region = getRegion(f);
+        if (region !== selectedRegion) return false;
+      }
+      
+      // Search filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const searchable = [
+          f.name,
+          f.district,
+          f.state,
+          f.phone,
+          ...(f.specialists || []),
+          ...(f.specialties || []),
+          f.type,
+          f.city || '',
+          f.area || '',
+          f.address || '',
+          f.location || '',
+        ].join(' ').toLowerCase();
+        if (!searchable.includes(q)) return false;
+      }
+      
+      return true;
+    });
+  }, [facilities, selectedType, selectedRegion, pmjayOnly, hasIcuOnly, searchQuery]);
+
+  // Count facilities per region
+  const regionCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: facilities.length };
+    for (const f of facilities) {
+      const r = getRegion(f);
+      counts[r] = (counts[r] || 0) + 1;
+    }
+    return counts;
+  }, [facilities]);
 
   const handleUpdateBeds = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,12 +124,44 @@ export default function FacilitiesPage() {
 
   const FacilityList = () => (
     <div className="flex flex-col h-full space-y-4">
+      {/* Search bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Input
+          type="text"
+          placeholder="Search by name, city, area, specialty..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 h-11 rounded-xl bg-white border-slate-200 focus:ring-teal-500"
+        />
+      </div>
+
       <Card className="border-none shadow-sm rounded-2xl bg-white border border-slate-200/60 overflow-hidden">
         <div className="bg-slate-50/80 p-4 border-b border-slate-100 flex items-center gap-2">
           <FilterIcon className="h-4 w-4 text-slate-500" />
           <h3 className="font-semibold text-sm text-slate-700">Filter Network</h3>
+          <Badge variant="outline" className="ml-auto text-xs bg-teal-50 text-teal-700 border-teal-200">
+            {filteredFacilities.length} of {facilities.length}
+          </Badge>
         </div>
         <CardContent className="p-4 space-y-3">
+          {/* Region filter */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-slate-500 uppercase">Region</Label>
+            <Select value={selectedRegion} onValueChange={(val) => val && setSelectedRegion(val)}>
+              <SelectTrigger className="h-10 w-full rounded-xl bg-slate-50/50 border-slate-200">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                {REGIONS.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label} ({regionCounts[r.value] || 0})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-slate-500 uppercase">Facility Type</Label>
             <Select value={selectedType} onValueChange={(val) => val && setSelectedType(val)}>
@@ -109,6 +215,7 @@ export default function FacilitiesPage() {
             
             const icuPct = f.icuBeds > 0 ? (f.icuBedsUsed / f.icuBeds) * 100 : 0;
             const genPct = f.generalBeds > 0 ? (f.generalBedsUsed / f.generalBeds) * 100 : 0;
+            const region = getRegion(f);
 
             return (
               <Card 
@@ -125,17 +232,37 @@ export default function FacilitiesPage() {
                       <Link href={`/facilities/${f.id}`}>
                         <h4 className="font-bold text-lg text-slate-900 group-hover:text-teal-700 transition-colors leading-tight mb-1">{f.name}</h4>
                       </Link>
-                      <div className="flex items-center text-xs text-slate-500 gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{f.district}, {f.state}</span>
+                      <div className="flex items-center text-xs text-slate-500 gap-1.5 flex-wrap">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                        <span>{f.area ? `${f.area}, ` : ''}{f.city || f.district}{f.state !== 'Delhi' ? `, ${f.state}` : ''}</span>
                         <span className="mx-1 text-slate-300">•</span>
-                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                         <span>{f.phone}</span>
                       </div>
                     </div>
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-600 font-medium px-2.5 py-1 whitespace-nowrap">
-                      {f.type.replace('_', ' ')}
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge variant="secondary" className="bg-slate-100 text-slate-600 font-medium px-2.5 py-1 whitespace-nowrap">
+                        {f.type.replace('_', ' ')}
+                      </Badge>
+                      {f.rating && (
+                        <div className="flex items-center gap-1 text-xs text-amber-600 font-medium">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          {f.rating.toFixed(1)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Region badge + emergency */}
+                  <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+                    <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-medium">
+                      {region}
                     </Badge>
+                    {f.emergencyAvailable !== false && (
+                      <Badge className="bg-red-50 text-red-600 border border-red-200 text-[10px] gap-1">
+                        <Ambulance className="h-3 w-3" /> Emergency
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="bg-slate-50/80 rounded-xl p-4 mb-4 border border-slate-100">
@@ -198,6 +325,22 @@ export default function FacilitiesPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Specialties pills */}
+                  {(f.specialties || f.specialists).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {(f.specialties || f.specialists).slice(0, 5).map((spec) => (
+                        <span key={spec} className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2 py-0.5 font-medium">
+                          {spec}
+                        </span>
+                      ))}
+                      {(f.specialties || f.specialists).length > 5 && (
+                        <span className="text-[10px] text-slate-400 font-medium py-0.5">
+                          +{(f.specialties || f.specialists).length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="flex flex-wrap gap-2 items-center">
                     {f.pmjayEmpanelled && (
@@ -205,11 +348,11 @@ export default function FacilitiesPage() {
                         <ShieldCheck className="h-3.5 w-3.5" /> PM-JAY Empanelled
                       </Badge>
                     )}
-                    {f.specialists.length > 0 && (
-                      <Badge variant="outline" className="text-xs bg-white text-slate-600 border-slate-200 shadow-sm px-2.5">
-                        {f.specialists.length} Specialists
-                      </Badge>
-                    )}
+                    <Link href={`/scheduling?facilityId=${f.id}`} className="ml-auto">
+                      <Button size="sm" className="h-7 text-xs bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-3">
+                        Book Appointment
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -227,9 +370,12 @@ export default function FacilitiesPage() {
           <Hospital className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Facilities & Bed Management</h1>
-          <p className="text-slate-500 mt-1">Real-time bed availability and intelligence across network.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Delhi-NCR Hospital Network</h1>
+          <p className="text-slate-500 mt-1">Real-time bed availability and hospital discovery across the Delhi-NCR region.</p>
         </div>
+        <Badge className="ml-auto bg-teal-600 text-white text-sm px-3 py-1.5 hidden sm:flex">
+          {facilities.length} Hospitals
+        </Badge>
       </div>
 
       {/* Desktop Split View */}
