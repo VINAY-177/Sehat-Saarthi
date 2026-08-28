@@ -2028,6 +2028,49 @@ app.get('/api/emergency', async (req: Request, res: Response) => {
   }
 });
 
+// Update emergency request (full update)
+app.put('/api/emergency/:id', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { status, ambulanceId, assignedHospitalId, assignedHospitalName, etaMinutes, notes } = req.body;
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (ambulanceId !== undefined) updateData.ambulanceId = ambulanceId;
+    if (assignedHospitalId !== undefined) updateData.assignedHospitalId = assignedHospitalId;
+    if (assignedHospitalName !== undefined) updateData.assignedHospitalName = assignedHospitalName;
+    if (etaMinutes !== undefined) updateData.etaMinutes = Number(etaMinutes);
+    if (notes !== undefined) updateData.notes = notes;
+
+    const updated = await prisma.emergencyRequest.update({
+      where: { id },
+      data: updateData,
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating emergency request:', error);
+    res.status(500).json({ error: 'Failed to update emergency request' });
+  }
+});
+
+// Patch emergency status only
+app.patch('/api/emergency/:id/status', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = String(req.params.id);
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' });
+    }
+    const updated = await prisma.emergencyRequest.update({
+      where: { id },
+      data: { status },
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating emergency status:', error);
+    res.status(500).json({ error: 'Failed to update emergency status' });
+  }
+});
+
 // ============================================================
 // 7. Government Health Schemes
 // ============================================================

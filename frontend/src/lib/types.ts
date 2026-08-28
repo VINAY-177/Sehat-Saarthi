@@ -40,6 +40,9 @@ export enum AmbulanceStatus {
   AVAILABLE = "AVAILABLE",
   DISPATCHED = "DISPATCHED",
   EN_ROUTE = "EN_ROUTE",
+  ARRIVED = "ARRIVED",
+  IN_SERVICE = "IN_SERVICE",
+  MAINTENANCE = "MAINTENANCE",
 }
 
 // ---------- Extended Models (Phase 1) ----------
@@ -371,12 +374,36 @@ export interface Ambulance {
   lat: number;
   lng: number;
   status: AmbulanceStatus;
+  driverName?: string;
+  driverPhone?: string;
+  type?: 'BLS' | 'ALS' | 'PATIENT_TRANSPORT' | string;
+  baseHospitalId?: string;
+  baseHospitalName?: string;
+  destination?: string;
+  assignedPatientName?: string;
+  assignedPatientId?: string;
+  etaMinutes?: number;
 }
 
 export interface Equipment {
+  id?: string;
   name: string;
-  status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE';
+  category?: string;
+  status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'OUT_OF_SERVICE';
   count: number;
+  inUseCount?: number;
+  maintenanceCount?: number;
+  location?: string;
+}
+
+export interface SupplyItem {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  minimumThreshold: number;
+  status: 'NORMAL' | 'LOW' | 'CRITICAL';
 }
 
 export interface AuthUser {
