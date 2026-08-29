@@ -1,12 +1,15 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useStore } from "@/lib/store";
+import { useStore, DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
 import { formatAppointmentDate, formatAppointmentTime } from "@/lib/appointment-time";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Siren,
   Building2,
@@ -20,11 +23,84 @@ import {
   Bell,
   CheckCircle2,
   ArrowRight,
-  Stethoscope
+  Stethoscope,
+  MapPin,
+  Star,
+  Search,
+  Phone,
+  Bot,
+  Map,
 } from "lucide-react";
 
+// Regional categorization for Delhi-NCR
+function getHospitalRegion(facility: { district?: string; state?: string; city?: string; area?: string; location?: string }): string {
+  const city = (facility.city || "").toLowerCase();
+  const district = (facility.district || "").toLowerCase();
+  const area = (facility.area || "").toLowerCase();
+  const location = (facility.location || "").toLowerCase();
+
+  if (city === "greater noida" || area.includes("greater noida") || location.includes("greater noida")) return "Greater Noida";
+  if (city === "noida" || district.includes("gautam") || location.includes("noida")) {
+    if (area.includes("greater noida") || location.includes("greater noida") || location.includes("pari chowk") || location.includes("knowledge park")) {
+      return "Greater Noida";
+    }
+    return "Noida";
+  }
+  if (area.includes("najafgarh") || area.includes("dwarka") || location.includes("najafgarh") || location.includes("dwarka") || district.includes("south west")) {
+    return "Dwarka & Najafgarh";
+  }
+  if (city === "ghaziabad" || district === "ghaziabad" || location.includes("ghaziabad") || location.includes("indirapuram") || location.includes("vaishali") || location.includes("kaushambi")) return "Ghaziabad";
+  if (city === "gurugram" || district === "gurugram" || city === "gurgaon" || district === "gurgaon" || location.includes("gurugram") || location.includes("gurgaon")) return "Gurugram";
+  if (city === "faridabad" || district === "faridabad" || location.includes("faridabad")) return "Faridabad";
+  if (district.includes("south") || district.includes("central") || district.includes("new delhi") || location.includes("ansari nagar") || location.includes("raj ghat")) {
+    return "South & Central Delhi";
+  }
+  return "Delhi NCR";
+}
+
 export function PatientDashboard() {
-  const { currentUser, t, language, appointments = [], notifications = [] } = useStore();
+  const { currentUser, t, language, appointments = [], notifications = [], facilities = [] } = useStore();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("ALL");
+
+  // Ensure all 32 Delhi-NCR facilities are available
+  const allFacilities = useMemo(() => {
+    const list = facilities && facilities.length > 0 ? facilities : DEFAULT_DELHI_HOSPITALS;
+    return list;
+  }, [facilities]);
+
+  // Filtered hospitals list
+  const filteredHospitals = useMemo(() => {
+    return allFacilities.filter((hosp) => {
+      const region = getHospitalRegion(hosp);
+      const matchesRegion =
+        selectedRegion === "ALL" ||
+        (selectedRegion === "Delhi" && (region === "South & Central Delhi" || region === "Dwarka & Najafgarh" || region === "Delhi NCR")) ||
+        (selectedRegion === "Dwarka & Najafgarh" && region === "Dwarka & Najafgarh") ||
+        (selectedRegion === "South & Central Delhi" && region === "South & Central Delhi") ||
+        (selectedRegion === "Noida" && (region === "Noida" || region === "Greater Noida")) ||
+        (selectedRegion === "Ghaziabad" && region === "Ghaziabad") ||
+        (selectedRegion === "Gurugram" && region === "Gurugram") ||
+        (selectedRegion === "Faridabad" && region === "Faridabad");
+
+      if (!matchesRegion) return false;
+
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const rawSpecs = hosp.specialties || hosp.specialists || [];
+      const specString = Array.isArray(rawSpecs) ? rawSpecs.join(" ") : String(rawSpecs);
+
+      return (
+        hosp.name.toLowerCase().includes(q) ||
+        (hosp.city || "").toLowerCase().includes(q) ||
+        (hosp.area || "").toLowerCase().includes(q) ||
+        (hosp.district || "").toLowerCase().includes(q) ||
+        (hosp.location || "").toLowerCase().includes(q) ||
+        specString.toLowerCase().includes(q)
+      );
+    });
+  }, [allFacilities, selectedRegion, searchQuery]);
 
   const currentHour = new Date().getHours();
   let greeting = t("goodEvening");
@@ -96,19 +172,31 @@ export function PatientDashboard() {
             </h1>
             <p className="text-slate-500 text-sm font-medium">
               {language === "hi" 
-                ? "आज के लिए आपका स्वास्थ्य अवलोकन।" 
-                : "Here's your healthcare overview for today."}
+                ? "यहाँ आज का आपका स्वास्थ्य और दिल्ली-एनसीआर अस्पताल अवलोकन है।" 
+                : "Here is your healthcare & Delhi-NCR hospital network overview."}
             </p>
           </div>
 
-          <Link href="/scheduling">
-            <Button 
-              className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-xs gap-1.5 transition-all card-hover btn-press"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              {language === "hi" ? "नया अपॉइंटमेंट बुक करें" : "Book New Appointment"}
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/chatbot">
+              <Button 
+                variant="outline"
+                className="border-teal-200 text-teal-800 hover:bg-teal-50 font-bold text-xs h-10 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all"
+              >
+                <Bot className="w-3.5 h-3.5 text-teal-600" />
+                {language === "hi" ? "AI चैटबॉट बुकिंग" : "AI Assistant"}
+              </Button>
+            </Link>
+
+            <Link href="/scheduling">
+              <Button 
+                className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-xs gap-1.5 transition-all card-hover btn-press"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                {language === "hi" ? "अपॉइंटमेंट बुक करें" : "Book Appointment"}
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* 2. Primary Hero Feature: Next Appointment Spotlight Card */}
@@ -260,7 +348,7 @@ export function PatientDashboard() {
                   </div>
                   <h3 className="font-bold text-slate-900 text-sm mb-0.5">{t("findHospitals") || "Find Hospitals"}</h3>
                   <p className="text-[11px] text-slate-500 leading-snug">
-                    {language === "hi" ? "नजदीकी अस्पताल और लाइव बेड" : "Nearby facilities & live bed status"}
+                    {language === "hi" ? "32 दिल्ली-एनसीआर अस्पताल और लाइव बेड" : "32 Delhi-NCR hospitals & live beds"}
                   </p>
                 </Card>
               </Link>
@@ -372,6 +460,230 @@ export function PatientDashboard() {
             </Card>
 
           </div>
+
+        </div>
+
+        {/* ============================================================ */}
+        {/* 5. Phase 4 Nearest Delhi-NCR Hospitals & Emergency Bed Telemetry */}
+        {/* ============================================================ */}
+        <div className="space-y-4 pt-2">
+          
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-teal-50 text-teal-700 rounded-lg border border-teal-100">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  {language === "hi" ? "नजदीकी दिल्ली-एनसीआर अस्पताल एवं बेड उपलब्धता" : "Nearest Delhi-NCR Hospitals & Live Bed Telemetry"}
+                </h2>
+                <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 text-[10px] font-bold">
+                  {filteredHospitals.length} {language === "hi" ? "अस्पताल" : "Facilities"}
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {language === "hi"
+                  ? "दिल्ली, नजफगढ़, नोएडा, ग्रेटर नोएडा, गाजियाबाद, गुरुग्राम और फरीदाबाद के 32 अस्पताल"
+                  : "Discover 32 verified hospitals across Delhi, Najafgarh, Noida, Greater Noida, Ghaziabad, Gurugram & Faridabad"}
+              </p>
+            </div>
+
+            <Link href="/hospitals">
+              <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl border-teal-200 text-teal-800 hover:bg-teal-50 gap-1.5">
+                <Map className="w-3.5 h-3.5" />
+                {language === "hi" ? "पूरा लाइव मैप देखें" : "Explore Live Map"}
+              </Button>
+            </Link>
+          </div>
+
+          {/* Search Bar & Region Filters */}
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div className="relative flex-1 max-w-md w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Input
+                placeholder={language === "hi" ? "अस्पताल, इलाका या विशेषता खोजें..." : "Search hospital, area, or specialty (e.g. AIIMS, Dwarka, Cardiology)..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-xs rounded-xl bg-white border-slate-200 shadow-xs"
+              />
+            </div>
+
+            {/* Region Filter Buttons */}
+            <div className="flex gap-1.5 flex-wrap">
+              {[
+                { id: "ALL", label: language === "hi" ? "सभी एनसीआर" : "All NCR" },
+                { id: "South & Central Delhi", label: language === "hi" ? "दक्षिण/मध्य दिल्ली" : "South/Central Delhi" },
+                { id: "Dwarka & Najafgarh", label: language === "hi" ? "द्वारका और नजफगढ़" : "Dwarka & Najafgarh" },
+                { id: "Noida", label: language === "hi" ? "नोएडा व ग्रेटर नोएडा" : "Noida & Gr. Noida" },
+                { id: "Ghaziabad", label: language === "hi" ? "गाजियाबाद" : "Ghaziabad" },
+                { id: "Gurugram", label: language === "hi" ? "गुरुग्राम" : "Gurugram" },
+                { id: "Faridabad", label: language === "hi" ? "फरीदाबाद" : "Faridabad" },
+              ].map((r) => (
+                <Button
+                  key={r.id}
+                  variant={selectedRegion === r.id ? "default" : "outline"}
+                  size="sm"
+                  className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${
+                    selectedRegion === r.id ? "bg-teal-700 text-white" : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+                  }`}
+                  onClick={() => setSelectedRegion(r.id)}
+                >
+                  {r.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Hospitals Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+            {filteredHospitals.slice(0, 6).map((hosp) => {
+              const genTotal = hosp.generalBeds || 200;
+              const genUsed = hosp.generalBedsUsed || 160;
+              const genAvail = Math.max(0, genTotal - genUsed);
+              const genPct = genTotal > 0 ? (genAvail / genTotal) * 100 : 0;
+
+              const icuTotal = hosp.icuBeds || 30;
+              const icuUsed = hosp.icuBedsUsed || 24;
+              const icuAvail = Math.max(0, icuTotal - icuUsed);
+              const icuPct = icuTotal > 0 ? (icuAvail / icuTotal) * 100 : 0;
+
+              const rawSpecs = hosp.specialties || hosp.specialists || [];
+              const specList: string[] = Array.isArray(rawSpecs)
+                ? rawSpecs
+                : typeof rawSpecs === "string"
+                ? (rawSpecs as string).split(",")
+                : [];
+
+              const rating = hosp.rating || 4.2;
+              const area = hosp.area || hosp.district || hosp.location || "Delhi-NCR";
+
+              return (
+                <Card key={hosp.id} className="bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group">
+                  <div className="p-4 space-y-3">
+                    
+                    {/* Header: Name + Rating + Badges */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[9px] font-bold bg-slate-50 text-slate-600 border-slate-200">
+                            {hosp.type || "Hospital"}
+                          </Badge>
+                          {hosp.emergencyAvailable !== false && (
+                            <Badge className="bg-red-50 text-red-700 border-red-200 text-[9px] font-bold px-1.5 py-0">
+                              🚨 24/7 ER
+                            </Badge>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-slate-900 text-sm leading-snug group-hover:text-teal-700 transition-colors">
+                          {hosp.name}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-medium flex items-center gap-1 truncate">
+                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span className="truncate">{area}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-lg text-amber-800 text-xs font-bold shrink-0">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span>{rating}</span>
+                      </div>
+                    </div>
+
+                    {/* Live Bed Telemetry Progress Bars */}
+                    <div className="space-y-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 text-xs">
+                      {/* General Beds */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-semibold text-slate-600">
+                          <span>General Beds</span>
+                          <span className={`font-bold ${genAvail <= 10 ? "text-amber-600" : "text-emerald-700"}`}>
+                            {genAvail} / {genTotal} free
+                          </span>
+                        </div>
+                        <Progress value={100 - genPct} className="h-1.5" />
+                      </div>
+
+                      {/* ICU Beds */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-semibold text-slate-600">
+                          <span>ICU Beds</span>
+                          <span className={`font-bold ${icuAvail <= 3 ? "text-red-600" : "text-emerald-700"}`}>
+                            {icuAvail} / {icuTotal} free
+                          </span>
+                        </div>
+                        <Progress value={100 - icuPct} className="h-1.5" />
+                      </div>
+                    </div>
+
+                    {/* Specialties Chips */}
+                    {specList.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {specList.slice(0, 3).map((spec, i) => (
+                          <span key={i} className="text-[9px] font-medium bg-teal-50/80 text-teal-800 border border-teal-100/80 px-2 py-0.5 rounded-md">
+                            {spec.trim()}
+                          </span>
+                        ))}
+                        {specList.length > 3 && (
+                          <span className="text-[9px] font-medium text-slate-400 px-1 py-0.5">
+                            +{specList.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Card Bottom Actions */}
+                  <div className="p-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-2">
+                    {hosp.phone && (
+                      <a href={`tel:${hosp.phone}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-slate-500 hover:text-teal-700 hover:bg-teal-50" title="Call Hospital">
+                          <Phone className="w-3.5 h-3.5" />
+                        </Button>
+                      </a>
+                    )}
+
+                    <div className="flex items-center gap-1.5 flex-1 justify-end">
+                      <Link href={`/facilities/${hosp.id}`}>
+                        <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] font-bold rounded-lg border-slate-200 hover:bg-white text-slate-700">
+                          Details
+                        </Button>
+                      </Link>
+
+                      <Link href={`/scheduling?facilityId=${hosp.id}`}>
+                        <Button size="sm" className="h-7 px-2.5 text-[10px] font-bold rounded-lg bg-teal-700 hover:bg-teal-800 text-white shadow-2xs">
+                          Book OPD
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Show View All Link if more hospitals exist */}
+          {filteredHospitals.length > 6 && (
+            <div className="text-center pt-2">
+              <Link href="/hospitals">
+                <Button variant="outline" className="text-xs font-bold rounded-xl border-teal-200 hover:bg-teal-50 text-teal-800 gap-1.5 shadow-xs">
+                  <span>{language === "hi" ? `सभी ${filteredHospitals.length} अस्पताल और लाइव मैप देखें` : `View all ${filteredHospitals.length} hospitals & live map`}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {filteredHospitals.length === 0 && (
+            <div className="text-center py-8 bg-white rounded-2xl border border-slate-200/80 p-6 space-y-2">
+              <Building2 className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="font-bold text-slate-800 text-sm">
+                {language === "hi" ? "कोई अस्पताल नहीं मिला" : "No hospitals found"}
+              </p>
+              <p className="text-xs text-slate-500">
+                {language === "hi" ? "कृपया अपनी खोज या क्षेत्र फ़िल्टर बदलें।" : "Try adjusting your search query or region filter."}
+              </p>
+            </div>
+          )}
 
         </div>
 
