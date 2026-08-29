@@ -461,10 +461,17 @@ export interface SchemeEligibilityCheck {
 }
 
 export interface SchemeResult {
+  schemeId?: string;
   schemeName: string;
-  status: "POTENTIALLY_ELIGIBLE" | "NOT_ELIGIBLE" | "NEEDS_VERIFICATION";
-  reason: string;
-  officialLink: string;
+  status: "POTENTIALLY_ELIGIBLE" | "NOT_ELIGIBLE" | "NEEDS_VERIFICATION" | string;
+  reason?: string;
+  reasons?: string[];
+  matchScore?: number;
+  coverageAmount?: string;
+  description?: string;
+  eligibilityCriteria?: string;
+  applicationUrl?: string;
+  officialLink?: string;
 }
 
 // ---------- Symptom Definitions ----------

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,25 +8,31 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { 
   ShieldCheck, Baby, HeartPulse, Users, Accessibility, 
-  ArrowRight, Briefcase, IndianRupee, Sparkles, Building2,
-  CheckCircle2, AlertCircle, FileCheck
+  Briefcase, IndianRupee, Sparkles, Building2,
+  CheckCircle2, AlertCircle, FileCheck, Search, ExternalLink
 } from "lucide-react";
 import { SchemeResult } from "@/lib/types";
 import { useStore } from "@/lib/store";
+import { MASTER_HEALTHCARE_SCHEMES_110, GovtScheme } from "@/lib/schemes-dataset";
 
-interface GovtScheme {
-  id: string;
-  schemeName: string;
-  category: string;
-  description: string;
-  eligibility: string;
-  coverageAmount: string;
-  officialLink: string;
-  stateApplicable: string;
-}
+const CATEGORY_FILTERS = [
+  { id: "ALL", label: "All Schemes (110)", labelHi: "सभी 110 योजनाएं" },
+  { id: "DELHI_FLAGSHIP", label: "Delhi Flagship (20+)", labelHi: "दिल्ली सरकार प्रमुख योजनाएं" },
+  { id: "NATIONAL", label: "National & PM-JAY", labelHi: "राष्ट्रीय एवं आयुष्मान भारत" },
+  { id: "MATERNAL", label: "Maternal & Pregnancy", labelHi: "मातृत्व एवं गर्भावस्था" },
+  { id: "CHILD_HEALTH", label: "Child & Newborn", labelHi: "शिशु एवं बाल स्वास्थ्य" },
+  { id: "COMMUNICABLE_DISEASE", label: "TB, Dengue & Infections", labelHi: "टीबी, संक्रमण व संचारी रोग" },
+  { id: "CHRONIC_CARE", label: "NCD, Eye & Chronic", labelHi: "बीपी, शुगर, नेत्र व डायलिसिस" },
+  { id: "CRITICAL_CARE", label: "Cancer, Trauma & Organ", labelHi: "कैंसर, ट्रॉमा व अंग प्रत्यारोपण" },
+  { id: "DISABILITY", label: "Disability & Rehab", labelHi: "दिव्यांगजन पुनर्वास" },
+  { id: "ELDERLY_CARE", label: "Elderly & Geriatric", labelHi: "वरिष्ठ नागरिक देखभाल" },
+  { id: "STATE_SCHEME", label: "State Health Covers", labelHi: "अन्य राज्य स्वास्थ्य योजनाएं" },
+] as const;
 
 export default function SchemesPage() {
   const { t, language } = useStore();
+  const isHindi = language === "hi";
+
   const [incomeCategory, setIncomeCategory] = useState<string>("BPL");
   const [occupationCategory, setOccupationCategory] = useState<string>("UNORGANIZED");
   const [age, setAge] = useState<number | "">(45);
@@ -34,337 +40,245 @@ export default function SchemesPage() {
   const [stateName, setStateName] = useState<string>("Delhi");
   const [hasDisability, setHasDisability] = useState<boolean>(false);
   const [isPregnant, setIsPregnant] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [results, setResults] = useState<SchemeResult[] | null>(null);
 
-  // Multi-Factor Clinical & Social Rule Engine
+  // Multi-Factor Clinical & Social Rule Engine across 110+ Schemes
   const checkEligibility = useCallback(() => {
-    const isHindi = language === "hi";
-
-    const schemesList: GovtScheme[] = [
-      {
-        id: "sch-pmjay",
-        schemeName: isHindi ? "आयुष्मान भारत पीएम-जय (राष्ट्रीय स्वास्थ्य सुरक्षा)" : "Ayushman Bharat PM-JAY (National Health Cover)",
-        category: "NATIONAL",
-        description: isHindi 
-          ? "28,000+ सूचीबद्ध अस्पतालों में द्वितीयक और तृतीयक अस्पताल में भर्ती के लिए ₹5 लाख प्रति परिवार निःशुल्क स्वास्थ्य सुरक्षा।"
-          : "World’s largest government health assurance scheme offering cashless secondary and tertiary hospitalization across 28,000+ empanelled hospitals.",
-        eligibility: isHindi
-          ? "बीपीएल / ईडब्ल्यूएस परिवार, असंगठित क्षेत्र के श्रमिक, और ग्रामीण भूमिहीन किसान।"
-          : "BPL / EWS households, unorganized sector workers, rural families with deprivation criteria, and landless agricultural workers under SECC database.",
-        coverageAmount: "₹5,00,000 per family / year",
-        officialLink: "https://pmjay.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-eshram",
-        schemeName: isHindi ? "ई-श्रम एवं पीएम श्रम योगी स्वास्थ्य शील्ड" : "e-Shram & PM Shram Yogi Health Shield",
-        category: "UNORGANIZED_WORKER",
-        description: isHindi
-          ? "असंगठित क्षेत्र के श्रमिकों, निर्माण मजदूरों और गिग कामगारों के लिए दुर्घटना स्वास्थ्य बीमा एवं सामाजिक सुरक्षा।"
-          : "Accidental hospitalization, critical trauma insurance, and integrated social security benefits for informal and unorganized sector workers.",
-        eligibility: isHindi
-          ? "18-59 वर्ष के असंगठित श्रमिक जिनकी मासिक आय ₹15,000 से कम हो।"
-          : "Unorganized sector workers, construction laborers, street vendors, delivery partners, and domestic workers aged 18-59 with monthly income < ₹15,000.",
-        coverageAmount: "₹2,00,000 accidental cover + cashless hospital network",
-        officialLink: "https://eshram.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-kisan",
-        schemeName: isHindi ? "पीएम-किसान स्वास्थ्य एवं सामाजिक सुरक्षा शील्ड" : "PM-KISAN Health & Social Security Shield",
-        category: "FARMER",
-        description: isHindi
-          ? "कृषि समुदाय और छोटे किसानों के लिए रियायती ग्रामीण स्वास्थ्य सुरक्षा एवं आपातकालीन सहायता।"
-          : "Subsidized rural health assurance, critical illness support, and emergency clinical assistance tailored for the agricultural community.",
-        eligibility: isHindi
-          ? "2 हेक्टेयर तक खेती योग्य भूमि वाले छोटे और सीमांत किसान / कृषि श्रमिक।"
-          : "Small and marginal farmers / agricultural laborers owning up to 2 hectares of cultivable land and rural farming families.",
-        coverageAmount: "₹3,00,000 rural health coverage & diagnostic subsidies",
-        officialLink: "https://pmkisan.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-cghs",
-        schemeName: isHindi ? "केंद्रीय सरकार स्वास्थ्य योजना (CGHS)" : "Central Government Health Scheme (CGHS)",
-        category: "GOVERNMENT",
-        description: isHindi
-          ? "सरकारी कर्मचारियों और पेंशनभोगियों के लिए 100% कैशलेस ओपीडी, आईपीडी और विशेषज्ञ परामर्श सुविधा।"
-          : "Comprehensive medical care facility including OPD, IPD, and specialist consultations across India for government staff and dependents.",
-        eligibility: isHindi
-          ? "केंद्र एवं राज्य सरकार के सेवारत और सेवानिवृत्त कर्मचारी तथा उनके आश्रित।"
-          : "Serving and retired Central / State government employees, Members of Parliament, and accredited government pensioners.",
-        coverageAmount: "100% cashless hospitalization & free specialist care",
-        officialLink: "https://cghs.nic.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-esic",
-        schemeName: isHindi ? "कर्मचारी राज्य बीमा योजना (ESIC)" : "Employees’ State Insurance Scheme (ESIC)",
-        category: "SALARIED",
-        description: isHindi
-          ? "संगठित क्षेत्र के वेतनभोगी कर्मचारियों और उनके परिवारों के लिए ईएसआईसी औषधालयों एवं अस्पतालों के माध्यम से पूर्ण चिकित्सा सुरक्षा।"
-          : "Integrated medical protection, sickness cash benefit, maternity cover, and dependent benefits through ESIC dispensaries and tie-up hospitals.",
-        eligibility: isHindi
-          ? "₹21,000 तक मासिक वेतन पाने वाले संगठित क्षेत्र के कर्मचारी।"
-          : "Organized sector salaried / corporate employees in factories and establishments with monthly wages up to ₹21,000 (₹25,000 for persons with disability).",
-        coverageAmount: "Full medical cover for employee and dependent family members",
-        officialLink: "https://esic.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-pmmvy",
-        schemeName: isHindi ? "प्रधानमंत्री मातृ वंदना योजना (PMMVY & JSY)" : "Pradhan Mantri Matru Vandana Yojana (PMMVY & JSY)",
-        category: "MATERNAL",
-        description: isHindi
-          ? "गर्भवती महिलाओं के लिए ₹6,000 नकद सहायता + जननी सुरक्षा योजना के तहत 100% निःशुल्क संस्थागत प्रसव एवं जांच।"
-          : "Maternity benefit cash incentive for first/second living child plus 100% free antenatal checkups and institutional delivery under Janani Suraksha Yojana.",
-        eligibility: isHindi
-          ? "गर्भवती महिलाएं एवं स्तनपान कराने वाली माताएं।"
-          : "Pregnant women and lactating mothers for institutional delivery in public and accredited private health centres.",
-        coverageAmount: "₹6,000 direct cash assistance + free delivery and neonatal care",
-        officialLink: "https://pmmvy.wcd.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-nphce",
-        schemeName: isHindi ? "राष्ट्रीय वृद्धजन स्वास्थ्य देखभाल कार्यक्रम (NPHCE)" : "National Programme for Health Care of the Elderly (NPHCE)",
-        category: "SENIOR",
-        description: isHindi
-          ? "वरिष्ठ नागरिकों के लिए समर्पित जेरियाट्रिक ओपीडी, निःशुल्क सहायक उपकरण (श्रवण यंत्र, चश्मा, व्हीलचेयर) एवं दवाएं।"
-          : "Specialized geriatric healthcare services, weekly dedicated elderly OPDs, chronic disease management, and free assistive devices.",
-        eligibility: isHindi
-          ? "60 वर्ष या उससे अधिक आयु के वरिष्ठ नागरिक।"
-          : "Senior citizens aged 60 years and above across India.",
-        coverageAmount: "Free geriatric diagnostics, specialized OPD, and assistive aids",
-        officialLink: "https://main.mohfw.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-niramaya",
-        schemeName: isHindi ? "निरामया स्वास्थ्य बीमा योजना (दिव्यांगजन)" : "Niramaya Health Insurance for Divyangjan",
-        category: "DISABILITY",
-        description: isHindi
-          ? "दिव्यांग व्यक्तियों के लिए ₹1 लाख तक का किफायती स्वास्थ्य बीमा (ओपीडी, फिजियोथेरेपी, सर्जरी और दवाएं शामिल)।"
-          : "Affordable health insurance cover for persons with autism, cerebral palsy, mental retardation, and multiple physical or intellectual disabilities.",
-        eligibility: isHindi
-          ? "यूडीआईडी (UDID) कार्ड धारक या प्रमाणित दिव्यांग नागरिक।"
-          : "Citizens with certified benchmark disabilities (possessing valid UDID Card or medical disability certificate).",
-        coverageAmount: "₹1,00,000 per annum (includes OPD, therapy, dental & surgery)",
-        officialLink: "https://thenationaltrust.gov.in",
-        stateApplicable: "ALL",
-      },
-      {
-        id: "sch-dak",
-        schemeName: isHindi ? "दिल्ली आरोग्य कोष (DAK) एवं मोहल्ला क्लिनिक" : "Delhi Arogya Kosh (DAK) & Mohalla Health Clinic",
-        category: "STATE",
-        description: isHindi
-          ? "निजी केंद्रों पर निःशुल्क एमआरआई, सीटी स्कैन, पीईटी स्कैन और ₹5 लाख तक की कैशलेस सर्जरी।"
-          : "Free high-end radiodiagnostics (MRI, CT Scan, PET Scan) at 30+ top private diagnostic centres plus cashless surgery reimbursement up to ₹5 Lakhs.",
-        eligibility: isHindi
-          ? "दिल्ली के निवासी जिनकी वार्षिक पारिवारिक आय ₹3 लाख से कम हो, एवं सभी मोहल्ला क्लिनिक लाभार्थी।"
-          : "Residents of Delhi/NCR with valid voter ID/Aadhaar and annual family income < ₹3,00,000, plus universal free OPD at all Aam Aadmi Mohalla Clinics.",
-        coverageAmount: "₹5,00,000 cashless diagnostic & surgery package",
-        officialLink: "https://delhi.gov.in",
-        stateApplicable: "Delhi",
-      },
-      {
-        id: "sch-up-mmjay",
-        schemeName: isHindi ? "यूपी मुख्यमंत्री जन आरोग्य योजना (MMJAY)" : "UP Mukhyamantri Jan Arogya Yojana (MMJAY)",
-        category: "STATE",
-        description: isHindi
-          ? "उत्तर प्रदेश में अंत्योदय कार्डधारकों और असंगठित कामगारों के लिए ₹5 लाख प्रति परिवार कैशलेस स्वास्थ्य बीमा।"
-          : "State health insurance extension for families left out of the SECC list, Antyodaya Anna cardholders, and unorganized rural households in Uttar Pradesh.",
-        eligibility: isHindi
-          ? "उत्तर प्रदेश के अंत्योदय/बीपीएल कार्डधारक एवं पंजीकृत असंगठित श्रमिक।"
-          : "Permanent residents of Uttar Pradesh holding Antyodaya/BPL ration cards or registered under unorganized worker boards.",
-        coverageAmount: "₹5,00,000 per family / year cashless cover",
-        officialLink: "https://ayushmanup.in",
-        stateApplicable: "Uttar Pradesh",
-      },
-      {
-        id: "sch-chiranjeevi",
-        schemeName: isHindi ? "मुख्यमंत्री आयुष्मान राजस्थान (चिरंजीवी योजना)" : "Mukhyamantri Ayushman Rajasthan (Chiranjeevi Yojana)",
-        category: "STATE",
-        description: isHindi
-          ? "राजस्थान के सभी परिवारों के लिए ₹25 लाख तक का सार्वभौमिक कैशलेस स्वास्थ्य बीमा।"
-          : "Universal cashless health assurance providing comprehensive package cover for general and critical specialty care in Rajasthan.",
-        eligibility: isHindi
-          ? "राजस्थान के समस्त परिवार (बीपीएल/किसानों के लिए पूर्णतः निःशुल्क)।"
-          : "Residents of Rajasthan (100% free for BPL, NFSA, small farmers, contractual workers, and nominal premium for APL families).",
-        coverageAmount: "₹25,00,000 universal annual family health cover",
-        officialLink: "https://chiranjeevi.rajasthan.gov.in",
-        stateApplicable: "Rajasthan",
-      },
-    ];
-
     const evaluatedResults: SchemeResult[] = [];
     const numAge = typeof age === "number" ? age : 40;
 
-    schemesList.forEach((scheme) => {
+    MASTER_HEALTHCARE_SCHEMES_110.forEach((scheme: GovtScheme) => {
       let isEligible = false;
       let matchScore = 0;
       const reasons: string[] = [];
 
-      // 1. Occupation-Specific Rules
-      if (occupationCategory === "UNORGANIZED") {
-        if (scheme.category === "UNORGANIZED_WORKER" || scheme.id === "sch-eshram") {
+      // State matching check
+      const isDelhi = stateName.toLowerCase().includes("delhi");
+      const isStateMatch = scheme.stateApplicable === "ALL" || scheme.stateApplicable.toLowerCase() === stateName.toLowerCase() || (isDelhi && scheme.stateApplicable === "Delhi");
+
+      // 1. Delhi Flagship Healthcare Schemes
+      if (scheme.category === "DELHI_FLAGSHIP") {
+        if (isDelhi) {
           isEligible = true;
-          matchScore += 40;
+          matchScore += 45;
           reasons.push(isHindi 
-            ? "सीधा मिलान: असंगठित क्षेत्र के श्रमिक ई-श्रम स्वास्थ्य शील्ड के पात्र हैं।"
-            : "Direct match: Unorganized sector workers qualify for e-Shram health shield.");
+            ? "निवास मिलान: दिल्ली निवासी के रूप में आप दिल्ली सरकार की स्वास्थ्य योजनाओं के पात्र हैं।" 
+            : "Residency Match: Eligible as a Delhi resident under Delhi Healthcare initiatives.");
+          
+          if (scheme.id === "sch-dan" && (incomeCategory === "BPL" || incomeCategory === "EWS")) {
+            matchScore += 35;
+            reasons.push(isHindi ? "बीपीएल/ईडब्ल्यूएस दिल्ली आरोग्य निधि (₹1.5 लाख) हेतु पूर्ण पात्र।" : "BPL/EWS eligible for Delhi Arogya Nidhi direct aid.");
+          }
+          if (scheme.id === "sch-dak" || scheme.id === "sch-dfss" || scheme.id === "sch-diag" || scheme.id === "sch-mohalla") {
+            matchScore += 35;
+            reasons.push(isHindi ? "दिल्ली अस्पताल एवं मोहल्ला क्लिनिक नेटवर्क के तहत 100% कैशलेस सेवाएं उपलब्ध।" : "100% cashless diagnostics, surgery, and consultations across Delhi network.");
+          }
+        } else {
+          // Non-Delhi
+          if (scheme.id === "sch-farishte") {
+            isEligible = true;
+            matchScore = 80;
+            reasons.push(isHindi ? "फ़रिश्ते योजना दिल्ली में किसी भी व्यक्ति के दुर्घटनाग्रस्त होने पर लागू होती है।" : "Farishte Dilli Ke covers any person injured within Delhi territory.");
+          }
         }
-        if (scheme.id === "sch-pmjay" && (incomeCategory === "BPL" || incomeCategory === "EWS")) {
+      }
+
+      // 2. National Schemes & Ayushman Bharat PM-JAY
+      if (scheme.id === "sch-pmjay") {
+        if (incomeCategory === "BPL" || incomeCategory === "EWS" || occupationCategory === "UNORGANIZED" || occupationCategory === "FARMER" || occupationCategory === "UNEMPLOYED") {
           isEligible = true;
-          matchScore += 35;
-          reasons.push(isHindi
-            ? "आय एवं व्यवसाय मानदंड: आयुष्मान भारत कार्ड हेतु पात्र।"
-            : "Income & occupation criteria met for PM-JAY Ayushman Bharat card.");
+          matchScore += 85;
+          reasons.push(isHindi 
+            ? "आय एवं सामाजिक श्रेणी मिलान: ₹5 लाख कैशलेस आयुष्मान भारत कार्ड हेतु पात्र।" 
+            : "Socio-economic criteria met for ₹5 Lakh PM-JAY Ayushman Card.");
+        }
+      }
+
+      if (scheme.id === "sch-pmjay-senior" && numAge >= 70) {
+        isEligible = true;
+        matchScore = 95;
+        reasons.push(isHindi 
+          ? "आयु मिलान: 70 वर्ष से अधिक आयु के वरिष्ठ नागरिकों के लिए ₹5 लाख का अलग से आयुष्मान कवर।" 
+          : "Age Match: Senior citizens aged 70+ receive dedicated ₹5L Ayushman health cover.");
+      }
+
+      // 3. Occupation-Specific Rules
+      if (occupationCategory === "UNORGANIZED") {
+        if (scheme.category === "UNORGANIZED_WORKER" || scheme.id === "sch-eshram" || scheme.id === "sch-pm-svanidhi" || scheme.id === "sch-pm-vishwakarma") {
+          isEligible = true;
+          matchScore += 50;
+          reasons.push(isHindi 
+            ? "व्यवसाय मिलान: असंगठित श्रमिक स्वास्थ्य एवं दुर्घटना सुरक्षा शील्ड के पात्र हैं।" 
+            : "Occupation match: Unorganized sector workers qualify for worker health shields.");
         }
       } else if (occupationCategory === "FARMER") {
         if (scheme.category === "FARMER" || scheme.id === "sch-kisan") {
           isEligible = true;
-          matchScore += 40;
-          reasons.push(isHindi
-            ? "सीधा मिलान: किसान एवं कृषि श्रमिक पीएम-किसान स्वास्थ्य लाभों के पात्र हैं।"
-            : "Direct match: Farmers and agricultural workers qualify for PM-KISAN health benefits.");
-        }
-        if (scheme.id === "sch-pmjay") {
-          isEligible = true;
-          matchScore += 30;
-          reasons.push(isHindi
-            ? "ग्रामीण कृषि परिवार एसईसीसी मानदंड के तहत पात्र हैं।"
-            : "Rural agricultural households qualify under SECC occupational deprivation.");
+          matchScore += 50;
+          reasons.push(isHindi 
+            ? "व्यवसाय मिलान: किसान एवं कृषि श्रमिक पीएम-किसान स्वास्थ्य लाभों के पात्र हैं।" 
+            : "Occupation match: Farmers qualify for PM-KISAN health and trauma benefits.");
         }
       } else if (occupationCategory === "GOVERNMENT") {
-        if (scheme.category === "GOVERNMENT" || scheme.id === "sch-cghs") {
+        if (scheme.category === "GOVERNMENT" || scheme.id === "sch-cghs" || scheme.id === "sch-echs") {
           isEligible = true;
-          matchScore += 50;
-          reasons.push(isHindi
-            ? "सीधा मिलान: सरकारी कर्मचारी और पेंशनभोगी सीजीएचएस के पात्र हैं।"
+          matchScore += 55;
+          reasons.push(isHindi 
+            ? "व्यवसाय मिलान: सेवारत व सेवानिवृत्त सरकारी कर्मचारी सीजीएचएस के पात्र हैं।" 
             : "Direct match: Government employees and pensioners are eligible for CGHS.");
         }
       } else if (occupationCategory === "SALARIED") {
         if (scheme.category === "SALARIED" || scheme.id === "sch-esic") {
           isEligible = true;
-          matchScore += 45;
-          reasons.push(isHindi
-            ? "सीधा मिलान: संगठित क्षेत्र के वेतनभोगी कर्मचारी ईएसआईसी के पात्र हैं।"
-            : "Direct match: Organized sector salaried employees qualify for ESIC benefits.");
-        }
-      } else if (occupationCategory === "UNEMPLOYED") {
-        if (scheme.id === "sch-pmjay" && (incomeCategory === "BPL" || incomeCategory === "EWS")) {
-          isEligible = true;
-          matchScore += 40;
-          reasons.push(isHindi
-            ? "बीपीएल/ईडब्ल्यूएस बेरोजगार नागरिक 100% कैशलेस पीएम-जय के पात्र हैं।"
-            : "BPL/EWS unemployed citizens qualify for 100% cashless PM-JAY cover.");
+          matchScore += 50;
+          reasons.push(isHindi 
+            ? "व्यवसाय मिलान: संगठित क्षेत्र के वेतनभोगी कर्मचारी ईएसआईसी के पात्र हैं।" 
+            : "Direct match: Organized salaried employees qualify for ESIC hospital network.");
         }
       }
 
-      // 2. Maternal & Antenatal Care Rules
+      // 4. Maternal & Pregnancy Rules
       if (isPregnant) {
-        if (scheme.category === "MATERNAL" || scheme.id === "sch-pmmvy") {
+        if (scheme.category === "MATERNAL" || scheme.id === "sch-pmmvy" || scheme.id === "sch-jsy" || scheme.id === "sch-jssk" || scheme.id === "sch-suman" || scheme.id === "sch-pmsma") {
           isEligible = true;
-          matchScore += 50;
-          reasons.push(isHindi
-            ? "मातृत्व लाभ: गर्भवती महिलाओं को ₹6,000 नकद प्रोत्साहन एवं निःशुल्क प्रसव।"
-            : "Maternal Benefit: Pregnant women receive ₹6,000 cash assistance and free delivery.");
+          matchScore += 55;
+          reasons.push(isHindi 
+            ? "मातृत्व लाभ: गर्भवती महिलाओं हेतु नकद प्रोत्साहन, मुफ्त पोषण व शत-प्रतिशत कैशलेस प्रसव।" 
+            : "Maternal Benefit: Pregnant women receive DBT cash incentives & zero-expense delivery.");
         }
       }
 
-      // 3. Disability Specific Rules
+      // 5. Disability Specific Rules
       if (hasDisability) {
-        if (scheme.category === "DISABILITY" || scheme.id === "sch-niramaya") {
+        if (scheme.category === "DISABILITY" || scheme.id === "sch-niramaya" || scheme.id === "sch-swavlamban-pwd" || scheme.id === "sch-adip" || scheme.id === "sch-ddrs") {
+          isEligible = true;
+          matchScore += 55;
+          reasons.push(isHindi 
+            ? "दिव्यांगता लाभ: विशेष स्वास्थ्य बीमा, मुफ्त सहायक उपकरण और पुनर्वास सेवाएं।" 
+            : "Disability Coverage: Comprehensive health insurance, free aids, and rehab services.");
+        }
+      }
+
+      // 6. Senior Citizen Rules (60+ Years)
+      if (numAge >= 60) {
+        if (scheme.category === "ELDERLY_CARE" || scheme.id === "sch-nphce-elderly" || scheme.id === "sch-rashtriya-vayoshri" || scheme.id === "sch-delhi-elderly") {
           isEligible = true;
           matchScore += 50;
-          reasons.push(isHindi
-            ? "दिव्यांगजन प्रमाण पत्र: निरामया ₹1 लाख व्यापक चिकित्सा सुरक्षा हेतु पात्र।"
-            : "Disability Certificate: Eligible for Niramaya ₹1 Lakh comprehensive medical coverage.");
+          reasons.push(isHindi 
+            ? "वरिष्ठ नागरिक लाभ: समर्पित जेरियाट्रिक वार्ड, मुफ्त उपकरण व प्राथमिकता स्वास्थ्य देखभाल।" 
+            : "Geriatric Benefit: Senior citizen OPD priority, free assistive aids & home care.");
         }
       }
 
-      // 4. Senior Citizen Geriatric Rules
-      if (numAge >= 60) {
-        if (scheme.category === "SENIOR" || scheme.id === "sch-nphce") {
+      // 7. Child & Pediatric Health Rules (0-18 Years)
+      if (numAge <= 18) {
+        if (scheme.category === "CHILD_HEALTH" || scheme.id === "sch-rbsk" || scheme.id === "sch-mission-indradhanush" || scheme.id === "sch-poshan" || scheme.id === "sch-delhi-school") {
           isEligible = true;
-          matchScore += 40;
-          reasons.push(isHindi
-            ? "वरिष्ठ नागरिक: एनपीएचसीई के तहत निःशुल्क जेरियाट्रिक ओपीडी एवं सहायक उपकरण।"
-            : "Senior Citizen: Free specialized geriatric OPD and assistive devices under NPHCE.");
+          matchScore += 50;
+          reasons.push(isHindi 
+            ? "बाल स्वास्थ्य: मुफ्त टीकाकरण, 4D स्क्रीनिंग व जन्मजात विकृति सर्जरी।" 
+            : "Pediatric Health: Free universal immunization, 4D screening & corrective surgeries.");
         }
       }
 
-      // 5. State-Specific Schemes
-      if (scheme.stateApplicable === "Delhi" && stateName === "Delhi") {
-        isEligible = true;
-        matchScore += 30;
-        reasons.push(isHindi
-          ? "राज्य निवासी: निःशुल्क एमआरआई/सीटी स्कैन एवं मोहल्ला क्लिनिक उपचार।"
-          : "State Resident: Eligible for free high-end diagnostics (MRI/CT) and Mohalla Clinic care.");
-      } else if (scheme.stateApplicable === "Uttar Pradesh" && stateName === "Uttar Pradesh") {
-        if (incomeCategory === "BPL" || incomeCategory === "EWS" || occupationCategory === "UNORGANIZED") {
-          isEligible = true;
-          matchScore += 35;
-          reasons.push(isHindi
-            ? "राज्य निवासी: यूपी मुख्यमंत्री जन आरोग्य योजना ₹5 लाख कवर हेतु पात्र।"
-            : "State Resident: Eligible for UP Mukhyamantri Jan Arogya Yojana ₹5 Lakh cover.");
-        }
-      } else if (scheme.stateApplicable === "Rajasthan" && stateName === "Rajasthan") {
+      // 8. Universal Communicable Disease & Chronic Health Programs
+      if (scheme.category === "COMMUNICABLE_DISEASE" || scheme.category === "CHRONIC_CARE" || scheme.category === "COMMUNITY_HEALTH" || scheme.category === "DIGITAL_HEALTH" || scheme.id === "sch-jan-aushadhi" || scheme.id === "sch-emergency-108" || scheme.id === "sch-abdm" || scheme.id === "sch-ab-hwc") {
         isEligible = true;
         matchScore += 40;
-        reasons.push(isHindi
-          ? "राज्य निवासी: ₹25 लाख चिरंजीवी स्वास्थ्य सुरक्षा का सार्वभौमिक अधिकार।"
-          : "State Resident: Universal entitlement to ₹25 Lakh Chiranjeevi health cover.");
+        reasons.push(isHindi 
+          ? "सार्वभौमिक राष्ट्रीय स्वास्थ्य मिशन: सभी नागरिकों के लिए मुफ्त प्राथमिक जांच व दवाएं।" 
+          : "Universal Health Mission: Free primary diagnosis, essential generics & emergency services.");
       }
 
-      // Universal National Baseline for BPL / EWS
-      if ((incomeCategory === "BPL" || incomeCategory === "EWS") && scheme.id === "sch-pmjay") {
-        isEligible = true;
-        matchScore += 30;
+      // 9. Super-specialty & Critical Illness Programs
+      if (scheme.category === "CRITICAL_CARE" || scheme.category === "CANCER_CARE") {
+        if (incomeCategory === "BPL" || incomeCategory === "EWS") {
+          isEligible = true;
+          matchScore += 45;
+          reasons.push(isHindi 
+            ? "गंभीर बीमारी सहायता: बीपीएल/ईडब्ल्यूएस मरीजों हेतु ₹15 लाख तक का सरकारी अनुदान।" 
+            : "Critical Care Grant: BPL/EWS eligible for up to ₹15L super-specialty grant.");
+        } else {
+          isEligible = true;
+          matchScore += 30;
+          reasons.push(isHindi 
+            ? "मूल्य नियंत्रण व रियायती पैकेज: सभी नागरिकों के लिए रियायती प्रत्यारोपण व स्टेंट दरें।" 
+            : "Statutory Price Cap: Capped rates for implants, dialysis & emergency thrombolysis.");
+        }
       }
 
-      // Format final eligibility status
-      let status: "POTENTIALLY_ELIGIBLE" | "NEEDS_VERIFICATION" = "NEEDS_VERIFICATION";
-      if (isEligible && matchScore >= 30) {
-        status = "POTENTIALLY_ELIGIBLE";
+      // 10. State Specific Scheme Rules
+      if (scheme.category === "STATE_SCHEME") {
+        if (scheme.stateApplicable.toLowerCase() === stateName.toLowerCase()) {
+          isEligible = true;
+          matchScore += 60;
+          reasons.push(isHindi 
+            ? `राज्य योजना मिलान: ${stateName} के निवासियों के लिए राज्य-स्तरीय स्वास्थ्य कवर।` 
+            : `State Match: Universal state-level health assurance for ${stateName} residents.`);
+        }
       }
 
-      // Construct detailed reason text
-      const reasonText = reasons.length > 0
-        ? reasons.join(" ")
-        : `${scheme.description} Eligibility: ${scheme.eligibility}. Coverage: ${scheme.coverageAmount}.`;
+      // Final qualification mapping
+      if (isEligible && isStateMatch) {
+        const finalScore = Math.min(98, Math.max(35, matchScore));
+        const status = finalScore >= 60 ? "POTENTIALLY_ELIGIBLE" : "NEEDS_VERIFICATION";
 
-      evaluatedResults.push({
-        schemeName: scheme.schemeName,
-        status,
-        reason: `${reasonText} [Coverage: ${scheme.coverageAmount}]`,
-        officialLink: scheme.officialLink,
-      });
+        evaluatedResults.push({
+          schemeId: scheme.id,
+          schemeName: isHindi ? (scheme.schemeNameHi || scheme.schemeName) : scheme.schemeName,
+          status: status,
+          matchScore: finalScore,
+          reasons: reasons.length > 0 ? reasons : [isHindi ? "राष्ट्रीय स्वास्थ्य सुरक्षा मानदंड पूर्ण।" : "Standard national health assurance criteria met."],
+          coverageAmount: isHindi ? (scheme.coverageAmountHi || scheme.coverageAmount) : scheme.coverageAmount,
+          applicationUrl: scheme.officialLink,
+          description: isHindi ? (scheme.descriptionHi || scheme.description) : scheme.description,
+          eligibilityCriteria: isHindi ? (scheme.eligibilityHi || scheme.eligibility) : scheme.eligibility,
+        });
+      }
     });
 
-    // Sort so POTENTIALLY_ELIGIBLE appears at the top
-    evaluatedResults.sort((a, b) => {
-      if (a.status === "POTENTIALLY_ELIGIBLE" && b.status !== "POTENTIALLY_ELIGIBLE") return -1;
-      if (a.status !== "POTENTIALLY_ELIGIBLE" && b.status === "POTENTIALLY_ELIGIBLE") return 1;
-      return 0;
-    });
-
+    // Sort by match score descending
+    evaluatedResults.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
     setResults(evaluatedResults);
-  }, [age, incomeCategory, occupationCategory, stateName, isPregnant, hasDisability, language]);
+  }, [age, incomeCategory, occupationCategory, stateName, isPregnant, hasDisability, isHindi]);
 
-  // Run initial check on load & language change
+  // Run initial evaluation on demographic change
   useEffect(() => {
     checkEligibility();
   }, [checkEligibility]);
 
+  // Filter results by search query and category
+  const displayedSchemes = useMemo(() => {
+    if (!results) return [];
+
+    return results.filter((res) => {
+      // Find raw scheme for category check
+      const rawScheme = MASTER_HEALTHCARE_SCHEMES_110.find((s) => s.id === res.schemeId);
+      if (selectedCategory !== "ALL" && rawScheme && rawScheme.category !== selectedCategory) {
+        return false;
+      }
+
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const name = res.schemeName.toLowerCase();
+      const desc = (res.description || "").toLowerCase();
+      const crit = (res.eligibilityCriteria || "").toLowerCase();
+      const cov = (res.coverageAmount || "").toLowerCase();
+
+      return name.includes(q) || desc.includes(q) || crit.includes(q) || cov.includes(q);
+    });
+  }, [results, selectedCategory, searchQuery]);
+
   const getSchemeIcon = (name: string) => {
     if (name.includes("Maternal") || name.includes("Matru") || name.includes("JSY") || name.includes("मातृ")) return <Baby className="h-6 w-6 text-pink-500" />;
-    if (name.includes("Elderly") || name.includes("NPHCE") || name.includes("वृद्धजन")) return <Users className="h-6 w-6 text-purple-600" />;
-    if (name.includes("Disability") || name.includes("Niramaya") || name.includes("दिव्यांग")) return <Accessibility className="h-6 w-6 text-blue-600" />;
+    if (name.includes("Elderly") || name.includes("NPHCE") || name.includes("वृद्ध") || name.includes("Vayoshri")) return <Users className="h-6 w-6 text-purple-600" />;
+    if (name.includes("Disability") || name.includes("Niramaya") || name.includes("दिव्यांग") || name.includes("ADIP")) return <Accessibility className="h-6 w-6 text-blue-600" />;
     if (name.includes("Farmer") || name.includes("KISAN") || name.includes("किसान")) return <HeartPulse className="h-6 w-6 text-emerald-600" />;
-    if (name.includes("Shram") || name.includes("Worker") || name.includes("श्रम")) return <Briefcase className="h-6 w-6 text-amber-600" />;
-    if (name.includes("Government") || name.includes("CGHS") || name.includes("केंद्रीय")) return <Building2 className="h-6 w-6 text-indigo-600" />;
+    if (name.includes("Shram") || name.includes("Worker") || name.includes("श्रम") || name.includes("Vishwakarma")) return <Briefcase className="h-6 w-6 text-amber-600" />;
+    if (name.includes("Government") || name.includes("CGHS") || name.includes("ECHS") || name.includes("केंद्रीय")) return <Building2 className="h-6 w-6 text-indigo-600" />;
+    if (name.includes("Delhi") || name.includes("DAK") || name.includes("Farishte") || name.includes("Mohalla") || name.includes("दिल्ली")) return <Building2 className="h-6 w-6 text-teal-600" />;
     return <ShieldCheck className="h-6 w-6 text-teal-600" />;
   };
 
@@ -372,7 +286,7 @@ export default function SchemesPage() {
     switch (status) {
       case "POTENTIALLY_ELIGIBLE":
         return (
-          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs gap-1 py-0.5">
+          <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 py-0.5">
             <CheckCircle2 className="w-3.5 h-3.5" /> {t("highMatchEligible")}
           </Badge>
         );
@@ -392,23 +306,23 @@ export default function SchemesPage() {
       {/* Page Header */}
       <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/92 backdrop-blur-2xl section-enter">
         <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20">
+          <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20 shrink-0">
             <ShieldCheck className="h-7 w-7" />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">{t("govSchemes")}</h1>
             <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
-              {language === "hi"
-                ? "राष्ट्रीय एवं राज्य-स्तरीय सरकारी स्वास्थ्य योजनाओं हेतु स्वचालित पात्रता मूल्यांकन।"
-                : "Automated AI rule engine evaluating eligibility for national and state-specific healthcare assurance programs."}
+              {isHindi
+                ? "110+ राष्ट्रीय एवं दिल्ली सरकारी स्वास्थ्य योजनाओं हेतु स्वचालित एआई पात्रता मूल्यांकन।"
+                : "Automated AI rule engine evaluating eligibility across 110+ national, Delhi Government, and state healthcare programs."}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-emerald-100/80 text-emerald-800 border-emerald-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs">
+          <Badge variant="outline" className="bg-emerald-100/80 text-emerald-800 border-emerald-300 font-extrabold px-3.5 py-1 text-xs gap-1.5 shadow-2xs">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            {language === "hi" ? "11 योजनाएं सक्रिय" : "11 Schemes Synced"}
+            {isHindi ? `${MASTER_HEALTHCARE_SCHEMES_110.length} योजनाएं सक्रिय` : `${MASTER_HEALTHCARE_SCHEMES_110.length} Schemes Synced`}
           </Badge>
         </div>
       </div>
@@ -419,11 +333,11 @@ export default function SchemesPage() {
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-teal-600" />
             <h2 className="text-base font-black text-slate-900">
-              {language === "hi" ? "नागरिक जनसांख्यिकी एवं व्यवसाय प्रोफ़ाइल" : "Citizen Demographic & Household Profile"}
+              {isHindi ? "नागरिक जनसांख्यिकी एवं व्यवसाय प्रोफ़ाइल" : "Citizen Demographic & Household Profile"}
             </h2>
           </div>
           <p className="text-xs text-slate-500 font-semibold mt-1">
-            {language === "hi"
+            {isHindi
               ? "पात्रता नियमों का मूल्यांकन करने के लिए अपनी सामाजिक-आर्थिक श्रेणी, व्यवसाय और राज्य का चयन करें।"
               : "Select your socio-economic category, occupation, and state to run automated qualification rules."}
           </p>
@@ -432,7 +346,7 @@ export default function SchemesPage() {
         <div className="space-y-6 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            {/* 1. Occupation Category Dropdown (Requested by User) */}
+            {/* 1. Occupation Category Dropdown */}
             <div className="space-y-2">
               <Label htmlFor="occupation" className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <Briefcase className="w-3.5 h-3.5 text-teal-600" />
@@ -452,7 +366,7 @@ export default function SchemesPage() {
               </Select>
             </div>
 
-            {/* 2. Income / Socio-Economic Category */}
+            {/* 2. Income Category Dropdown */}
             <div className="space-y-2">
               <Label htmlFor="income" className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <IndianRupee className="w-3.5 h-3.5 text-teal-600" />
@@ -463,185 +377,256 @@ export default function SchemesPage() {
                   <SelectValue placeholder="Select income category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BPL">{language === "hi" ? "बीपीएल (गरीबी रेखा से नीचे / अंत्योदय)" : "BPL (Below Poverty Line / Antyodaya)"}</SelectItem>
-                  <SelectItem value="EWS">{language === "hi" ? "ईडब्ल्यूएस (आर्थिक रूप से कमजोर वर्ग < ₹3 लाख)" : "EWS (Economically Weaker Section < ₹3L)"}</SelectItem>
-                  <SelectItem value="APL">{language === "hi" ? "एपीएल (गरीबी रेखा से ऊपर / मध्यम आय)" : "APL (Above Poverty Line / Middle Income)"}</SelectItem>
+                  <SelectItem value="BPL">BPL (Below Poverty Line / अंत्योदय)</SelectItem>
+                  <SelectItem value="EWS">EWS (Economically Weaker / वार्षिक आय &lt; ₹3 लाख)</SelectItem>
+                  <SelectItem value="LIG">LIG (Low Income / वार्षिक आय ₹3-6 लाख)</SelectItem>
+                  <SelectItem value="MIG_HIG">MIG / HIG (मध्यम एवं उच्च आय वर्ग)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* 3. Age */}
+            {/* 3. Age Input */}
             <div className="space-y-2">
-              <Label htmlFor="age" className="text-xs font-bold text-slate-800">
-                {language === "hi" ? "आयु (वर्ष) *" : "Age (Years) *"}
+              <Label htmlFor="age" className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-teal-600" />
+                {isHindi ? "आयु (वर्ष)" : "Age (Years)"} *
               </Label>
-              <Input
+              <Input 
                 id="age"
                 type="number"
-                min={0}
-                max={120}
-                placeholder="e.g. 45"
+                min="0"
+                max="120"
                 value={age}
-                onChange={(e) => setAge(e.target.value ? Number(e.target.value) : "")}
-                className="h-11 w-full rounded-xl border-slate-200 focus-visible:ring-teal-500 bg-slate-50/50 text-xs font-medium"
+                onChange={(e) => setAge(e.target.value === "" ? "" : parseInt(e.target.value))}
+                className="h-11 rounded-xl border-slate-200 focus-visible:ring-teal-500 bg-slate-50/50 font-medium text-xs"
               />
             </div>
 
-            {/* 4. Gender */}
+            {/* 4. Gender Select */}
             <div className="space-y-2">
               <Label htmlFor="gender" className="text-xs font-bold text-slate-800">
-                {language === "hi" ? "लिंग (Gender)" : "Gender"}
+                {isHindi ? "लिंग" : "Gender"}
               </Label>
               <Select value={gender} onValueChange={(val) => val && setGender(val)}>
                 <SelectTrigger id="gender" className="h-11 w-full rounded-xl border-slate-200 focus:ring-teal-500 bg-slate-50/50 font-medium text-xs">
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Male">{language === "hi" ? "पुरुष (Male)" : "Male"}</SelectItem>
-                  <SelectItem value="Female">{language === "hi" ? "महिला (Female)" : "Female"}</SelectItem>
-                  <SelectItem value="Other">{language === "hi" ? "अन्य (Other)" : "Other"}</SelectItem>
+                  <SelectItem value="Male">{isHindi ? "पुरुष" : "Male"}</SelectItem>
+                  <SelectItem value="Female">{isHindi ? "महिला" : "Female"}</SelectItem>
+                  <SelectItem value="Other">{isHindi ? "अन्य" : "Other"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* 5. State of Residence */}
+            {/* 5. State Selector */}
             <div className="space-y-2">
-              <Label htmlFor="state" className="text-xs font-bold text-slate-800">
-                {language === "hi" ? "निवास राज्य (State) *" : "State of Residence *"}
+              <Label htmlFor="state" className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                {isHindi ? "राज्य" : "State"}
               </Label>
               <Select value={stateName} onValueChange={(val) => val && setStateName(val)}>
                 <SelectTrigger id="state" className="h-11 w-full rounded-xl border-slate-200 focus:ring-teal-500 bg-slate-50/50 font-medium text-xs">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Delhi">{language === "hi" ? "दिल्ली / एनसीआर" : "Delhi / NCR"}</SelectItem>
-                  <SelectItem value="Uttar Pradesh">{language === "hi" ? "उत्तर प्रदेश" : "Uttar Pradesh"}</SelectItem>
-                  <SelectItem value="Rajasthan">{language === "hi" ? "राजस्थान" : "Rajasthan"}</SelectItem>
-                  <SelectItem value="Bihar">{language === "hi" ? "बिहार" : "Bihar"}</SelectItem>
-                  <SelectItem value="Maharashtra">{language === "hi" ? "महाराष्ट्र" : "Maharashtra"}</SelectItem>
-                  <SelectItem value="Madhya Pradesh">{language === "hi" ? "मध्य प्रदेश" : "Madhya Pradesh"}</SelectItem>
-                  <SelectItem value="Other">{language === "hi" ? "अन्य राज्य एवं केंद्र शासित प्रदेश" : "Other States & UTs"}</SelectItem>
+                  <SelectItem value="Delhi">Delhi NCT (दिल्ली)</SelectItem>
+                  <SelectItem value="Uttar Pradesh">Uttar Pradesh (Noida/Ghaziabad/UP)</SelectItem>
+                  <SelectItem value="Haryana">Haryana (Gurugram/Faridabad/HR)</SelectItem>
+                  <SelectItem value="Rajasthan">Rajasthan</SelectItem>
+                  <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                  <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                  <SelectItem value="Karnataka">Karnataka</SelectItem>
+                  <SelectItem value="West Bengal">West Bengal</SelectItem>
+                  <SelectItem value="Bihar">Bihar</SelectItem>
+                  <SelectItem value="Odisha">Odisha</SelectItem>
+                  <SelectItem value="Kerala">Kerala</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* 6. Disability & Pregnancy Checkboxes */}
+            <div className="flex flex-col justify-center space-y-3 pt-2">
+              <div className="flex items-center space-x-2.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80">
+                <Checkbox 
+                  id="disability" 
+                  checked={hasDisability} 
+                  onCheckedChange={(checked) => setHasDisability(!!checked)} 
+                  className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                />
+                <Label htmlFor="disability" className="text-xs font-bold cursor-pointer text-slate-800">
+                  {isHindi ? "दिव्यांगजन (PwD)" : "Person with Disability (PwD)"}
+                </Label>
+              </div>
+
+              {gender === "Female" && (
+                <div className="flex items-center space-x-2.5 bg-pink-50/80 p-2.5 rounded-xl border border-pink-200/80">
+                  <Checkbox 
+                    id="pregnant" 
+                    checked={isPregnant} 
+                    onCheckedChange={(checked) => setIsPregnant(!!checked)}
+                    className="data-[state=checked]:bg-pink-600 data-[state=checked]:border-pink-600" 
+                  />
+                  <Label htmlFor="pregnant" className="text-xs font-bold cursor-pointer text-pink-900">
+                    {isHindi ? "वर्तमान में गर्भवती" : "Currently Pregnant"}
+                  </Label>
+                </div>
+              )}
+            </div>
+
           </div>
-
-          {/* Special Entitlement Checkboxes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-            <label className="flex items-center space-x-3 text-xs cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 hover:bg-slate-100/80 transition-colors border border-slate-100">
-              <Checkbox
-                id="disability"
-                checked={hasDisability}
-                onCheckedChange={(checked) => setHasDisability(!!checked)}
-                className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600 w-4 h-4 rounded"
-              />
-              <span className="font-semibold text-slate-800">
-                {language === "hi"
-                  ? "नागरिक के पास दिव्यांगता प्रमाण पत्र / यूडीआईडी (UDID) कार्ड है"
-                  : "Citizen has a recognized disability (Possesses UDID card or benchmark medical certificate)"}
-              </span>
-            </label>
-
-            <label className="flex items-center space-x-3 text-xs cursor-pointer p-3.5 rounded-2xl bg-slate-50/70 hover:bg-slate-100/80 transition-colors border border-slate-100">
-              <Checkbox
-                id="pregnancy"
-                checked={isPregnant}
-                onCheckedChange={(checked) => setIsPregnant(!!checked)}
-                className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600 w-4 h-4 rounded"
-              />
-              <span className="font-semibold text-slate-800">
-                {language === "hi"
-                  ? "नागरिक वर्तमान में गर्भवती हैं / प्रसव पूर्व एवं संस्थागत प्रसव सहायता की आवश्यकता है"
-                  : "Citizen is currently pregnant / requiring antenatal & institutional delivery assistance"}
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div className="bg-slate-50/80 p-6 border-t border-slate-200/80 flex justify-between items-center">
-          <button 
-            type="button"
-            onClick={checkEligibility} 
-            className="btn-3d-primary w-full h-12 text-xs font-black rounded-2xl gap-2"
-          >
-            <ShieldCheck className="w-4 h-4" />
-            <span>{t("evaluateEligibility")}</span>
-          </button>
         </div>
       </div>
 
-      {/* Evaluated Scheme Results */}
-      {results && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-500">
-          <div className="flex items-center justify-between px-2">
-            <div>
-              <h2 className="text-xl font-black text-white drop-shadow-md">
-                {language === "hi" ? "पहचानी गई सरकारी लाभ योजनाएं" : "Identified Government Benefit Programs"} <span className="text-teal-400">({results.length})</span>
-              </h2>
-              <p className="text-xs text-slate-200 font-semibold mt-0.5 drop-shadow-xs">
-                {language === "hi"
-                  ? `व्यवसाय (${occupationCategory}), आय श्रेणी (${incomeCategory}), आयु (${age || 40}), और राज्य (${stateName}) के आधार पर मूल्यांकित।`
-                  : `Matched based on occupation (${occupationCategory}), income tier (${incomeCategory}), age (${age || 40}), and state (${stateName}).`}
-              </p>
-            </div>
-            <Badge variant="outline" className="text-xs bg-teal-100 text-teal-800 border-teal-300 px-3 py-1 font-extrabold shadow-2xs">
-              {language === "hi" ? "AI नियम इंजन सक्रिय" : "AI Rule Engine Active"}
-            </Badge>
+      {/* Scheme Search & Category Filter Toolbar */}
+      <div className="glass-panel p-4 rounded-[24px] border border-white/80 bg-white/92 backdrop-blur-2xl shadow-xl space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <Input
+              placeholder={isHindi ? "योजना का नाम, बीमारी, लाभ या कवरेज खोजें (उदा. DAK, सर्जरी, कैंसर, डायलिसिस, PM-JAY)..." : "Search 110+ schemes by name, condition, or benefit (e.g. DAK, Surgery, Cancer, Dialysis, PM-JAY)..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11 text-xs rounded-xl bg-white border-slate-200 font-semibold focus-visible:ring-teal-500"
+            />
           </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            {results.map((res, idx) => (
-              <div 
-                key={idx} 
-                className={`glass-panel p-6 rounded-[28px] border border-white/80 shadow-xl bg-white/92 backdrop-blur-2xl card-hover flex flex-col md:flex-row gap-6 items-start md:items-center justify-between ${
-                  res.status === "POTENTIALLY_ELIGIBLE" 
-                    ? "border-emerald-300 ring-1 ring-emerald-200/50" 
-                    : "border-slate-200/80"
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3.5 bg-slate-50 rounded-2xl shrink-0 shadow-2xs border border-slate-200/80">
-                    {getSchemeIcon(res.schemeName)}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="font-black text-base text-slate-900">{res.schemeName}</h3>
-                      {getStatusBadge(res.status)}
-                    </div>
-                    <p className="text-xs text-slate-700 leading-relaxed max-w-2xl font-semibold">{res.reason}</p>
-                  </div>
-                </div>
-
-                <button 
-                  type="button"
-                  onClick={() => window.open(res.officialLink, '_blank')} 
-                  className="btn-3d-glass shrink-0 text-xs h-10 px-4 rounded-xl border-slate-200 font-extrabold gap-1.5"
-                >
-                  <span>{t("officialPortal")}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Official Disclaimer */}
-          <div className="glass-panel bg-amber-50/90 border border-amber-200/90 rounded-[24px] shadow-lg p-5 flex items-start gap-3.5 backdrop-blur-xl">
-            <div className="shrink-0 mt-0.5 text-amber-600">
-              <FileCheck className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-xs font-black text-amber-950">
-                {language === "hi" ? "आधिकारिक सत्यापन एवं ई-कार्ड जारी करना" : "Official Verification & e-Card Issuance"}
-              </h4>
-              <p className="text-xs text-amber-900 leading-relaxed font-semibold">
-                {language === "hi"
-                  ? "यह नेविगेटर राष्ट्रीय स्वास्थ्य स्टैक मानकों के अनुसार मार्गदर्शन प्रदान करता है। अंतिम सत्यापन और आयुष्मान गोल्डन कार्ड जारी करने के लिए अपने नजदीकी आयुष्मान आरोग्य मंदिर, सीएससी केंद्र या अस्पताल में बायोमेट्रिक ई-केवाईसी करवाएं।"
-                  : "This navigator provides automated rule-based guidance in compliance with National Health Stack standards. Final verification and Ayushman golden card issuance can be completed with biometric Aadhaar e-KYC at any Ayushman Arogya Mandir, CSC Kiosk, or Empanelled Public/Private Hospital."}
-              </p>
-            </div>
+          <div className="w-full sm:w-72 shrink-0">
+            <Select value={selectedCategory} onValueChange={(val) => val && setSelectedCategory(val)}>
+              <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 bg-white font-semibold focus:ring-teal-500">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_FILTERS.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id} className="text-xs font-medium">
+                    {isHindi ? cat.labelHi : cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      )}
+
+        {/* Quick Category Chips */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          {CATEGORY_FILTERS.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`h-7 px-3 text-[11px] font-bold rounded-lg whitespace-nowrap transition-all ${
+                selectedCategory === cat.id
+                  ? "bg-teal-700 text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200/80"
+              }`}
+            >
+              {isHindi ? cat.labelHi : cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Evaluated Scheme Results List */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <FileCheck className="w-4 h-4 text-teal-600" />
+            {isHindi ? "पात्रता परिणाम एवं योजना सूची" : "Evaluated Schemes & Benefit Programs"}
+          </h3>
+          <span className="text-xs text-slate-500 font-bold">
+            {displayedSchemes.length} {isHindi ? "योजनाएं प्रदर्शित" : "Schemes Shown"} (Total 110 Synced)
+          </span>
+        </div>
+
+        {displayedSchemes.length === 0 ? (
+          <div className="glass-panel p-12 text-center rounded-[28px] bg-white/90 border border-white/80">
+            <ShieldCheck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h4 className="text-base font-bold text-slate-800">
+              {isHindi ? "कोई योजना नहीं मिली" : "No Schemes Match Your Active Search / Category"}
+            </h4>
+            <p className="text-xs text-slate-500 font-medium mt-1">
+              {isHindi ? "कृपया अपनी खोज या श्रेणी फ़िल्टर को बदलकर देखें।" : "Try clearing the search query or selecting 'All Schemes' category."}
+            </p>
+          </div>
+        ) : (
+          displayedSchemes.map((res) => (
+            <div 
+              key={res.schemeId || res.schemeName}
+              className="glass-panel group hover:shadow-2xl transition-all duration-300 rounded-[28px] border border-white/80 bg-white/92 backdrop-blur-2xl p-6 relative overflow-hidden"
+            >
+              <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-gradient-to-b from-teal-500 to-emerald-600" />
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                
+                <div className="space-y-3 flex-1 pl-1">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-xl bg-teal-50/80 border border-teal-100 shrink-0 mt-0.5">
+                      {getSchemeIcon(res.schemeName)}
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h4 className="text-base sm:text-lg font-black text-slate-900 group-hover:text-teal-700 transition-colors">
+                          {res.schemeName}
+                        </h4>
+                        {getStatusBadge(res.status)}
+                      </div>
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                        {res.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Coverage Amount Banner */}
+                  <div className="bg-slate-50/90 rounded-xl p-3 border border-slate-200/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-700">{isHindi ? "कवरेज एवं सहायता राशि:" : "Coverage & Benefits:"}</span>
+                      <span className="font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        {res.coverageAmount}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-semibold">
+                      {isHindi ? "पात्रता स्कोर:" : "AI Match Score:"} <strong className="text-teal-700 font-black">{res.matchScore || 75}%</strong>
+                    </div>
+                  </div>
+
+                  {/* Qualification Reasons */}
+                  {res.reasons && res.reasons.length > 0 && (
+                    <div className="space-y-1 text-xs">
+                      <span className="font-bold text-slate-700">{isHindi ? "पात्रता एवं मिलान कारण:" : "Eligibility Reasons:"}</span>
+                      <ul className="list-disc pl-4 space-y-0.5 text-slate-600 text-[11px] font-medium">
+                        {res.reasons.map((reason: string, idx: number) => (
+                          <li key={idx}>{reason}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Criteria Note */}
+                  {res.eligibilityCriteria && (
+                    <p className="text-[11px] text-slate-500 font-medium italic">
+                      <strong>{isHindi ? "आवश्यक दस्तावेज / मापदंड:" : "Criteria & Documents:"}</strong> {res.eligibilityCriteria}
+                    </p>
+                  )}
+                </div>
+
+                {/* Right Action */}
+                <div className="shrink-0 flex md:flex-col items-center md:items-end justify-between md:justify-start gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                  <a 
+                    href={res.applicationUrl || res.officialLink || "#"} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto"
+                  >
+                    <button type="button" className="btn-3d-primary h-9 px-4 rounded-xl text-xs font-bold gap-1.5 w-full">
+                      <span>{isHindi ? "आधिकारिक पोर्टल" : "Apply / Portal"}</span>
+                      <ExternalLink className="w-3.5 h-3.5 inline" />
+                    </button>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
