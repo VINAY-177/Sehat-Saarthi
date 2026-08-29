@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useStore } from "@/lib/store";
 import { formatAppointmentTime, formatAppointmentDate, getAppointmentDateKey } from "@/lib/appointment-time";
 import { UrgencyBadge } from "@/components/urgency-badge";
@@ -287,10 +288,22 @@ export function StaffDashboard() {
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
 
+      {/* 1. Unique Staff Hospital Command Operations Background Image */}
+      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+        <Image
+          src="/backgrounds/staff-dashboard.jpg"
+          alt="Hospital Command & Operations Center"
+          fill
+          priority
+          className="object-cover object-center opacity-15 mix-blend-multiply scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/15 via-slate-50/85 to-[#F8FAFC]/95 backdrop-blur-[2px]" />
+      </div>
+
       {/* Background Accents */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/8 via-teal-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-500/6 via-indigo-500/3 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-15 pointer-events-none -z-10" />
 
       <div className="relative max-w-7xl mx-auto space-y-5 pb-12 z-10 page-enter">
 

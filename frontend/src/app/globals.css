@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Sehat Saathi — Healthcare Design System */
+    /* Sehat Saathi — Modern Healthcare Design System */
     --background: 210 40% 98%;    /* #F8FAFC */
     --foreground: 222 47% 11%;    /* #0F172A */
 
@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Deep Healthcare Teal */
+    /* Primary: Deep Healthcare Teal & Navy */
     --primary: 173 80% 26%;       /* #0F766E */
     --primary-foreground: 0 0% 100%;
 
@@ -34,7 +34,7 @@
     --input: 214 32% 91%;
     --ring: 173 80% 26%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar: 174 30% 97%;
     --sidebar-foreground: 222 47% 11%;
@@ -105,34 +105,188 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 /* ── Leaflet map z-index containment ── */
-/* Force the map into its own stacking context so Leaflet's internal
-   z-index (200–1000 on tile/control panes) stays scoped to the map
-   and never overlaps dialogs, modals, or dropdowns (z-50). */
 .leaflet-container {
   z-index: 0 !important;
   isolation: isolate;
 }
 
+/* ── 3D BUTTON SYSTEM & TACTILE INTERACTION ── */
+@layer components {
+  /* Primary 3D Physical Button */
+  .btn-3d-primary {
+    @apply relative inline-flex items-center justify-center font-bold text-white transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);
+    box-shadow: 0 4px 0 0 #0f5b55, 0 8px 16px -2px rgba(15, 118, 110, 0.35);
+    border-radius: 1rem;
+    transform: translateY(0);
+  }
+  .btn-3d-primary::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+  .btn-3d-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 0 #0f5b55, 0 12px 24px -3px rgba(15, 118, 110, 0.45);
+    filter: brightness(1.03);
+  }
+  .btn-3d-primary:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 0 #0f5b55, 0 3px 6px -1px rgba(15, 118, 110, 0.25);
+    filter: brightness(0.97);
+  }
+  .btn-3d-primary:disabled {
+    transform: none;
+    box-shadow: none;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Navy 3D Physical Button */
+  .btn-3d-navy {
+    @apply relative inline-flex items-center justify-center font-bold text-white transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    background: linear-gradient(180deg, #1e3a5f 0%, #0f243d 100%);
+    box-shadow: 0 4px 0 0 #0a1829, 0 8px 16px -2px rgba(15, 36, 61, 0.4);
+    border-radius: 1rem;
+    transform: translateY(0);
+  }
+  .btn-3d-navy::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 100%);
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+  .btn-3d-navy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 0 #0a1829, 0 12px 24px -3px rgba(15, 36, 61, 0.5);
+    filter: brightness(1.05);
+  }
+  .btn-3d-navy:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 0 #0a1829, 0 3px 6px -1px rgba(15, 36, 61, 0.25);
+  }
+
+  /* Emergency 108 Red 3D Button */
+  .btn-3d-emergency {
+    @apply relative inline-flex items-center justify-center font-bold text-white transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 4px 0 0 #991b1b, 0 8px 20px -2px rgba(220, 38, 38, 0.45);
+    border-radius: 1rem;
+    transform: translateY(0);
+  }
+  .btn-3d-emergency::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.1) 100%);
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+  .btn-3d-emergency:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 0 #991b1b, 0 14px 28px -3px rgba(220, 38, 38, 0.55);
+    filter: brightness(1.05);
+  }
+  .btn-3d-emergency:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 0 #991b1b, 0 4px 8px -1px rgba(220, 38, 38, 0.3);
+  }
+
+  /* Glassmorphic Outline 3D Button */
+  .btn-3d-glass {
+    @apply relative inline-flex items-center justify-center font-bold transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 3px 0 0 #cbd5e1, 0 6px 12px -2px rgba(15, 23, 42, 0.06);
+    border-radius: 1rem;
+    transform: translateY(0);
+  }
+  .btn-3d-glass:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 0 #cbd5e1, 0 10px 20px -3px rgba(15, 23, 42, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+  }
+  .btn-3d-glass:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 0 #cbd5e1, 0 2px 4px -1px rgba(15, 23, 42, 0.05);
+  }
+}
+
+/* ── PREMIUM GLASSMORPHISM PANELS ── */
+@layer components {
+  /* Auth Centered Glass Card */
+  .glass-card-auth {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 
+      0 20px 50px -10px rgba(15, 23, 42, 0.15),
+      0 10px 20px -5px rgba(13, 148, 136, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-radius: 2rem;
+  }
+
+  /* General Dashboard Glass Panel */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    border-radius: 1.5rem;
+  }
+
+  /* Dark Operations Glass Panel */
+  .glass-panel-dark {
+    background: rgba(15, 23, 42, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+  }
+}
 
 /* ── Sehat Saathi Healthcare Animations & Micro-Interactions ── */
 @layer utilities {
   /* Page & Section Entrances */
   .page-enter {
-    animation: pageFadeUp 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: pageFadeUp 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .section-enter {
-    animation: pageFadeUp 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: pageFadeUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .auth-card-enter {
+    animation: authCardFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   @keyframes pageFadeUp {
     from {
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
@@ -140,31 +294,45 @@
     }
   }
 
+  @keyframes authCardFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   /* Staggered Entrance Delays */
-  .stagger-1 { animation-delay: 0ms; }
-  .stagger-2 { animation-delay: 60ms; }
-  .stagger-3 { animation-delay: 120ms; }
-  .stagger-4 { animation-delay: 180ms; }
-  .stagger-5 { animation-delay: 240ms; }
-  .stagger-6 { animation-delay: 300ms; }
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 160ms; }
+  .stagger-4 { animation-delay: 220ms; }
+  .stagger-5 { animation-delay: 280ms; }
+  .stagger-6 { animation-delay: 340ms; }
 
   /* Interactive Card Elevation on Hover */
   .card-hover {
-    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), 
-                box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1), 
-                border-color 200ms ease;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 220ms ease;
   }
   .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.09), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
   }
 
   /* Responsive Button Press Micro-interaction */
   .btn-press {
-    transition: transform 100ms ease, background-color 150ms ease, opacity 150ms ease;
+    transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease;
+  }
+  .btn-press:hover {
+    transform: translateY(-1px);
   }
   .btn-press:active {
-    transform: scale(0.98);
+    transform: translateY(2px) scale(0.98);
   }
 
   /* Shimmer Loading Skeleton */
@@ -172,7 +340,7 @@
     background: linear-gradient(
       90deg,
       rgba(241, 245, 249, 0.8) 0%,
-      rgba(226, 232, 240, 0.9) 50%,
+      rgba(226, 232, 240, 0.95) 50%,
       rgba(241, 245, 249, 0.8) 100%
     );
     background-size: 200% 100%;
@@ -190,8 +358,24 @@
   }
   @keyframes subtlePulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.65; transform: scale(0.95); }
+    50% { opacity: 0.65; transform: scale(0.96); }
   }
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
 }
 
 /* ── Accessibility: Reduced Motion Support ── */
@@ -205,11 +389,11 @@
     scroll-behavior: auto !important;
   }
 
-  .card-hover:hover {
-    transform: none !important;
-  }
-  
-  .btn-press:active {
+  .card-hover:hover,
+  .btn-3d-primary:hover,
+  .btn-3d-navy:hover,
+  .btn-3d-emergency:hover,
+  .btn-3d-glass:hover {
     transform: none !important;
   }
 }

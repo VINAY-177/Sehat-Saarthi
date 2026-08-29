@@ -6,9 +6,21 @@ import { useStore } from "@/lib/store";
 import { Role, AuthUser } from "@/lib/types";
 import { apiPost } from "@/lib/api";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Users, Stethoscope, Building2, Mail, Lock, Eye, ArrowRight, Shield, Siren, Loader2 } from "lucide-react";
+import {
+  Users,
+  Stethoscope,
+  Building2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Shield,
+  Siren,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -85,39 +97,287 @@ export default function LoginPage() {
   };
 
   const roles = [
-    { value: Role.PATIENT, label: t("patientRole"), icon: Users },
-    { value: Role.DOCTOR, label: t("doctorRole"), icon: Stethoscope },
-    { value: Role.HOSPITAL_STAFF, label: t("staffRole"), icon: Building2 },
+    { value: Role.PATIENT, label: language === "hi" ? "मरीज़" : "Patient", icon: Users, demo: "Aarav" },
+    { value: Role.DOCTOR, label: language === "hi" ? "डॉक्टर" : "Doctor", icon: Stethoscope, demo: "Dr. Priya" },
+    { value: Role.HOSPITAL_STAFF, label: language === "hi" ? "स्टाफ़" : "Staff", icon: Building2, demo: "Neha" },
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[#f8f8fa] flex font-sans relative">
-      <div className="absolute top-5 right-5 sm:top-6 sm:right-6 z-30 flex items-center gap-3">
-        <Link href="/emergency"><Button type="button" className="h-9 sm:h-10 px-3.5 sm:px-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md shadow-red-600/25 gap-2 transition-all hover:scale-105 border border-red-500"><Siren className="w-4 h-4 animate-pulse text-white" /><span>{language === "hi" ? "आपातकालीन 108" : "Emergency 108"}</span></Button></Link>
-        <div className="flex items-center bg-white/90 backdrop-blur-md p-1 rounded-2xl border border-slate-200 shadow-sm">
-          <button type="button" onClick={() => setLanguage("en")} className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${language === "en" ? "bg-[#1e3a5f] text-white shadow-xs" : "text-slate-500 hover:text-slate-800"}`}>English</button>
-          <button type="button" onClick={() => setLanguage("hi")} className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${language === "hi" ? "bg-[#0d9488] text-white shadow-xs" : "text-slate-500 hover:text-slate-800"}`}>हिंदी</button>
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-x-hidden font-sans">
+      
+      {/* ── 1. Full-screen Healthcare Background Image ── */}
+      <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
+        <Image
+          src="/backgrounds/auth-login.jpg"
+          alt="Healthcare consultation"
+          fill
+          priority
+          className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
+        />
+        {/* Ambient Dark & Teal Atmospheric Protective Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-teal-950/70 to-slate-950/85 backdrop-blur-[4px]" />
+      </div>
+
+      {/* ── 2. Ambient Lighting Flares ── */}
+      <div className="fixed top-1/4 left-1/4 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
+      <div className="fixed bottom-1/4 right-1/4 w-[450px] h-[450px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* ── 3. Top Navigation Controls ── */}
+      <header className="absolute top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between max-w-7xl mx-auto pointer-events-none">
+        
+        {/* Brand Link on Top Left */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="w-10 h-10 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg border border-white/40 p-1.5 flex items-center justify-center">
+            <Image src="/logo.png" alt="Sehat Saathi" width={36} height={36} className="object-contain" priority />
+          </div>
+          <div className="hidden sm:block">
+            <span className="text-base font-extrabold text-white tracking-tight drop-shadow-sm">
+              {t("brandName") || "Sehat Saathi"}
+            </span>
+            <p className="text-[10px] font-bold text-teal-300 tracking-wider uppercase">
+              {t("tagline") || "National Healthcare Network"}
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-12 xl:p-16 relative overflow-hidden animate-in fade-in duration-700">
-        <Image src="/login-bg.jpg" alt="Healthcare consultation" fill priority className="object-cover object-center scale-105 transition-transform duration-1000 ease-out" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-teal-950/85 to-slate-900/75 backdrop-blur-[2px]" />
-        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
-        <div className="relative z-10"><div className="flex items-center gap-3.5"><div className="w-12 h-12 rounded-2xl overflow-hidden bg-white/95 backdrop-blur-sm shadow-md border border-white/20 p-1.5 flex items-center justify-center"><Image src="/logo.png" alt="Sehat Saathi" width={44} height={44} className="object-contain" priority /></div><div><h1 className="text-[22px] font-bold tracking-tight text-white">{t("brandName")}</h1><p className="text-[11px] font-bold text-teal-300 tracking-wide">{t("tagline")}</p></div></div></div>
-        <div className="relative z-10 space-y-6 max-w-lg"><h2 className="text-[36px] xl:text-[42px] font-extrabold text-white leading-[1.15] tracking-tight">{t("heroHeadline")} <span className="text-teal-300">{t("heroHeadlineAccent")}</span></h2><p className="text-[15px] xl:text-[16px] text-slate-200 leading-relaxed max-w-md">{t("heroSubtext")}</p><div className="p-4 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/15 shadow-lg space-y-2.5"><div className="flex items-center gap-2 text-xs font-bold text-teal-300"><Shield className="w-4 h-4 text-teal-400" /><span>SIH Interconnected Demo Credentials (Select role):</span></div><div className="text-[11px] text-slate-200 grid grid-cols-3 gap-2"><div className="bg-white/10 p-2 rounded-xl border border-white/10"><p className="font-bold text-white">Dr. Priya</p><p className="font-mono text-[10px] text-teal-200">9876500002</p></div><div className="bg-white/10 p-2 rounded-xl border border-white/10"><p className="font-bold text-white">Neha (Staff)</p><p className="font-mono text-[10px] text-teal-200">9876500003</p></div><div className="bg-white/10 p-2 rounded-xl border border-white/10"><p className="font-bold text-white">Aarav (Patient)</p><p className="font-mono text-[10px] text-teal-200">9876500001</p></div></div><p className="text-[10px] text-slate-400 font-medium text-center">Password: <span className="font-mono font-bold text-white">Demo@1234</span></p></div></div>
-        <div className="relative z-10 flex items-center gap-2.5 text-[12px] text-slate-300 font-medium"><Shield className="w-4 h-4 text-teal-400" /><span>{t("trustBadgeText")}</span></div>
-      </div>
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-white lg:border-l border-[#eef0f4] animate-in fade-in slide-in-from-bottom-3 duration-500"><div className="w-full max-w-[420px] space-y-8">
-        <div className="flex items-center gap-3 lg:hidden"><div className="w-10 h-10 rounded-xl overflow-hidden bg-[#f8f8fa] border border-slate-100 p-1 flex items-center justify-center"><Image src="/logo.png" alt="Sehat Saathi" width={36} height={36} className="object-contain" priority /></div><span className="text-lg font-bold text-[#1a1f36] tracking-tight">{t("brandName")}</span></div>
-        <div className="space-y-2"><h2 className="text-[26px] sm:text-[28px] font-black text-[#1a1f36] tracking-tight">{t("signInTitle")}</h2><p className="text-[14px] sm:text-[15px] text-[#64748b] font-medium">{t("signInSub")}</p></div>
-        <form onSubmit={handleLogin} className="space-y-6"><div className="space-y-2.5"><Label className="text-[12px] font-bold text-[#475569] uppercase tracking-wider">{t("iAmA")}</Label><div className="grid grid-cols-3 gap-2.5">{roles.map(({ value, label, icon: Icon }) => { const isActive = selectedRole === value; return <button key={value} type="button" onClick={() => handleRoleSelect(value)} className={`relative flex flex-col items-center gap-2 py-3 px-2 rounded-2xl border transition-all duration-200 cursor-pointer ${isActive ? "border-[#1e3a5f] bg-[#1e3a5f] text-white shadow-md shadow-[#1e3a5f]/15" : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"}`}><Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-[#94a3b8]"}`} /><span className={`text-[12px] font-bold ${isActive ? "text-white" : "text-[#475569]"}`}>{label}</span></button>; })}</div></div>
-        <div className="space-y-2"><Label className="text-[13px] font-bold text-[#475569]">{t("emailOrMobile")}</Label><div className="relative"><Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" /><Input type="text" placeholder={language === "hi" ? "मोबाइल नंबर या ईमेल दर्ज करें" : "you@example.com / 9876543210"} value={emailOrMobile} onChange={(e) => setEmailOrMobile(e.target.value)} className="pl-11 h-12 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] transition-colors font-medium" required /></div></div>
-        <div className="space-y-2"><div className="flex items-center justify-between"><Label className="text-[13px] font-bold text-[#475569]">{t("password")}</Label></div><div className="relative"><Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" /><Input type={showPassword ? "text" : "password"} placeholder={language === "hi" ? "पासवर्ड दर्ज करें" : "Enter your password"} value={password} onChange={(e) => setPassword(e.target.value)} className="pl-11 pr-11 h-12 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] transition-colors" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#475569]"><Eye className="w-5 h-5" /></button></div></div>
-        <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-[14px] shadow-md shadow-[#1e3a5f]/15 transition-all hover:-translate-y-0.5">{loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><span>{language === "hi" ? "साइन इन करें" : "Sign In"}</span><ArrowRight className="w-4 h-4 ml-2" /></>}</Button>
-        </form>
-        <p className="text-center text-[12px] text-[#94a3b8]">{t("noAccount")} <Link href="/signup" className="font-bold text-[#1e3a5f] hover:underline">{t("createOne")}</Link></p>
-      </div></div>
+
+        {/* Top Right Controls */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          {/* 3D Red Emergency 108 Button */}
+          <Link href="/emergency">
+            <button
+              type="button"
+              className="btn-3d-emergency h-9 sm:h-10 px-3.5 sm:px-4 text-xs gap-2 rounded-2xl"
+            >
+              <Siren className="w-4 h-4 animate-pulse text-white" />
+              <span className="font-extrabold tracking-wide">
+                {language === "hi" ? "आपातकालीन 108" : "Emergency 108"}
+              </span>
+            </button>
+          </Link>
+
+          {/* Glass Language Switcher */}
+          <div className="flex items-center bg-white/20 backdrop-blur-xl p-1 rounded-2xl border border-white/30 shadow-lg">
+            <button
+              type="button"
+              onClick={() => setLanguage("en")}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 ${
+                language === "en"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage("hi")}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 ${
+                language === "hi"
+                  ? "bg-teal-600 text-white shadow-sm"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              हिं
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── 4. Centered Glass Card (420-460px Desktop) ── */}
+      <main className="w-full max-w-[460px] my-auto pt-16 pb-6 relative z-20 auth-card-enter">
+        <div className="glass-card-auth p-6 sm:p-8 rounded-[32px] border border-white/60 shadow-2xl relative overflow-hidden backdrop-blur-2xl bg-white/90">
+          
+          {/* Subtle Top Inner Highlight */}
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-600" />
+
+          {/* Header & Logo */}
+          <div className="text-center space-y-2 mb-6">
+            <div className="inline-flex p-2.5 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100/80 shadow-xs mb-1">
+              <Image src="/logo.png" alt="Sehat Saathi" width={48} height={48} className="object-contain" priority />
+            </div>
+            
+            <h1 className="text-2xl sm:text-[26px] font-black text-slate-900 tracking-tight">
+              {language === "hi" ? "साइन इन करें" : "Sign In"}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-xs mx-auto">
+              {language === "hi"
+                ? "सेहत साथी राष्ट्रीय स्वास्थ्य पोर्टल में आपका स्वागत है"
+                : "Welcome back to Sehat Saathi healthcare portal"}
+            </p>
+          </div>
+
+          {/* Role Selector — 3D Interactive Cards */}
+          <div className="space-y-2 mb-5">
+            <div className="flex items-center justify-between">
+              <Label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                {t("iAmA") || "Select Your Role"}
+              </Label>
+              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                Demo Ready
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5">
+              {roles.map(({ value, label, icon: Icon, demo }) => {
+                const isActive = selectedRole === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => handleRoleSelect(value)}
+                    className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? "bg-gradient-to-b from-teal-700 to-teal-800 text-white border-teal-600 shadow-[0_4px_0_0_#0f5b55,0_8px_16px_-2px_rgba(15,118,110,0.35)] -translate-y-0.5"
+                        : "bg-white/70 hover:bg-white text-slate-600 border-slate-200/90 shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 mb-1.5 transition-transform ${isActive ? "text-white scale-110" : "text-slate-400"}`} />
+                    <span className="text-xs font-bold leading-none">{label}</span>
+                    <span className={`text-[9px] mt-1 font-medium ${isActive ? "text-teal-200" : "text-slate-400"}`}>
+                      {demo}
+                    </span>
+                    {isActive && (
+                      <div className="absolute top-1.5 right-1.5">
+                        <CheckCircle2 className="w-3 h-3 text-teal-300" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
+            
+            {/* Email / Mobile */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-slate-700">
+                {t("emailOrMobile") || "Phone Number or Email"}
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder={language === "hi" ? "मोबाइल नंबर (उदा. 9876500001)" : "Phone number (e.g. 9876500001)"}
+                  value={emailOrMobile}
+                  onChange={(e) => setEmailOrMobile(e.target.value)}
+                  className="pl-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-slate-700">
+                  {t("password") || "Password"}
+                </Label>
+                <span className="text-[11px] font-semibold text-teal-700 hover:text-teal-800 cursor-pointer">
+                  {language === "hi" ? "पासवर्ड भूल गए?" : "Forgot password?"}
+                </span>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder={language === "hi" ? "पासवर्ड (उदा. Demo@1234)" : "Enter password (Demo@1234)"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* 3D Primary Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-3d-primary w-full h-12 text-sm font-extrabold gap-2 rounded-2xl"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span>{language === "hi" ? "साइन इन करें" : "SIGN IN"}</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Social Divider */}
+          <div className="relative my-5 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
+            </div>
+            <span className="relative bg-white/90 px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              {language === "hi" ? "या अन्य विकल्प" : "or continue with"}
+            </span>
+          </div>
+
+          {/* Google & Apple 3D Mock Buttons */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={() => toast.info("Google Sign-In is configured for demo with phone accounts")}
+              className="btn-3d-glass h-10 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>Google</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => toast.info("Apple Sign-In is configured for demo with phone accounts")}
+              className="btn-3d-glass h-10 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4 fill-current text-slate-800" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.8 1.11-1.92.99-3.04-1 .04-2.22.67-2.93 1.5-.63.73-1.18 1.89-1.03 2.99 1.12.09 2.31-.65 2.97-1.45z" />
+              </svg>
+              <span>Apple</span>
+            </button>
+          </div>
+
+          {/* Footer Link */}
+          <div className="mt-6 pt-4 border-t border-slate-100 text-center text-xs font-medium text-slate-500">
+            <span>{t("noAccount") || "Don't have an account?"}</span>{" "}
+            <Link href="/signup" className="font-extrabold text-teal-700 hover:text-teal-800 hover:underline">
+              {t("createOne") || "Sign up"}
+            </Link>
+          </div>
+
+          {/* Quick Demo Credentials Reminder */}
+          <div className="mt-4 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Shield className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+              Password for all demo accounts:
+            </span>
+            <span className="font-mono font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">
+              Demo@1234
+            </span>
+          </div>
+
+        </div>
+      </main>
+
     </div>
   );
 }

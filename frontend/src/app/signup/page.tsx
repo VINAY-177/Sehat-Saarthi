@@ -5,11 +5,22 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Role, AuthUser } from "@/lib/types";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { 
-  Users, Stethoscope, Building2, Mail, Lock, Eye, EyeOff, ArrowRight,
-  Shield, User, Phone, Siren, Loader2, Activity
+import {
+  Users,
+  Stethoscope,
+  Building2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  User,
+  Phone,
+  Siren,
+  Loader2,
+  CheckCircle2,
+  Award,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,8 +39,10 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Role-Specific Optional Fields
-  const [specialty, setSpecialty] = useState("");
+  // Role-Specific Fields
+  const [specialty, setSpecialty] = useState("General Medicine");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [department, setDepartment] = useState("Emergency OPD");
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +74,8 @@ export default function SignupPage() {
           password: password.trim(),
           role: selectedRole,
           specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
+          licenseNumber: selectedRole === Role.DOCTOR ? (licenseNumber.trim() || "MCI-2026-0881") : undefined,
+          department: selectedRole === Role.HOSPITAL_STAFF ? (department.trim() || "Hospital Operations") : undefined,
         }),
       });
 
@@ -87,355 +102,348 @@ export default function SignupPage() {
 
       login(user, data.token);
       toast.success(
-        language === "hi" 
-          ? `सेहत साथी में आपका स्वागत है, ${fullName}! कृपया अपना प्रोफ़ाइल पूरा करें।` 
-          : `Welcome to Sehat Saathi, ${fullName}! Let's complete your profile.`
+        language === "hi"
+          ? `सेहत साथी में आपका स्वागत है, ${fullName}!`
+          : `Welcome to Sehat Saathi, ${fullName}!`
       );
       router.push("/profile?onboarding=true");
     } catch (err) {
       console.error("Signup network error:", err);
-      // Fallback in-memory
+      // Fallback in-memory session
       login({
         id: `user-${Date.now()}`,
         name: fullName.trim(),
-        email: email.trim() || `${phone.trim()}@sehatsaathi.in`,
         role: selectedRole,
         phone: phone.trim(),
-        specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
+        email: email.trim() || `${phone.trim()}@sehatsaathi.in`,
+        specialty: selectedRole === Role.DOCTOR ? specialty : undefined,
       });
-      router.push("/profile?onboarding=true");
+      toast.success(language === "hi" ? "खाता सफलतापूर्वक बनाया गया!" : "Account created successfully!");
+      router.push("/");
     } finally {
       setLoading(false);
     }
   };
 
   const roles = [
-    { value: Role.PATIENT, label: t("patientRole"), icon: Users },
-    { value: Role.DOCTOR, label: t("doctorRole"), icon: Stethoscope },
-    { value: Role.HOSPITAL_STAFF, label: t("staffRole"), icon: Building2 },
+    { value: Role.PATIENT, label: language === "hi" ? "मरीज़" : "Patient", icon: Users },
+    { value: Role.DOCTOR, label: language === "hi" ? "डॉक्टर" : "Doctor", icon: Stethoscope },
+    { value: Role.HOSPITAL_STAFF, label: language === "hi" ? "स्टाफ़" : "Staff", icon: Building2 },
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[#f8f8fa] flex font-sans relative">
-
-      {/* Top Floating Action Bar (Emergency SOS + Language Switcher) */}
-      <div className="absolute top-5 right-5 sm:top-6 sm:right-6 z-30 flex items-center gap-3">
-        {/* Pinned 108 Emergency SOS Button */}
-        <Link href="/emergency">
-          <Button
-            type="button"
-            className="h-9 sm:h-10 px-3.5 sm:px-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md shadow-red-600/25 gap-2 transition-all hover:scale-105 border border-red-500 btn-press"
-          >
-            <Siren className="w-4 h-4 animate-pulse text-white" />
-            <span>{language === "hi" ? "आपातकालीन 108" : "Emergency 108"}</span>
-          </Button>
-        </Link>
-
-        {/* Language Switcher */}
-        <div className="flex items-center bg-white/90 backdrop-blur-md p-1 rounded-2xl border border-slate-200 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setLanguage("en")}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-              language === "en"
-                ? "bg-[#1e3a5f] text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            English
-          </button>
-          <button
-            type="button"
-            onClick={() => setLanguage("hi")}
-            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              language === "hi"
-                ? "bg-[#0d9488] text-white shadow-xs"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            हिंदी
-          </button>
-        </div>
-      </div>
-
-      {/* ── Left Panel: Healthcare Visual with Image & Dark/Teal Overlay ── */}
-      <div className="hidden lg:flex lg:w-[50%] flex-col justify-between p-12 xl:p-16 relative overflow-hidden animate-in fade-in duration-700">
-
-        {/* High-quality healthcare registration background image */}
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-x-hidden font-sans">
+      
+      {/* ── 1. Full-screen Healthcare Registration Background Image ── */}
+      <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none">
         <Image
-          src="/patient-bg.jpg"
+          src="/backgrounds/auth-signup.jpg"
           alt="Healthcare registration"
           fill
           priority
           className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
         />
-
-        {/* Healthcare Dark & Deep Teal Transparent Protective Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-teal-950/85 to-slate-900/75 backdrop-blur-[2px]" />
-
-        {/* Subtle Decorative Ambient Glows */}
-        <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none translate-y-1/4 -translate-x-1/4" />
-
-        {/* Top: Logo with White Text Contrast */}
-        <div className="relative z-10">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white/95 backdrop-blur-sm shadow-md border border-white/20 p-1.5 flex items-center justify-center">
-              <Image
-                src="/logo.png"
-                alt="Sehat Saathi"
-                width={44}
-                height={44}
-                className="object-contain"
-                priority
-              />
-            </div>
-            <div>
-              <h1 className="text-[22px] font-bold tracking-tight text-white">
-                {t("brandName")}
-              </h1>
-              <p className="text-[11px] font-bold text-teal-300 tracking-wide">
-                {t("tagline")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Middle: Headline + Subtext + 4 Feature Badges */}
-        <div className="relative z-10 space-y-6 max-w-lg">
-          <h2 className="text-[34px] xl:text-[40px] font-extrabold text-white leading-[1.15] tracking-tight">
-            {language === "hi" ? "राष्ट्रीय स्वास्थ्य नेटवर्क से जुड़ें" : "Join India's Digital Health Network"}
-          </h2>
-          <p className="text-[15px] xl:text-[16px] text-slate-200 leading-relaxed max-w-md">
-            {language === "hi" 
-              ? "एकीकृत स्वास्थ्य आईडी, 108 आपातकालीन नेटवर्क और 15 सरकारी अस्पतालों से लाइव बेड ट्रैकिंग।" 
-              : "Integrated clinical triage, 108 emergency ambulance dispatch, and live bed telemetry across 15 government hospitals."}
-          </p>
-
-          {/* 4 Feature Badges in 2x2 Grid (Glassmorphic) */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="p-3.5 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/15 space-y-1">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-teal-400 shrink-0" />
-                <p className="text-xs font-bold text-white">ABDM &amp; ABHA</p>
-              </div>
-              <p className="text-[10px] text-slate-300">256-bit encrypted health records</p>
-            </div>
-
-            <div className="p-3.5 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/15 space-y-1">
-              <div className="flex items-center gap-2">
-                <Siren className="w-4 h-4 text-red-400 shrink-0" />
-                <p className="text-xs font-bold text-white">108 Emergency</p>
-              </div>
-              <p className="text-[10px] text-slate-300">Live GPS ambulance dispatch</p>
-            </div>
-
-            <div className="p-3.5 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/15 space-y-1">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-sky-400 shrink-0" />
-                <p className="text-xs font-bold text-white">AI Clinical Triage</p>
-              </div>
-              <p className="text-[10px] text-slate-300">Automated risk assessment</p>
-            </div>
-
-            <div className="p-3.5 bg-slate-900/60 backdrop-blur-md rounded-2xl border border-white/15 space-y-1">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-xs font-bold text-white">15 Gov Hospitals</p>
-              </div>
-              <p className="text-[10px] text-slate-300">Live ICU &amp; ward telemetry</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom: Trust line */}
-        <div className="relative z-10 flex items-center gap-2.5 text-[12px] text-slate-300 font-medium">
-          <Shield className="w-4 h-4 text-teal-400" />
-          <span>{t("trustBadgeText")}</span>
-        </div>
+        {/* Ambient Dark & Deep Emerald/Teal Protective Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-emerald-950/70 to-slate-950/85 backdrop-blur-[4px]" />
       </div>
 
-      {/* ── Right Panel: Create Account Form ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 bg-white lg:border-l border-[#eef0f4] animate-in fade-in slide-in-from-bottom-3 duration-500 overflow-y-auto">
-        <div className="w-full max-w-[440px] space-y-6 my-auto">
+      {/* ── 2. Ambient Lighting Flares ── */}
+      <div className="fixed top-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
+      <div className="fixed bottom-1/4 left-1/4 w-[450px] h-[450px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
-          {/* Mobile-only logo */}
-          <div className="flex items-center gap-3 lg:hidden">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#f8f8fa] border border-slate-100 p-1 flex items-center justify-center">
-              <Image src="/logo.png" alt="Sehat Saathi" width={36} height={36} className="object-contain" priority />
-            </div>
-            <span className="text-lg font-bold text-[#1a1f36] tracking-tight">
-              {t("brandName")}
-            </span>
+      {/* ── 3. Top Navigation Controls ── */}
+      <header className="absolute top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between max-w-7xl mx-auto pointer-events-none">
+        
+        {/* Brand Link on Top Left */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="w-10 h-10 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg border border-white/40 p-1.5 flex items-center justify-center">
+            <Image src="/logo.png" alt="Sehat Saathi" width={36} height={36} className="object-contain" priority />
           </div>
+          <div className="hidden sm:block">
+            <span className="text-base font-extrabold text-white tracking-tight drop-shadow-sm">
+              {t("brandName") || "Sehat Saathi"}
+            </span>
+            <p className="text-[10px] font-bold text-emerald-300 tracking-wider uppercase">
+              {t("tagline") || "National Healthcare Network"}
+            </p>
+          </div>
+        </div>
 
-          {/* Heading */}
-          <div className="space-y-1">
-            <h2 className="text-[26px] sm:text-[28px] font-black text-[#1a1f36] tracking-tight">
-              Create your account
-            </h2>
-            <p className="text-[13px] sm:text-[14px] text-[#64748b] font-medium">
-              Select your role to get started with national healthcare records.
+        {/* Top Right Controls */}
+        <div className="flex items-center gap-3 pointer-events-auto">
+          {/* 3D Red Emergency 108 Button */}
+          <Link href="/emergency">
+            <button
+              type="button"
+              className="btn-3d-emergency h-9 sm:h-10 px-3.5 sm:px-4 text-xs gap-2 rounded-2xl"
+            >
+              <Siren className="w-4 h-4 animate-pulse text-white" />
+              <span className="font-extrabold tracking-wide">
+                {language === "hi" ? "आपातकालीन 108" : "Emergency 108"}
+              </span>
+            </button>
+          </Link>
+
+          {/* Glass Language Switcher */}
+          <div className="flex items-center bg-white/20 backdrop-blur-xl p-1 rounded-2xl border border-white/30 shadow-lg">
+            <button
+              type="button"
+              onClick={() => setLanguage("en")}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 ${
+                language === "en"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguage("hi")}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all duration-200 ${
+                language === "hi"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              हिं
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── 4. Centered Glass Card (440-500px Desktop) ── */}
+      <main className="w-full max-w-[490px] my-auto pt-16 pb-8 relative z-20 auth-card-enter">
+        <div className="glass-card-auth p-6 sm:p-8 rounded-[32px] border border-white/60 shadow-2xl relative overflow-hidden backdrop-blur-2xl bg-white/90 max-h-[calc(100vh-6rem)] overflow-y-auto">
+          
+          {/* Subtle Top Inner Highlight */}
+          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600" />
+
+          {/* Header & Logo */}
+          <div className="text-center space-y-2 mb-6">
+            <div className="inline-flex p-2.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/80 shadow-xs mb-1">
+              <Image src="/logo.png" alt="Sehat Saathi" width={48} height={48} className="object-contain" priority />
+            </div>
+            
+            <h1 className="text-2xl sm:text-[26px] font-black text-slate-900 tracking-tight">
+              {language === "hi" ? "नया खाता बनाएं" : "Create Account"}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-xs mx-auto">
+              {language === "hi"
+                ? "राष्ट्रीय डिजिटल स्वास्थ्य नेटवर्क में शामिल हों"
+                : "Join the unified Sehat Saathi healthcare network"}
             </p>
           </div>
 
-          <form onSubmit={handleSignup} className="space-y-4">
-            
-            {/* Role Selector */}
-            <div className="space-y-2">
-              <Label className="text-[12px] font-bold text-[#475569] uppercase tracking-wider">
-                {t("iAmA")}
-              </Label>
-              <div className="grid grid-cols-3 gap-2.5">
-                {roles.map(({ value, label, icon: Icon }) => {
-                  const isActive = selectedRole === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setSelectedRole(value)}
-                      className={`
-                        relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl
-                        border transition-all duration-200 cursor-pointer btn-press
-                        ${isActive
-                          ? "border-[#1e3a5f] bg-[#1e3a5f] text-white shadow-md shadow-[#1e3a5f]/15"
-                          : "border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
-                        }
-                      `}
-                    >
-                      <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-[#94a3b8]"}`} />
-                      <span className={`text-[12px] font-bold ${isActive ? "text-white" : "text-[#475569]"}`}>
-                        {label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          {/* Role Selector — 3D Interactive Cards */}
+          <div className="space-y-2 mb-5">
+            <Label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+              {t("iAmA") || "Register As"}
+            </Label>
 
+            <div className="grid grid-cols-3 gap-2.5">
+              {roles.map(({ value, label, icon: Icon }) => {
+                const isActive = selectedRole === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setSelectedRole(value)}
+                    className={`relative flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? "bg-gradient-to-b from-teal-700 to-teal-800 text-white border-teal-600 shadow-[0_4px_0_0_#0f5b55,0_8px_16px_-2px_rgba(15,118,110,0.35)] -translate-y-0.5"
+                        : "bg-white/70 hover:bg-white text-slate-600 border-slate-200/90 shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 mb-1.5 transition-transform ${isActive ? "text-white scale-110" : "text-slate-400"}`} />
+                    <span className="text-xs font-bold leading-none">{label}</span>
+                    {isActive && (
+                      <div className="absolute top-1.5 right-1.5">
+                        <CheckCircle2 className="w-3 h-3 text-teal-300" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSignup} className="space-y-3.5">
+            
             {/* Full Name */}
             <div className="space-y-1.5">
-              <Label className="text-[13px] font-bold text-[#475569]">
-                Full Name <span className="text-red-500">*</span>
+              <Label className="text-xs font-bold text-slate-700">
+                {language === "hi" ? "पूरा नाम *" : "Full Name *"}
               </Label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" />
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
                   type="text"
-                  placeholder="e.g. Ramesh Kumar"
+                  placeholder={selectedRole === Role.DOCTOR ? "Dr. Priya Mehta" : "Aarav Sharma"}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="pl-11 h-11 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] font-medium"
+                  className="pl-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
                   required
                 />
               </div>
             </div>
 
-            {/* Phone */}
+            {/* Phone Number */}
             <div className="space-y-1.5">
-              <Label className="text-[13px] font-bold text-[#475569]">
-                Mobile Number <span className="text-red-500">*</span>
+              <Label className="text-xs font-bold text-slate-700">
+                {language === "hi" ? "मोबाइल नंबर *" : "Phone Number *"}
               </Label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
                   type="tel"
-                  placeholder="e.g. 9876543210"
+                  placeholder="9876543210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="pl-11 h-11 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] font-medium"
+                  className="pl-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
                   required
                 />
               </div>
             </div>
 
-            {/* Email (Optional) */}
+            {/* Email Address */}
             <div className="space-y-1.5">
-              <Label className="text-[13px] font-bold text-[#475569]">
-                Email Address (Optional)
+              <Label className="text-xs font-bold text-slate-700">
+                {language === "hi" ? "ईमेल पता (वैकल्पिक)" : "Email Address (Optional)"}
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11 h-11 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f] font-medium"
+                  className="pl-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
                 />
               </div>
             </div>
 
-            {/* Doctor Specialty (if doctor) */}
+            {/* Doctor-Specific Fields */}
             {selectedRole === Role.DOCTOR && (
-              <div className="space-y-1.5 animate-in fade-in duration-200">
-                <Label className="text-[13px] font-bold text-[#475569]">
-                  Medical Specialty
+              <div className="space-y-3 p-3 bg-teal-50/70 border border-teal-100 rounded-2xl animate-in fade-in duration-300">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-teal-900">
+                    {language === "hi" ? "चिकित्सा विशेषज्ञता (Specialty) *" : "Medical Specialty *"}
+                  </Label>
+                  <select
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl border border-teal-200 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500"
+                    required
+                  >
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Gynecology">Gynecology</option>
+                    <option value="Dermatology">Dermatology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Pulmonology">Pulmonology</option>
+                    <option value="Emergency Medicine">Emergency Medicine</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-teal-900">
+                    {language === "hi" ? "मेडिकल रजिस्ट्रेशन / लाइसेंस नंबर" : "Medical Registration / License No."}
+                  </Label>
+                  <div className="relative">
+                    <Award className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-600 pointer-events-none" />
+                    <Input
+                      type="text"
+                      placeholder="MCI-2026-XXXX"
+                      value={licenseNumber}
+                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      className="pl-9 h-10 rounded-xl border-teal-200 bg-white text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Hospital Staff-Specific Fields */}
+            {selectedRole === Role.HOSPITAL_STAFF && (
+              <div className="space-y-1.5 p-3 bg-teal-50/70 border border-teal-100 rounded-2xl animate-in fade-in duration-300">
+                <Label className="text-xs font-bold text-teal-900">
+                  {language === "hi" ? "विभाग / भूमिका (Department) *" : "Department / Operation Desk *"}
                 </Label>
-                <Input
-                  type="text"
-                  placeholder="e.g. Cardiology, General Medicine"
-                  value={specialty}
-                  onChange={(e) => setSpecialty(e.target.value)}
-                  className="h-11 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] font-medium"
-                />
+                <select
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl border border-teal-200 bg-white text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500"
+                  required
+                >
+                  <option value="Hospital Operations Desk">Hospital Operations Desk</option>
+                  <option value="OPD Appointments Desk">OPD Appointments Desk</option>
+                  <option value="Emergency & 108 Dispatch">Emergency & 108 Dispatch</option>
+                  <option value="Ward & Bed Management">Ward & Bed Management</option>
+                  <option value="Blood Bank Desk">Blood Bank Desk</option>
+                </select>
               </div>
             )}
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label className="text-[13px] font-bold text-[#475569]">
-                Password <span className="text-red-500">*</span>
+              <Label className="text-xs font-bold text-slate-700">
+                {t("password") || "Create Password *"}
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#94a3b8]" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
+                  placeholder={language === "hi" ? "पासवर्ड (कम से कम 4 अक्षर)" : "Password (min 4 chars)"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-11 pr-11 h-11 rounded-xl border-[#e2e8f0] bg-[#f8f8fa] text-[14px] text-[#1a1f36] placeholder:text-[#94a3b8] focus-visible:ring-2 focus-visible:ring-[#1e3a5f]/20 focus-visible:border-[#1e3a5f]"
+                  className="pl-10 pr-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b] transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#1e3a5f] hover:bg-[#162d4a] text-white font-bold text-[14px] shadow-sm hover:shadow-md transition-all gap-2 mt-3 btn-press"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating Account...</span>
-                </>
-              ) : (
-                <>
-                  <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </Button>
-
-            {/* Login Link */}
-            <p className="text-center text-[13px] text-[#64748b] font-medium pt-1">
-              Already have an account?{" "}
-              <Link href="/login" className="font-bold text-[#0d9488] hover:text-[#0f766e] transition-colors">
-                Sign In
-              </Link>
-            </p>
+            {/* 3D Primary Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-3d-primary w-full h-12 text-sm font-extrabold gap-2 rounded-2xl"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span>{language === "hi" ? "खाता बनाएं" : "CREATE ACCOUNT"}</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
+
+          {/* Footer Link */}
+          <div className="mt-5 pt-4 border-t border-slate-100 text-center text-xs font-medium text-slate-500">
+            <span>{language === "hi" ? "पहले से खाता है?" : "Already have an account?"}</span>{" "}
+            <Link href="/login" className="font-extrabold text-teal-700 hover:text-teal-800 hover:underline">
+              {language === "hi" ? "साइन इन करें" : "Sign in"}
+            </Link>
+          </div>
+
         </div>
-      </div>
+      </main>
+
     </div>
   );
 }

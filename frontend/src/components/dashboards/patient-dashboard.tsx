@@ -5,8 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useStore, DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
 import { formatAppointmentDate, formatAppointmentTime } from "@/lib/appointment-time";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -29,7 +27,8 @@ import {
   Search,
   Phone,
   Bot,
-  Map,
+  Map as MapIcon,
+  HeartPulse,
 } from "lucide-react";
 
 // Regional categorization for Delhi-NCR
@@ -66,8 +65,9 @@ export function PatientDashboard() {
 
   // Ensure all 32 Delhi-NCR facilities are available
   const allFacilities = useMemo(() => {
-    const list = facilities && facilities.length > 0 ? facilities : DEFAULT_DELHI_HOSPITALS;
-    return list;
+    return facilities && facilities.length >= DEFAULT_DELHI_HOSPITALS.length
+      ? facilities
+      : DEFAULT_DELHI_HOSPITALS;
   }, [facilities]);
 
   // Filtered hospitals list
@@ -140,77 +140,79 @@ export function PatientDashboard() {
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
       
-      {/* Visible Healthcare Background Image & Protective Gradient Overlay */}
+      {/* ── 1. Unique Patient Wellness Background Image & Glass Overlay ── */}
       <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
         <Image
-          src="/patient-bg.jpg"
-          alt="Healthcare background"
+          src="/backgrounds/patient-dashboard.jpg"
+          alt="Patient wellness sanctuary"
           fill
           priority
-          className="object-cover object-top opacity-20 mix-blend-multiply"
+          className="object-cover object-center opacity-25 mix-blend-multiply scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-slate-50/85 to-[#F8FAFC]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-slate-50/85 to-[#F8FAFC]/95 backdrop-blur-[2px]" />
       </div>
 
-      {/* Subtle Ambient Healthcare Corner Gradients & Vector Motifs */}
-      <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-teal-500/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
-      />
-      <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-500/12 via-teal-500/6 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
-      />
-      {/* Subtle Dot Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
+      {/* ── 2. Subtle Ambient Healthcare Corner Gradients ── */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-teal-500/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-500/12 via-teal-500/8 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      
+      {/* Dot Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-15 pointer-events-none -z-10" />
 
-      <div className="relative space-y-6 max-w-6xl mx-auto pb-10 z-10 page-enter">
+      <div className="relative space-y-6 max-w-6xl mx-auto pb-12 z-10 page-enter">
         
-        {/* 1. Header Section - Clean & Personal Greeting */}
+        {/* ── 1. Header Section ── */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mt-1 section-enter">
           <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-teal-800 text-xs font-bold shadow-2xs">
+              <HeartPulse className="w-3.5 h-3.5 text-teal-600 animate-pulse" />
+              <span>{language === "hi" ? "व्यक्तिगत स्वास्थ्य पोर्टल" : "Personal Health Portal"}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               {greeting}, {firstName} 👋
             </h1>
-            <p className="text-slate-500 text-sm font-medium">
+            <p className="text-slate-500 text-xs sm:text-sm font-medium">
               {language === "hi" 
                 ? "यहाँ आज का आपका स्वास्थ्य और दिल्ली-एनसीआर अस्पताल अवलोकन है।" 
-                : "Here is your healthcare & Delhi-NCR hospital network overview."}
+                : "Here is your unified health overview and Delhi-NCR hospital network."}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Link href="/chatbot">
-              <Button 
-                variant="outline"
-                className="border-teal-200 text-teal-800 hover:bg-teal-50 font-bold text-xs h-10 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all"
+              <button 
+                type="button"
+                className="btn-3d-glass h-10 px-4 text-xs gap-2 font-bold text-teal-800 border-teal-200"
               >
-                <Bot className="w-3.5 h-3.5 text-teal-600" />
-                {language === "hi" ? "AI चैटबॉट बुकिंग" : "AI Assistant"}
-              </Button>
+                <Bot className="w-4 h-4 text-teal-600" />
+                <span>{language === "hi" ? "AI चैटबॉट बुकिंग" : "AI Assistant"}</span>
+              </button>
             </Link>
 
             <Link href="/scheduling">
-              <Button 
-                className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-10 px-4 rounded-xl shadow-xs gap-1.5 transition-all card-hover btn-press"
+              <button 
+                type="button"
+                className="btn-3d-primary h-10 px-4 text-xs gap-2 font-bold"
               >
                 <Calendar className="w-3.5 h-3.5" />
-                {language === "hi" ? "अपॉइंटमेंट बुक करें" : "Book Appointment"}
-              </Button>
+                <span>{language === "hi" ? "नया अपॉइंटमेंट" : "Book Appointment"}</span>
+              </button>
             </Link>
           </div>
         </div>
 
-        {/* 2. Primary Hero Feature: Next Appointment Spotlight Card */}
+        {/* ── 2. Primary Hero Feature: Next Appointment Spotlight Card ── */}
         {nextAppt ? (
-          <div className="bg-white border border-teal-100 rounded-2xl p-5 sm:p-6 shadow-xs relative overflow-hidden card-hover section-enter stagger-1">
-            {/* Subtle teal accent border on top */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500" />
+          <div className="glass-panel p-5 sm:p-6 relative overflow-hidden card-hover section-enter stagger-1 border border-teal-200/80 bg-white/85 shadow-lg">
+            {/* Top Accent Gradient Bar */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-500" />
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
               
               {/* Left: Next Appointment Details */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-100/80">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-lg border border-teal-200/80 shadow-2xs">
                     {language === "hi" ? "अगला अपॉइंटमेंट" : "NEXT APPOINTMENT"}
                   </span>
                   <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0.5">
@@ -229,12 +231,12 @@ export function PatientDashboard() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-700 pt-1">
-                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-700 pt-1">
+                  <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
                     <Calendar className="w-3.5 h-3.5 text-teal-700" />
                     <span>{nextAppt.date}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                  <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
                     <Clock className="w-3.5 h-3.5 text-teal-700" />
                     <span>{nextAppt.time}</span>
                   </div>
@@ -244,96 +246,99 @@ export function PatientDashboard() {
               {/* Right Action Button */}
               <div className="flex items-center gap-3 shrink-0">
                 <Link href="/scheduling">
-                  <Button 
-                    className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-11 px-5 rounded-xl shadow-xs transition-all flex items-center gap-2 btn-press"
+                  <button 
+                    type="button"
+                    className="btn-3d-primary h-11 px-5 text-xs font-bold gap-2"
                   >
-                    {language === "hi" ? "अपॉइंटमेंट देखें" : "View Appointment"}
+                    <span>{language === "hi" ? "अपॉइंटमेंट देखें" : "View Appointment"}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
+                  </button>
                 </Link>
               </div>
             </div>
           </div>
         ) : (
-          <Card className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs card-hover section-enter stagger-1">
-            <div className="text-center py-8 text-slate-500">
-              <Calendar className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-              <p className="font-semibold text-slate-700">{language === "hi" ? "कोई आगामी अपॉइंटमेंट नहीं" : "No upcoming appointments"}</p>
-              <p className="text-sm mt-1">{language === "hi" ? "शुरू करने के लिए अपना पहला अपॉइंटमेंट बुक करें" : "Book your first appointment to get started"}</p>
-              <Link href="/scheduling" className="inline-block mt-4">
-                <Button variant="outline" className="text-xs font-bold rounded-xl border-teal-200 hover:bg-teal-50 text-teal-700 btn-press">
-                  {language === "hi" ? "अपॉइंटमेंट बुक करें" : "Book Appointment"}
-                </Button>
-              </Link>
-            </div>
-          </Card>
+          <div className="glass-panel p-6 sm:p-8 text-center card-hover section-enter stagger-1">
+            <Calendar className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-bold text-slate-800 text-sm">
+              {language === "hi" ? "कोई आगामी अपॉइंटमेंट नहीं" : "No upcoming appointments"}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {language === "hi" ? "शुरू करने के लिए अपना पहला अपॉइंटमेंट बुक करें" : "Book your first clinical consultation to get started"}
+            </p>
+            <Link href="/scheduling" className="inline-block mt-4">
+              <button type="button" className="btn-3d-glass h-9 px-4 text-xs font-bold text-teal-800 border-teal-200">
+                {language === "hi" ? "अपॉइंटमेंट बुक करें" : "Book Appointment"}
+              </button>
+            </Link>
+          </div>
         )}
 
-        {/* 3. Patient Statistics — 4 Compact Metrics */}
+        {/* ── 3. Patient Statistics — 4 Compact Glass Cards ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           
-          <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4 stagger-1">
+          <div className="glass-panel p-4 card-hover stagger-1">
             <div className="flex items-center justify-between pb-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 {language === "hi" ? "आगामी विज़िट" : "Upcoming Visits"}
               </span>
-              <div className="p-1.5 rounded-lg bg-teal-50 text-teal-700">
+              <div className="p-2 rounded-xl bg-teal-50 text-teal-700 border border-teal-100 shadow-2xs">
                 <Calendar className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">{upcomingCount}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{upcomingCount}</div>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "कुल निर्धारित" : "Total scheduled"}</p>
-          </Card>
+          </div>
 
-          <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4 stagger-2">
+          <div className="glass-panel p-4 card-hover stagger-2">
             <div className="flex items-center justify-between pb-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 {language === "hi" ? "पूर्ण परामर्श" : "Past Consultations"}
               </span>
-              <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
+              <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-2xs">
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">{pastCount || 1}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{pastCount || 1}</div>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "सफलतापूर्वक पूर्ण" : "Completed successfully"}</p>
-          </Card>
+          </div>
 
-          <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4 stagger-3">
+          <div className="glass-panel p-4 card-hover stagger-3">
             <div className="flex items-center justify-between pb-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 {language === "hi" ? "सक्रिय दवाइयाँ" : "Prescriptions"}
               </span>
-              <div className="p-1.5 rounded-lg bg-blue-50 text-blue-700">
+              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 shadow-2xs">
                 <FileText className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">1</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">1</div>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">Telmisartan 20mg</p>
-          </Card>
+          </div>
 
-          <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4 stagger-4">
+          <div className="glass-panel p-4 card-hover stagger-4">
             <div className="flex items-center justify-between pb-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 {language === "hi" ? "अधिसूचनाएं" : "Notifications"}
               </span>
-              <div className="p-1.5 rounded-lg bg-amber-50 text-amber-700">
+              <div className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 shadow-2xs">
                 <Bell className="w-3.5 h-3.5" />
               </div>
             </div>
-            <div className="text-xl font-black text-slate-900 mt-1">{unreadNotifCount || 2}</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{unreadNotifCount || 2}</div>
             <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "अपठित अलर्ट" : "Unread alerts"}</p>
-          </Card>
+          </div>
 
         </div>
 
-        {/* 4. Split Section: Left Quick Services & Right Patient Health Profile Card */}
+        {/* ── 4. Split Section: Left Quick Services & Right Patient Health Profile Card ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* Left Column (7 cols): 4-Portal Service Command Grid */}
           <div className="lg:col-span-7 space-y-4">
             
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">
+              <h2 className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 uppercase">
                 {language === "hi" ? "स्वास्थ्य सेवाएँ" : "Healthcare Services"}
               </h2>
             </div>
@@ -342,85 +347,91 @@ export function PatientDashboard() {
               
               {/* Find Hospitals */}
               <Link href="/hospitals" className="block group">
-                <Card className="h-full bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4">
-                  <div className="p-2.5 bg-teal-50 border border-teal-100 text-teal-700 rounded-xl w-fit group-hover:bg-teal-100 transition-colors mb-3">
+                <div className="h-full glass-panel card-hover p-4 border border-white/80 group-hover:border-teal-300 transition-all">
+                  <div className="p-2.5 bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 text-teal-700 rounded-2xl w-fit group-hover:scale-105 transition-transform mb-3 shadow-2xs">
                     <Building2 className="h-4 w-4" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-sm mb-0.5">{t("findHospitals") || "Find Hospitals"}</h3>
-                  <p className="text-[11px] text-slate-500 leading-snug">
+                  <h3 className="font-bold text-slate-900 text-sm mb-0.5 group-hover:text-teal-700 transition-colors">
+                    {t("findHospitals") || "Find Hospitals"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-snug font-medium">
                     {language === "hi" ? "32 दिल्ली-एनसीआर अस्पताल और लाइव बेड" : "32 Delhi-NCR hospitals & live beds"}
                   </p>
-                </Card>
+                </div>
               </Link>
 
               {/* Emergency 108 */}
               <Link href="/emergency" className="block group">
-                <Card className="h-full bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4">
-                  <div className="p-2.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl w-fit group-hover:bg-rose-100 transition-colors mb-3">
+                <div className="h-full glass-panel card-hover p-4 border border-white/80 group-hover:border-red-300 transition-all">
+                  <div className="p-2.5 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 text-red-600 rounded-2xl w-fit group-hover:scale-105 transition-transform mb-3 shadow-2xs">
                     <Siren className="h-4 w-4" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-sm mb-0.5">{t("emergency108") || "Emergency 108"}</h3>
-                  <p className="text-[11px] text-slate-500 leading-snug">
+                  <h3 className="font-bold text-slate-900 text-sm mb-0.5 group-hover:text-red-600 transition-colors">
+                    {t("emergency108") || "Emergency 108"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-snug font-medium">
                     {language === "hi" ? "तत्काल 108 एम्बुलेंस अनुरोध" : "Instant 108 ambulance dispatch"}
                   </p>
-                </Card>
+                </div>
               </Link>
 
               {/* Check Symptoms */}
               <Link href="/assess" className="block group">
-                <Card className="h-full bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4">
-                  <div className="p-2.5 bg-teal-50 border border-teal-100 text-teal-700 rounded-xl w-fit group-hover:bg-teal-100 transition-colors mb-3">
+                <div className="h-full glass-panel card-hover p-4 border border-white/80 group-hover:border-teal-300 transition-all">
+                  <div className="p-2.5 bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 text-teal-700 rounded-2xl w-fit group-hover:scale-105 transition-transform mb-3 shadow-2xs">
                     <Activity className="h-4 w-4" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-sm mb-0.5">{t("riskAssessment") || "Check Symptoms"}</h3>
-                  <p className="text-[11px] text-slate-500 leading-snug">
+                  <h3 className="font-bold text-slate-900 text-sm mb-0.5 group-hover:text-teal-700 transition-colors">
+                    {t("riskAssessment") || "Check Symptoms"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-snug font-medium">
                     {language === "hi" ? "AI क्लिनिकल जोखिम जांच" : "AI clinical risk assessment"}
                   </p>
-                </Card>
+                </div>
               </Link>
 
               {/* Scheme Benefits */}
               <Link href="/schemes" className="block group">
-                <Card className="h-full bg-white border border-slate-200/80 rounded-2xl shadow-xs card-hover p-4">
-                  <div className="p-2.5 bg-teal-50 border border-teal-100 text-teal-700 rounded-xl w-fit group-hover:bg-teal-100 transition-colors mb-3">
+                <div className="h-full glass-panel card-hover p-4 border border-white/80 group-hover:border-teal-300 transition-all">
+                  <div className="p-2.5 bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 text-teal-700 rounded-2xl w-fit group-hover:scale-105 transition-transform mb-3 shadow-2xs">
                     <ShieldCheck className="h-4 w-4" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-sm mb-0.5">{t("govSchemes") || "Scheme Benefits"}</h3>
-                  <p className="text-[11px] text-slate-500 leading-snug">
+                  <h3 className="font-bold text-slate-900 text-sm mb-0.5 group-hover:text-teal-700 transition-colors">
+                    {t("govSchemes") || "Scheme Benefits"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-snug font-medium">
                     {language === "hi" ? "PM-JAY व सरकारी योजनाएं" : "PM-JAY & government schemes"}
                   </p>
-                </Card>
+                </div>
               </Link>
 
             </div>
 
             {/* Health Tip Banner */}
-            <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-teal-50 border border-teal-100 text-teal-700 rounded-xl shrink-0">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold text-slate-900">{t("dailyHealthTip") || "Daily Health Tip"}</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    {t("healthTipText") || "Stay hydrated — drink at least 8 glasses of water daily for optimal health."}
-                  </p>
-                </div>
+            <div className="glass-panel p-4 flex items-start gap-3 border border-teal-100/80">
+              <div className="p-2 bg-teal-50 border border-teal-200 text-teal-700 rounded-xl shrink-0 shadow-2xs">
+                <Sparkles className="h-4 w-4" />
               </div>
-            </Card>
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-bold text-slate-900">{t("dailyHealthTip") || "Daily Health Tip"}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  {t("healthTipText") || "Stay hydrated — drink at least 8 glasses of water daily for optimal health."}
+                </p>
+              </div>
+            </div>
 
           </div>
 
           {/* Right Column (5 cols): Patient Profile & Basic Health Info Card */}
           <div className="lg:col-span-5 space-y-4">
             
-            <h2 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">
+            <h2 className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 uppercase">
               {language === "hi" ? "स्वास्थ्य प्रोफाइल" : "Health Profile"}
             </h2>
 
-            <Card className="bg-white border border-slate-200/80 rounded-2xl shadow-xs p-5 space-y-4 card-hover">
+            <div className="glass-panel p-5 space-y-4 card-hover border border-white/80">
               <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-teal-700 text-white flex items-center justify-center font-black text-sm">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-700 to-teal-800 text-white flex items-center justify-center font-black text-sm shadow-md">
                   {firstName.charAt(0)}
                 </div>
                 <div>
@@ -429,49 +440,50 @@ export function PatientDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className="p-3 bg-white/70 rounded-xl border border-slate-100 shadow-2xs">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Age / Gender</span>
                   <span className="font-bold text-slate-800 text-xs">{currentUser?.age || '-'} Yrs • {currentUser?.gender || '-'}</span>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="p-3 bg-white/70 rounded-xl border border-slate-100 shadow-2xs">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Blood Group</span>
                   <span className="font-bold text-teal-700 text-xs">{currentUser?.bloodGroup || 'Not recorded'}</span>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
+                <div className="p-3 bg-white/70 rounded-xl border border-slate-100 col-span-2 shadow-2xs">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Active Condition</span>
                   <span className="font-bold text-slate-800 text-xs">{currentUser?.conditions?.join(', ') || 'No active conditions'}</span>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 col-span-2">
+                <div className="p-3 bg-white/70 rounded-xl border border-slate-100 col-span-2 shadow-2xs">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">Primary Hospital</span>
                   <span className="font-bold text-slate-800 text-xs">{currentUser?.facilityName || 'Government General Hospital — Delhi'}</span>
                 </div>
               </div>
 
               <Link href={currentUser?.patientId ? `/patients/${currentUser.patientId}` : "/profile"} className="block">
-                <Button variant="outline" className="w-full h-9 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 btn-press">
-                  {language === "hi" ? "पूर्ण स्वास्थ्य रिकॉर्ड देखें" : "View Full Health Records"}
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
+                <button 
+                  type="button" 
+                  className="btn-3d-glass w-full h-9 text-xs font-bold text-slate-700 gap-1.5"
+                >
+                  <span>{language === "hi" ? "पूर्ण स्वास्थ्य रिकॉर्ड देखें" : "View Full Health Records"}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
               </Link>
-            </Card>
+            </div>
 
           </div>
 
         </div>
 
-        {/* ============================================================ */}
-        {/* 5. Phase 4 Nearest Delhi-NCR Hospitals & Emergency Bed Telemetry */}
-        {/* ============================================================ */}
+        {/* ── 5. Phase 4 Nearest Delhi-NCR Hospitals & Emergency Bed Telemetry ── */}
         <div className="space-y-4 pt-2">
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-teal-50 text-teal-700 rounded-lg border border-teal-100">
+                <div className="p-2 bg-teal-50 text-teal-700 rounded-xl border border-teal-200 shadow-2xs">
                   <Building2 className="w-4 h-4" />
                 </div>
                 <h2 className="text-base font-extrabold text-slate-900">
@@ -489,22 +501,22 @@ export function PatientDashboard() {
             </div>
 
             <Link href="/hospitals">
-              <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl border-teal-200 text-teal-800 hover:bg-teal-50 gap-1.5">
-                <Map className="w-3.5 h-3.5" />
-                {language === "hi" ? "पूरा लाइव मैप देखें" : "Explore Live Map"}
-              </Button>
+              <button type="button" className="btn-3d-glass h-8 px-3 text-xs font-bold text-teal-800 border-teal-200 gap-1.5">
+                <MapIcon className="w-3.5 h-3.5" />
+                <span>{language === "hi" ? "पूरा लाइव मैप देखें" : "Explore Live Map"}</span>
+              </button>
             </Link>
           </div>
 
           {/* Search Bar & Region Filters */}
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
             <div className="relative flex-1 max-w-md w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
               <Input
                 placeholder={language === "hi" ? "अस्पताल, इलाका या विशेषता खोजें..." : "Search hospital, area, or specialty (e.g. AIIMS, Dwarka, Cardiology)..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 text-xs rounded-xl bg-white border-slate-200 shadow-xs"
+                className="pl-10 h-10 text-xs rounded-xl bg-white/80 border-slate-200/90 shadow-2xs font-medium focus-visible:ring-teal-500"
               />
             </div>
 
@@ -519,17 +531,18 @@ export function PatientDashboard() {
                 { id: "Gurugram", label: language === "hi" ? "गुरुग्राम" : "Gurugram" },
                 { id: "Faridabad", label: language === "hi" ? "फरीदाबाद" : "Faridabad" },
               ].map((r) => (
-                <Button
+                <button
                   key={r.id}
-                  variant={selectedRegion === r.id ? "default" : "outline"}
-                  size="sm"
-                  className={`h-7 px-2.5 text-[11px] font-bold rounded-lg ${
-                    selectedRegion === r.id ? "bg-teal-700 text-white" : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
-                  }`}
+                  type="button"
                   onClick={() => setSelectedRegion(r.id)}
+                  className={`h-7 px-2.5 text-[11px] font-bold rounded-lg transition-all ${
+                    selectedRegion === r.id
+                      ? "bg-teal-700 text-white shadow-xs"
+                      : "bg-white/80 border border-slate-200 text-slate-600 hover:bg-white"
+                  }`}
                 >
                   {r.label}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -558,14 +571,14 @@ export function PatientDashboard() {
               const area = hosp.area || hosp.district || hosp.location || "Delhi-NCR";
 
               return (
-                <Card key={hosp.id} className="bg-white border border-slate-200/80 rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group">
-                  <div className="p-4 space-y-3">
+                <div key={hosp.id} className="glass-panel p-4 card-hover flex flex-col justify-between overflow-hidden group border border-white/90 bg-white/80">
+                  <div className="space-y-3">
                     
                     {/* Header: Name + Rating + Badges */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <Badge variant="outline" className="text-[9px] font-bold bg-slate-50 text-slate-600 border-slate-200">
+                          <Badge variant="outline" className="text-[9px] font-bold bg-white text-slate-600 border-slate-200">
                             {hosp.type || "Hospital"}
                           </Badge>
                           {hosp.emergencyAvailable !== false && (
@@ -590,7 +603,7 @@ export function PatientDashboard() {
                     </div>
 
                     {/* Live Bed Telemetry Progress Bars */}
-                    <div className="space-y-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 text-xs">
+                    <div className="space-y-2 bg-white/90 p-2.5 rounded-xl border border-slate-100 text-xs shadow-2xs">
                       {/* General Beds */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-[10px] font-semibold text-slate-600">
@@ -618,7 +631,7 @@ export function PatientDashboard() {
                     {specList.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {specList.slice(0, 3).map((spec, i) => (
-                          <span key={i} className="text-[9px] font-medium bg-teal-50/80 text-teal-800 border border-teal-100/80 px-2 py-0.5 rounded-md">
+                          <span key={i} className="text-[9px] font-medium bg-teal-50/90 text-teal-800 border border-teal-100 px-2 py-0.5 rounded-md">
                             {spec.trim()}
                           </span>
                         ))}
@@ -633,30 +646,30 @@ export function PatientDashboard() {
                   </div>
 
                   {/* Card Bottom Actions */}
-                  <div className="p-3 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                     {hosp.phone && (
                       <a href={`tel:${hosp.phone}`}>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-slate-500 hover:text-teal-700 hover:bg-teal-50" title="Call Hospital">
+                        <button type="button" className="btn-3d-glass h-8 w-8 rounded-lg p-0 flex items-center justify-center text-slate-500 hover:text-teal-700" title="Call Hospital">
                           <Phone className="w-3.5 h-3.5" />
-                        </Button>
+                        </button>
                       </a>
                     )}
 
                     <div className="flex items-center gap-1.5 flex-1 justify-end">
                       <Link href={`/facilities/${hosp.id}`}>
-                        <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] font-bold rounded-lg border-slate-200 hover:bg-white text-slate-700">
+                        <button type="button" className="btn-3d-glass h-7 px-2.5 text-[10px] font-bold rounded-lg text-slate-700">
                           Details
-                        </Button>
+                        </button>
                       </Link>
 
                       <Link href={`/scheduling?facilityId=${hosp.id}`}>
-                        <Button size="sm" className="h-7 px-2.5 text-[10px] font-bold rounded-lg bg-teal-700 hover:bg-teal-800 text-white shadow-2xs">
+                        <button type="button" className="btn-3d-primary h-7 px-3 text-[10px] font-bold rounded-lg">
                           Book OPD
-                        </Button>
+                        </button>
                       </Link>
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>
@@ -665,16 +678,16 @@ export function PatientDashboard() {
           {filteredHospitals.length > 6 && (
             <div className="text-center pt-2">
               <Link href="/hospitals">
-                <Button variant="outline" className="text-xs font-bold rounded-xl border-teal-200 hover:bg-teal-50 text-teal-800 gap-1.5 shadow-xs">
+                <button type="button" className="btn-3d-glass h-9 px-4 text-xs font-bold text-teal-800 border-teal-200 gap-1.5">
                   <span>{language === "hi" ? `सभी ${filteredHospitals.length} अस्पताल और लाइव मैप देखें` : `View all ${filteredHospitals.length} hospitals & live map`}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                </button>
               </Link>
             </div>
           )}
 
           {filteredHospitals.length === 0 && (
-            <div className="text-center py-8 bg-white rounded-2xl border border-slate-200/80 p-6 space-y-2">
+            <div className="text-center py-8 glass-panel p-6 space-y-2">
               <Building2 className="w-8 h-8 text-slate-300 mx-auto" />
               <p className="font-bold text-slate-800 text-sm">
                 {language === "hi" ? "कोई अस्पताल नहीं मिला" : "No hospitals found"}

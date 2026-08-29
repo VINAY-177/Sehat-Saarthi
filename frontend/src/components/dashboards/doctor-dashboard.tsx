@@ -5,20 +5,17 @@ import Image from "next/image";
 import { useStore } from "@/lib/store";
 import { Urgency } from "@/lib/types";
 import { formatAppointmentTime, getAppointmentDateKey } from "@/lib/appointment-time";
-import { StatCard } from "@/components/stat-card";
 import { UrgencyBadge } from "@/components/urgency-badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Users, 
   AlertTriangle, 
-  Ambulance, 
   Calendar, 
   Activity, 
-  ArrowRight, 
   Clock, 
-  Building2,
+  Stethoscope,
+  Play,
+  FileCheck,
 } from "lucide-react";
 
 export function DoctorDashboard() {
@@ -65,402 +62,287 @@ export function DoctorDashboard() {
   return (
     <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
       
-      {/* Visible Clinical ECG Telemetry Background Image */}
+      {/* ── 1. Unique Doctor Clinical Workspace Background Image & Overlay ── */}
       <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
         <Image
-          src="/doctor-bg.jpg"
-          alt="Clinical ECG background"
+          src="/backgrounds/doctor-dashboard.jpg"
+          alt="Clinical Doctor Workstation"
           fill
           priority
-          className="object-cover object-top opacity-15 mix-blend-multiply"
+          className="object-cover object-center opacity-20 mix-blend-multiply scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-slate-50/85 to-[#F8FAFC]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/10 via-slate-50/85 to-[#F8FAFC]/95 backdrop-blur-[2px]" />
       </div>
 
-      {/* Ultra-subtle Ambient Clinical Background Accents */}
-      <div 
-        className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-sky-600/8 via-teal-600/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
-      />
-      <div 
-        className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-600/6 via-sky-600/3 to-transparent rounded-full blur-3xl pointer-events-none -z-10" 
-      />
-      {/* Subtle Clinical Dot Matrix Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none -z-10" />
+      {/* ── 2. Deep Clinical Ambient Glows ── */}
+      <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-gradient-to-bl from-teal-600/12 via-sky-600/6 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-sky-600/10 via-teal-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      
+      {/* Dot Matrix */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-15 pointer-events-none -z-10" />
 
       <div className="relative max-w-7xl mx-auto space-y-6 pb-12 z-10 page-enter">
         
-        {/* 1. Header Section — Doctor Greeting & On-Duty Status */}
+        {/* ── 1. Header Section — Doctor Greeting & On-Duty Status ── */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 section-enter">
           <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold shadow-2xs">
+              <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
+              <span>{currentUser?.specialty || "General Physician"} • OPD Clinical Desk</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               {greeting}, {currentUser?.name || "Dr. Priya Mehta"} 👋
             </h1>
-            <p className="text-slate-500 text-sm font-medium">
+            <p className="text-slate-500 text-xs sm:text-sm font-medium">
               {language === "hi" 
                 ? `आज आपके पास ${todayAppointments.length} अपॉइंटमेंट निर्धारित हैं।` 
-                : `You have ${todayAppointments.length} appointments scheduled for today.`}
+                : `You have ${todayAppointments.length} appointments scheduled today.`}
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 pulse-subtle" />
-              <span>On Duty</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-600 font-bold">{currentUser?.specialty || "General Physician"}</span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <Link href="/patients">
+              <button 
+                type="button" 
+                className="btn-3d-glass h-10 px-4 text-xs font-bold text-slate-800 border-slate-200 gap-1.5"
+              >
+                <Users className="w-4 h-4 text-teal-600" />
+                <span>{language === "hi" ? "मरीज़ रजिस्ट्री" : "Patient Registry"}</span>
+              </button>
+            </Link>
 
-            <Link href="/assess">
-              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all btn-press">
-                <Activity className="w-3.5 h-3.5" />
-                {language === "hi" ? "नया क्लिनिकल ट्राइएज" : "New AI Triage"}
-              </Button>
+            <Link href="/scheduling">
+              <button 
+                type="button" 
+                className="btn-3d-primary h-10 px-4 text-xs font-bold gap-2"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>{language === "hi" ? "रोस्टर व स्लॉट" : "OPD Schedule"}</span>
+              </button>
             </Link>
           </div>
         </div>
 
-        {/* 2. Doctor Statistics — 4 Compact Metrics */}
-        <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title={language === "hi" ? "आज के अपॉइंटमेंट्स" : "Today's Appointments"}
-            value={todayAppointments.length.toString()}
-            icon={<Calendar className="h-4 w-4 text-sky-700" />}
-            description={`${todayAppointments.length} appointments today`}
-            className="stagger-1"
-          />
-          <StatCard
-            title={language === "hi" ? "लंबित समीक्षाएं" : "Pending Reviews"}
-            value={emergencyScreenings.length > 0 ? emergencyScreenings.length.toString() : "1"}
-            icon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
-            description="Clinical triage cases"
-            className="stagger-2"
-          />
-          <StatCard
-            title={language === "hi" ? "रेफरल केस" : "Outbound Referrals"}
-            value={pendingReferrals.length > 0 ? pendingReferrals.length.toString() : "1"}
-            icon={<Ambulance className="h-4 w-4 text-teal-700" />}
-            description="AIIMS Cardiology dispatch"
-            className="stagger-3"
-          />
-          <StatCard
-            title={language === "hi" ? "कुल पंजीकृत मरीज" : "Total Patients"}
-            value={patients.length > 0 ? patients.length.toString() : "8"}
-            icon={<Users className="h-4 w-4 text-slate-700" />}
-            description="Under primary care roster"
-            className="stagger-4"
-          />
+        {/* ── 2. Top Metric Statistics Grid ── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="glass-panel p-4 card-hover stagger-1">
+            <div className="flex items-center justify-between pb-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {language === "hi" ? "आज के अपॉइंटमेंट" : "Today's OPD Queue"}
+              </span>
+              <div className="p-2 rounded-xl bg-teal-50 text-teal-700 border border-teal-100 shadow-2xs">
+                <Calendar className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{todayAppointments.length}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "कुल निर्धारित" : "Scheduled consultations"}</p>
+          </div>
+
+          <div className="glass-panel p-4 card-hover stagger-2">
+            <div className="flex items-center justify-between pb-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {language === "hi" ? "कुल पंजीकृत मरीज़" : "Total Patients"}
+              </span>
+              <div className="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 shadow-2xs">
+                <Users className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{patients.length || 18}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "सक्रिय ईएचआर" : "Active EHR records"}</p>
+          </div>
+
+          <div className="glass-panel p-4 card-hover stagger-3">
+            <div className="flex items-center justify-between pb-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {language === "hi" ? "लंबित रेफरल" : "Pending Referrals"}
+              </span>
+              <div className="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 shadow-2xs">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{pendingReferrals.length || 2}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "समीक्षा आवश्यक" : "Awaiting triage"}</p>
+          </div>
+
+          <div className="glass-panel p-4 card-hover stagger-4">
+            <div className="flex items-center justify-between pb-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {language === "hi" ? "आपातकालीन ट्रायज" : "Emergency Alerts"}
+              </span>
+              <div className="p-2 rounded-xl bg-red-50 text-red-600 border border-red-100 shadow-2xs">
+                <Activity className="w-3.5 h-3.5" />
+              </div>
+            </div>
+            <div className="text-2xl font-black text-red-600 mt-1">{emergencyScreenings.length || 1}</div>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">{language === "hi" ? "रेड अलर्ट मरीज" : "Immediate review"}</p>
+          </div>
         </div>
 
-        {/* 3. Main Clinical Layout: Today's Schedule & Patient Queue (7 cols) & Clinical Actions (5 cols) */}
+        {/* ── 3. Split Main Section: Today's Clinical Schedule & Clinical Alert Spotlight ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
-          {/* Today's Schedule & Patient Queue (7 cols) */}
-          <div className="lg:col-span-7 space-y-4">
-            
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
-              <CardHeader className="py-3.5 px-5 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                    {language === "hi" ? "आज का अपॉइंटमेंट शेड्यूल" : "Today's Schedule & Queue"}
-                  </CardTitle>
-                  <CardDescription className="text-xs text-slate-500 font-medium">
-                    Chronological consultation queue for {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </CardDescription>
+          {/* Left Column (8 cols): Today's Schedule Table */}
+          <div className="lg:col-span-8 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-teal-50 text-teal-700 rounded-xl border border-teal-100 shadow-2xs">
+                  <Clock className="w-4 h-4" />
                 </div>
-                <Badge variant="outline" className="text-[11px] bg-sky-50 text-sky-800 border-sky-200 font-bold px-2.5 py-0.5">
-                  {todayAppointments.length} Patients Scheduled
-                </Badge>
-              </CardHeader>
-
-              <CardContent className="p-0">
-                <div className="divide-y divide-slate-100">
-                  {todayAppointments.length === 0 ? (
-                    <div className="p-8 text-center text-slate-500 text-sm font-medium">
-                      No appointments scheduled for today.
-                    </div>
-                  ) : (
-                    todayAppointments.map((appt) => (
-                      <div key={appt.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors">
-                        <div className="flex items-start gap-3.5">
-                          <div className="p-2.5 bg-slate-100 rounded-xl text-slate-700 font-bold text-xs shrink-0 flex flex-col items-center justify-center min-w-[65px]">
-                            <Clock className="w-3.5 h-3.5 mb-0.5 text-slate-500" />
-                            <span>{appt.time}</span>
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-extrabold text-sm text-slate-900">{appt.patientName}</span>
-                              <span className="text-[11px] text-slate-400 font-medium">({appt.age} • {appt.gender})</span>
-                              
-                              {/* Status Indicators */}
-                              {appt.status === "IN_CONSULTATION" && (
-                                <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 text-[10px] font-bold py-0 flex items-center gap-1 animate-pulse">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                                  In Consultation
-                                </Badge>
-                              )}
-                              {appt.status === "CHECKED_IN" && (
-                                <Badge className="bg-sky-50 text-sky-800 border-sky-200 text-[10px] font-bold py-0">
-                                  Checked In
-                                </Badge>
-                              )}
-                              {appt.status === "CONFIRMED" && (
-                                <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] font-bold py-0">
-                                  Confirmed
-                                </Badge>
-                              )}
-                              {appt.status === "REQUESTED" && (
-                                <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] font-bold py-0">
-                                  Requested
-                                </Badge>
-                              )}
-                              {appt.status === "COMPLETED" && (
-                                <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 text-[10px] font-medium py-0">
-                                  Completed
-                                </Badge>
-                              )}
-                            </div>
-
-                            <p className="text-xs text-slate-600 font-medium">
-                              <span className="font-semibold text-slate-700">{appt.type}:</span> {appt.reason}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 sm:self-center shrink-0">
-                          {appt.status === "IN_CONSULTATION" ? (
-                            <Link href={`/patients/${appt.patientId}/encounter?appointmentId=${appt.id}`}>
-                              <Button 
-                                size="sm" 
-                                className="h-8 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
-                              >
-                                Resume Consult
-                              </Button>
-                            </Link>
-                          ) : (appt.status === "CONFIRMED" || appt.status === "CHECKED_IN") ? (
-                            <Link href={`/patients/${appt.patientId}/encounter?appointmentId=${appt.id}`}>
-                              <Button 
-                                size="sm" 
-                                className="h-8 text-xs font-bold rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-xs"
-                              >
-                                Start Consult
-                              </Button>
-                            </Link>
-                          ) : null}
-
-                          <Link href={`/patients/${appt.patientId}`}>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="h-8 text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-xs"
-                            >
-                              View Patient
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Priority Triage Cases Preview */}
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
-              <CardHeader className="py-3 px-5 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
-                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  AI Triage & Clinical Risk Cases
-                </CardTitle>
-                <Link href="/assess">
-                  <Button variant="ghost" size="sm" className="text-teal-700 text-xs px-2 h-7 gap-1 font-bold">
-                    View All <ArrowRight className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent className="p-4">
-                {triagePatient ? (
-                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs text-slate-900">{triagePatient.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">({triagePatient.mrn})</span>
-                        <UrgencyBadge urgency={triagePatient.riskLevel === "HIGH" || triagePatient.riskLevel === "EMERGENCY" ? Urgency.HIGH : Urgency.MODERATE} size="sm" />
-                      </div>
-                      <p className="text-[11px] text-slate-500">
-                        {triagePatient.age} yrs • {triagePatient.gender} • Blood: {triagePatient.bloodGroup || "—"} • {triagePatient.district}
-                      </p>
-                    </div>
-                    <Link href={`/patients/${triagePatient.id}`}>
-                      <Button size="sm" variant="ghost" className="h-7 text-xs font-bold text-teal-700 hover:bg-teal-50">
-                        Review Profile
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="py-4 text-center text-xs text-slate-400">
-                    No urgent clinical triage alerts
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-          </div>
-          
-          {/* Right Sidebar: Quick Clinical Actions & Recent Referrals (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
-            
-            {/* Quick Clinical Actions */}
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
-              <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-3 px-5">
-                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">Clinical Tools</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-2.5">
-                <Link href="/assess" className="block">
-                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-xs btn-press">
-                    <Activity className="h-4 w-4" />
-                    New AI Clinical Assessment
-                  </Button>
-                </Link>
-                <Link href="/patients" className="block">
-                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 btn-press" variant="outline">
-                    <Users className="h-4 w-4 text-sky-700" />
-                    Patient Records (360° EHR)
-                  </Button>
-                </Link>
-                <Link href="/referrals" className="block">
-                  <Button className="w-full justify-start gap-2.5 h-10 text-xs font-bold rounded-xl border-slate-200 hover:bg-slate-50 text-slate-700 btn-press" variant="outline">
-                    <Ambulance className="h-4 w-4 text-amber-600" />
-                    Initiate Tertiary Referral
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Outbound Tertiary Referral Spotlight */}
-            <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
-              <CardHeader className="flex flex-row items-center justify-between py-3 px-5 bg-slate-50/70 border-b border-slate-100">
-                <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wider">Active Referrals</CardTitle>
-                <Link href="/referrals">
-                  <Button variant="ghost" size="sm" className="text-teal-700 text-xs px-2 h-7 gap-1 font-bold">
-                    All <ArrowRight className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                <div className="p-3.5 rounded-xl border border-slate-100 bg-slate-50 space-y-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="font-bold text-xs text-slate-900">{patients[0]?.name || "Aarav Sharma"}</span>
-                    <UrgencyBadge urgency={Urgency.MODERATE} size="sm" />
-                  </div>
-                  
-                  <div className="text-[11px] text-slate-600 flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" /> 
-                    <span className="font-medium">To: AIIMS New Delhi (Cardiology)</span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-500 italic">
-                    &quot;Stage 1 hypertension evaluation; recommended 24h Holter BP monitoring.&quot;
-                  </p>
-
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
-                    <span className="text-slate-400 font-mono">Status: PENDING</span>
-                    <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[9px] font-bold">
-                      Awaiting Intake
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-          </div>
-        </div>
-
-        {/* 4. Doctor Patient Registry Roster (Full Width Section) */}
-        <div className="space-y-4 pt-2">
-          <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl overflow-hidden card-hover">
-            <CardHeader className="py-3.5 px-5 bg-slate-50/70 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <CardTitle className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                  {language === "hi" ? "डॉक्टर रोगी रजिस्ट्री" : "Doctor Patient Registry"}
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-500 font-medium">
-                  {language === "hi" 
-                    ? "प्राथमिक देखभाल और ओपीडी के तहत पंजीकृत मरीजों की सूची" 
-                    : "Longitudinal electronic health records of patients under primary care"}
-                </CardDescription>
+                <h2 className="text-sm font-extrabold tracking-tight text-slate-900 uppercase">
+                  {language === "hi" ? "आज की ओपीडी सूची" : "Today's Clinical Roster"}
+                </h2>
               </div>
 
-              <Link href="/patients">
-                <Button variant="outline" size="sm" className="h-8 text-xs font-bold rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-teal-600" />
-                  <span>View All ({patients.length})</span>
-                </Button>
+              <Link href="/scheduling">
+                <button type="button" className="btn-3d-glass h-8 px-3 text-xs font-bold text-teal-800 border-teal-200">
+                  {language === "hi" ? "पूरा कैलेंडर देखें" : "View Full Calendar"}
+                </button>
               </Link>
-            </CardHeader>
+            </div>
 
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead className="text-[11px] text-slate-400 uppercase bg-slate-50/50 border-b border-slate-100 font-bold">
-                    <tr>
-                      <th className="px-5 py-3">Patient</th>
-                      <th className="px-3 py-3">Age / Gender</th>
-                      <th className="px-3 py-3">Blood Group</th>
-                      <th className="px-4 py-3">Location</th>
-                      <th className="px-3 py-3">Risk Level</th>
-                      <th className="px-5 py-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {patients && patients.length > 0 ? (
-                      patients.slice(0, 6).map((pat) => (
-                        <tr key={pat.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="px-5 py-3.5">
-                            <div className="font-bold text-slate-900">{pat.name}</div>
-                            <div className="text-[10px] font-mono text-slate-400">{pat.mrn}</div>
+            <div className="glass-panel overflow-hidden border border-white/90 bg-white/85 shadow-md">
+              {todayAppointments.length === 0 ? (
+                <div className="text-center py-12 p-6 space-y-2">
+                  <Calendar className="w-10 h-10 mx-auto text-slate-300" />
+                  <p className="font-bold text-slate-800 text-sm">
+                    {language === "hi" ? "आज कोई अपॉइंटमेंट नहीं" : "No appointments scheduled for today"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {language === "hi" ? "नया अपॉइंटमेंट शेड्यूल करने के लिए शेड्यूलिंग पेज पर जाएं।" : "Open the scheduling module to manage walk-in patients."}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-extrabold">
+                        <th className="py-3 px-4 text-left">Time</th>
+                        <th className="py-3 px-4 text-left">Patient</th>
+                        <th className="py-3 px-4 text-left">Chief Complaint</th>
+                        <th className="py-3 px-4 text-left">Status</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {todayAppointments.map((appt) => (
+                        <tr key={appt.id} className="hover:bg-teal-50/40 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-slate-800 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-teal-600" />
+                              <span>{appt.time}</span>
+                            </div>
                           </td>
-                          <td className="px-3 py-3.5 text-slate-600 font-medium">
-                            {pat.age} yrs • {pat.gender}
+                          <td className="py-3.5 px-4 font-bold text-slate-900">
+                            <div>{appt.patientName}</div>
+                            <div className="text-[10px] text-slate-400 font-normal">{appt.age} • {appt.gender}</div>
                           </td>
-                          <td className="px-3 py-3.5">
-                            <span className="font-bold text-rose-600">{pat.bloodGroup || "—"}</span>
+                          <td className="py-3.5 px-4 text-slate-600 font-medium max-w-[180px] truncate">
+                            {appt.reason}
                           </td>
-                          <td className="px-4 py-3.5 text-slate-600 font-medium">
-                            {pat.district || pat.city || "New Delhi"}
+                          <td className="py-3.5 px-4">
+                            <Badge className={`text-[10px] font-bold py-0.5 ${
+                              appt.status === "COMPLETED"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : appt.status === "IN_CONSULTATION"
+                                ? "bg-teal-50 text-teal-800 border-teal-300"
+                                : "bg-purple-50 text-purple-800 border-purple-200"
+                            }`}>
+                              {appt.status}
+                            </Badge>
                           </td>
-                          <td className="px-3 py-3.5">
-                            <UrgencyBadge 
-                              urgency={
-                                pat.riskLevel === "HIGH" || pat.riskLevel === "EMERGENCY" 
-                                  ? Urgency.HIGH 
-                                  : pat.riskLevel === "MODERATE" 
-                                  ? Urgency.MODERATE 
-                                  : Urgency.LOW
-                              } 
-                              size="sm" 
-                            />
-                          </td>
-                          <td className="px-5 py-3.5 text-right">
-                            <Link href={`/patients/${pat.id}`}>
-                              <Button size="sm" className="h-7 text-xs font-bold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg">
-                                View Patient
-                              </Button>
+                          <td className="py-3.5 px-4 text-right">
+                            <Link href={`/patients/${appt.patientId}/encounter?appointmentId=${appt.id}`}>
+                              <button 
+                                type="button" 
+                                className="btn-3d-primary h-7 px-2.5 text-[10px] font-bold rounded-lg gap-1"
+                              >
+                                <Play className="w-3 h-3 fill-current" />
+                                <span>Consult</span>
+                              </button>
                             </Link>
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="px-5 py-8 text-center text-slate-400 font-medium">
-                          Loading patient registry...
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column (4 cols): Priority Clinical Triage & Quick Prescriptions */}
+          <div className="lg:col-span-4 space-y-4">
+            
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 uppercase">
+                {language === "hi" ? "प्राथमिकता ट्रायज" : "Priority Patient Triage"}
+              </h2>
+            </div>
+
+            {triagePatient && (
+              <div className="glass-panel p-5 space-y-3.5 card-hover border border-teal-200/80 bg-white/90 shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                    High Attention
+                  </span>
+                  <UrgencyBadge urgency={triagePatient.riskLevel === "EMERGENCY" ? Urgency.EMERGENCY : Urgency.HIGH} />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">{triagePatient.name}</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    MRN: {triagePatient.mrn || "MRN-2026-0001"} • {triagePatient.age || 28} Yrs • {triagePatient.gender || "Male"}
+                  </p>
+                </div>
+
+                <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1 text-xs">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Clinical Summary</span>
+                  <p className="text-slate-700 font-medium leading-relaxed">
+                    Patient presenting with acute chest discomfort and elevated BP readings. Continuous telemetry recommended.
+                  </p>
+                </div>
+
+                <div className="pt-1 flex items-center gap-2">
+                  <Link href={`/patients/${triagePatient.id}`} className="flex-1">
+                    <button type="button" className="btn-3d-glass w-full h-9 text-xs font-bold text-slate-700">
+                      Open 360°
+                    </button>
+                  </Link>
+
+                  <Link href={`/patients/${triagePatient.id}/encounter`} className="flex-1">
+                    <button type="button" className="btn-3d-primary w-full h-9 text-xs font-bold gap-1">
+                      <FileCheck className="w-3.5 h-3.5" />
+                      <span>Encounter</span>
+                    </button>
+                  </Link>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            {/* Quick Operational Telemetry Summary */}
+            <div className="glass-panel p-4 space-y-3 border border-white/80 bg-white/80">
+              <h4 className="text-xs font-extrabold text-slate-900 uppercase">Emergency Ward Status</h4>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between items-center text-slate-600 font-semibold">
+                  <span>General Ward Capacity</span>
+                  <span className="text-teal-800 font-bold">88% Occupied</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-teal-600 rounded-full" style={{ width: "88%" }} />
+                </div>
+
+                <div className="flex justify-between items-center text-slate-600 font-semibold pt-1">
+                  <span>ICU Bed Availability</span>
+                  <span className="text-emerald-700 font-bold">4 Beds Available</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: "20%" }} />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
       </div>
