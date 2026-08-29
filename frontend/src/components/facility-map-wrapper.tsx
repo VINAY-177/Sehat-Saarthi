@@ -8,6 +8,7 @@ interface FacilityMapProps {
   facilities: FacilityMapItem[];
   onFacilityClick?: (id: string) => void;
   selectedFacilityId?: string;
+  userLocation?: { lat: number; lng: number } | null;
   className?: string;
 }
 

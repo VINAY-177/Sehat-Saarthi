@@ -1,8 +1,9 @@
 'use client';
 // Note: This component should ONLY be imported via dynamic(() => import('./facility-map'), { ssr: false }) in parent components.
 
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 import 'leaflet-defaulticon-compatibility';
@@ -27,7 +28,6 @@ export interface FacilityMapItem {
   generalBeds?: number;
   generalBedsUsed?: number;
   pmjayEmpanelled?: boolean;
-  // Phase 4 NCR fields
   city?: string;
   area?: string;
   address?: string;
@@ -35,34 +35,87 @@ export interface FacilityMapItem {
   emergencyAvailable?: boolean;
   specialists?: string[];
   specialties?: string[] | string;
+  distanceKm?: number;
 }
 
 interface FacilityMapProps {
   facilities: FacilityMapItem[];
   onFacilityClick?: (id: string) => void;
   selectedFacilityId?: string;
+  userLocation?: { lat: number; lng: number } | null;
   className?: string;
 }
 
-export default function FacilityMap({ facilities, onFacilityClick, selectedFacilityId, className }: FacilityMapProps) {
+// Helper to smoothly fly map when center changes
+function MapCameraController({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo(center, zoom, { duration: 1.2 });
+  }, [center, zoom, map]);
+  return null;
+}
+
+// Custom pulsing blue beacon for user GPS location
+const userLocationIcon = L.divIcon({
+  className: 'user-gps-marker',
+  html: `
+    <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: absolute; width: 24px; height: 24px; background: rgba(14, 165, 233, 0.4); border-radius: 50%; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+      <div style="position: relative; width: 14px; height: 14px; background: #0284c7; border: 2.5px solid #ffffff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>
+    </div>
+  `,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
+export default function FacilityMap({
+  facilities,
+  onFacilityClick,
+  selectedFacilityId,
+  userLocation,
+  className,
+}: FacilityMapProps) {
   // Center on Delhi-NCR region to show the full network
-  const defaultCenter: [number, number] = [28.57, 77.25];
-  const center = facilities.length > 0 && selectedFacilityId
+  const defaultCenter: [number, number] = [28.6139, 77.2090];
+  const targetCenter: [number, number] = userLocation
+    ? [userLocation.lat, userLocation.lng]
+    : facilities.length > 0 && selectedFacilityId
     ? (() => {
-        const found = facilities.find(f => f.id === selectedFacilityId);
-        return (found && found.lat && found.lng) ? [found.lat, found.lng] as [number, number] : defaultCenter;
+        const found = facilities.find((f) => f.id === selectedFacilityId);
+        return found && found.lat && found.lng
+          ? ([found.lat, found.lng] as [number, number])
+          : defaultCenter;
       })()
     : defaultCenter;
 
-  const defaultZoom = selectedFacilityId ? 13 : 10;
+  const targetZoom = userLocation ? 12 : selectedFacilityId ? 13 : 10;
 
   return (
     <div className={`w-full h-full min-h-[420px] z-0 rounded-2xl overflow-hidden border border-slate-200 shadow-inner ${className || ''}`}>
-      <MapContainer center={center} zoom={defaultZoom} style={{ height: '100%', width: '100%', minHeight: '420px' }} scrollWheelZoom={true}>
+      <MapContainer center={targetCenter} zoom={targetZoom} style={{ height: '100%', width: '100%', minHeight: '420px' }} scrollWheelZoom={true}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapCameraController center={targetCenter} zoom={targetZoom} />
+
+        {userLocation && (
+          <>
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
+              <Popup>
+                <div className="p-1 font-bold text-xs text-sky-900">
+                  📍 <strong className="text-sky-700">Your Current GPS Location</strong>
+                </div>
+              </Popup>
+            </Marker>
+            <Circle
+              center={[userLocation.lat, userLocation.lng]}
+              radius={800}
+              pathOptions={{ color: '#0284c7', fillColor: '#38bdf8', fillOpacity: 0.15, weight: 1.5 }}
+            />
+          </>
+        )}
+
         {facilities.map((facility, idx) => {
           const lat = facility.lat || (28.6139 + (idx % 4 - 2) * 0.04);
           const lng = facility.lng || (77.2090 + (Math.floor(idx / 4) - 1) * 0.04);
@@ -87,7 +140,13 @@ export default function FacilityMap({ facilities, onFacilityClick, selectedFacil
                   {/* Header */}
                   <span className="font-bold text-sm text-slate-900 leading-snug">{facility.name}</span>
                   
-                  {/* Type + Emergency + Rating badges */}
+                  {/* Distance badge if GPS active */}
+                  {facility.distanceKm !== undefined && (
+                    <div className="inline-flex items-center gap-1 w-fit bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">
+                      📍 <span>{facility.distanceKm} km from your location</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <Badge variant="outline" className="text-[10px] font-bold bg-teal-50 text-teal-800 border-teal-200">
                       {facility.type}

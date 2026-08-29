@@ -1,9 +1,26 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, ShieldCheck, Search, Activity, Stethoscope, Building2, Phone, Map as MapIcon, Star, Ambulance } from "lucide-react";
+import {
+  MapPin,
+  ShieldCheck,
+  Search,
+  Activity,
+  Stethoscope,
+  Building2,
+  Phone,
+  Map as MapIcon,
+  Star,
+  Ambulance,
+  Navigation,
+  Loader2,
+  Compass,
+  AlertCircle,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FacilityMapWrapper from "@/components/facility-map-wrapper";
 import type { FacilityMapItem } from "@/components/facility-map";
@@ -37,6 +54,7 @@ interface HospitalDb extends FacilityMapItem {
   danEmpanelled?: boolean;
   jsyAvailable?: boolean;
   echsEmpanelled?: boolean;
+  distanceKm?: number;
 }
 
 // Region definitions for filtering
@@ -52,13 +70,13 @@ const REGIONS = [
 
 const SCHEME_FILTERS = [
   { value: "ALL", label: "All Healthcare Schemes" },
-  { value: "DAK", label: "Delhi Arogya Kosh (DAK)" },
-  { value: "DFSS", label: "Delhi Free Surgery Scheme" },
+  { value: "DAK", label: "Delhi Arogya Kosh (DAK ₹5L)" },
+  { value: "DFSS", label: "Delhi Free Surgery (1,100+ Procedures)" },
   { value: "DIAG", label: "Delhi Free Diagnostics (450+ Tests)" },
-  { value: "DAN", label: "Delhi Arogya Nidhi (DAN)" },
-  { value: "PMJAY", label: "Ayushman Bharat PM-JAY" },
-  { value: "CGHS", label: "CGHS / ECHS" },
-  { value: "JSY", label: "Janani Suraksha Yojana" },
+  { value: "DAN", label: "Delhi Arogya Nidhi (DAN ₹1.5L)" },
+  { value: "PMJAY", label: "Ayushman Bharat PM-JAY (₹5L)" },
+  { value: "CGHS", label: "CGHS / ECHS Contributory" },
+  { value: "JSY", label: "Janani Suraksha Yojana (Maternal)" },
 ] as const;
 
 function getHospitalRegion(facility: { district?: string; state?: string; city?: string; area?: string; location?: string }): string {
@@ -88,6 +106,21 @@ function getHospitalRegion(facility: { district?: string; state?: string; city?:
     if (district.includes("faridabad")) return "Faridabad";
   }
   return "Delhi";
+}
+
+// Precise Haversine distance calculator between GPS coordinates in km
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return +(R * c).toFixed(1);
 }
 
 // Helper component for progress bar
@@ -153,6 +186,12 @@ export default function HospitalsPage() {
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | undefined>();
   const [showMap, setShowMap] = useState(true);
 
+  // GPS Nearest Hospital State
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [sortByDistance, setSortByDistance] = useState(false);
+
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     fetch(`${API}/api/hospitals`)
@@ -189,10 +228,9 @@ export default function HospitalsPage() {
             echsEmpanelled: typeof item.echsEmpanelled === "boolean" ? item.echsEmpanelled : undefined,
           }));
 
-          // Merge by ID with fallback hospitals so no hospitals are lost
+          // Merge by ID with fallback hospitals
           const apiMap = new Map(mapped.map((h) => [h.id, h]));
           const merged = FALLBACK_HOSPITALS.map((fb) => apiMap.get(fb.id) || fb);
-          // Add any new hospitals from API not in fallback
           mapped.forEach((h) => {
             if (!FALLBACK_HOSPITALS.some((fb) => fb.id === h.id)) {
               merged.push(h);
@@ -205,8 +243,54 @@ export default function HospitalsPage() {
       .catch(() => {});
   }, []);
 
+  // GPS Geolocation trigger
+  const handleGetLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        setUserLocation(coords);
+        setSortByDistance(true);
+        setIsLocating(false);
+        setShowMap(true);
+      },
+      (err) => {
+        setIsLocating(false);
+        let msg = "Could not detect your location.";
+        if (err.code === 1) msg = "Location permission denied. Please allow GPS access in your browser settings.";
+        else if (err.code === 2) msg = "Location unavailable. Please check your network or GPS connection.";
+        else if (err.code === 3) msg = "Location request timed out. Please try again.";
+        setLocationError(msg);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
+  }, []);
+
+  // Filter and sort facilities
   const filteredFacilities = useMemo(() => {
-    return facilities.filter((facility) => {
+    let list = facilities.map((f) => {
+      let distanceKm: number | undefined = undefined;
+      if (userLocation && f.lat && f.lng) {
+        distanceKm = calculateDistanceKm(userLocation.lat, userLocation.lng, f.lat, f.lng);
+      }
+      return { ...f, distanceKm };
+    });
+
+    list = list.filter((facility) => {
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -240,7 +324,21 @@ export default function HospitalsPage() {
 
       return matchesSearch && matchesType && matchesRegion && matchesScheme;
     });
-  }, [facilities, searchQuery, typeFilter, regionFilter, schemeFilter]);
+
+    if (sortByDistance && userLocation) {
+      list.sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
+    }
+
+    return list;
+  }, [facilities, searchQuery, typeFilter, regionFilter, schemeFilter, userLocation, sortByDistance]);
+
+  // Nearest Hospital spotlight
+  const nearestHospital = useMemo(() => {
+    if (!userLocation || filteredFacilities.length === 0) return null;
+    const withDist = filteredFacilities.filter((f) => f.distanceKm !== undefined);
+    if (withDist.length === 0) return null;
+    return withDist.reduce((prev, curr) => ((prev.distanceKm ?? 9999) < (curr.distanceKm ?? 9999) ? prev : curr));
+  }, [userLocation, filteredFacilities]);
 
   // Region counts
   const regionCounts = useMemo(() => {
@@ -261,20 +359,46 @@ export default function HospitalsPage() {
             <Building2 size={30} />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Delhi-NCR Hospital Network</h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Real-time facility capacity, doctor specialties, ER/ICU telemetry, and direct appointments across Delhi-NCR.</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Delhi-NCR Hospital Network</h1>
+              <Badge className="bg-teal-100 text-teal-900 border-teal-300 font-extrabold text-[11px] px-2.5 py-0.5">
+                Hospitals Only
+              </Badge>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
+              Verified hospital network across Delhi, Noida, Greater Noida, Ghaziabad, Gurugram &amp; Faridabad with live bed telemetry &amp; GPS nearest locator.
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="bg-teal-100/80 text-teal-800 border-teal-300 font-extrabold px-3.5 py-1 text-xs gap-1.5 shadow-2xs">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-600 animate-pulse" />
-            {facilities.length} Hospitals in Network
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* GPS Nearest Finder Button */}
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            disabled={isLocating}
+            className={`btn-3d-primary font-black text-xs gap-2 h-10 px-4 rounded-xl flex items-center shadow-md ${
+              userLocation ? "bg-emerald-600 hover:bg-emerald-700" : ""
+            }`}
+            title="Use your device GPS to locate nearest hospitals"
+          >
+            {isLocating ? (
+              <Loader2 className="w-4 h-4 animate-spin inline mr-1" />
+            ) : (
+              <Navigation className="w-4 h-4 inline mr-1" />
+            )}
+            <span>{isLocating ? "Detecting GPS..." : userLocation ? "📍 GPS Active" : "Find Nearest Hospital"}</span>
+          </button>
+
+          <Badge variant="outline" className="bg-teal-100/80 text-teal-800 border-teal-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs h-10 flex items-center">
+            <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse" />
+            {facilities.length} Hospitals
           </Badge>
+
           <button
             type="button"
             onClick={() => setShowMap(!showMap)}
-            className={`btn-3d-glass font-bold text-xs gap-2 h-10 px-4 rounded-xl ${
+            className={`btn-3d-glass font-bold text-xs gap-1.5 h-10 px-3.5 rounded-xl ${
               showMap ? "bg-teal-50 text-teal-900 border-teal-300" : ""
             }`}
           >
@@ -284,19 +408,103 @@ export default function HospitalsPage() {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* GPS Location Error Banner if any */}
+      {locationError && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-3 text-xs font-semibold shadow-xs">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{locationError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            className="text-xs font-bold text-amber-800 underline hover:text-amber-950"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* ── GPS Nearest Hospital Spotlight Card ── */}
+      {userLocation && nearestHospital && (
+        <div className="p-6 rounded-[28px] bg-gradient-to-r from-teal-900 via-emerald-800 to-teal-900 text-white shadow-2xl relative overflow-hidden border border-emerald-500/30">
+          <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/40 text-emerald-200 text-xs font-black">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                <span>CLOSEST HOSPITAL TO YOUR LOCATION</span>
+                <span className="bg-emerald-500 text-slate-950 px-2 py-0.2 rounded-full font-black text-[10px]">
+                  {nearestHospital.distanceKm} km away
+                </span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+                <Building2 className="w-6 h-6 text-emerald-300" />
+                {nearestHospital.name}
+              </h2>
+
+              <p className="text-xs text-emerald-100 font-medium max-w-2xl">
+                📍 {nearestHospital.location || `${nearestHospital.district}, ${nearestHospital.state}`} •{" "}
+                <span className="font-bold text-white">Estimated Drive: {Math.max(4, Math.round((nearestHospital.distanceKm || 1) * 3.5))} mins</span>
+              </p>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Badge className="bg-emerald-500/30 text-emerald-100 border border-emerald-400/40 text-xs font-bold">
+                  ICU Beds: {nearestHospital.availableIcu} Free
+                </Badge>
+                <Badge className="bg-emerald-500/30 text-emerald-100 border border-emerald-400/40 text-xs font-bold">
+                  General Beds: {nearestHospital.availableBeds} Free
+                </Badge>
+                {nearestHospital.emergencyAvailable !== false && (
+                  <Badge className="bg-rose-500/80 text-white border border-rose-400 text-xs font-bold">
+                    🚨 24/7 Emergency Active
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              {nearestHospital.phone && (
+                <a href={`tel:${nearestHospital.phone}`}>
+                  <button
+                    type="button"
+                    className="h-11 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 border border-white/20 transition-all"
+                  >
+                    <Phone className="w-4 h-4 text-emerald-300" />
+                    <span>Call ({nearestHospital.phone})</span>
+                  </button>
+                </a>
+              )}
+
+              <Link href={`/scheduling?facilityId=${nearestHospital.id}`}>
+                <button
+                  type="button"
+                  className="h-11 px-5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-black flex items-center gap-2 shadow-lg transition-all"
+                >
+                  <span>Book OPD Instantly</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filter, Search & GPS Sorting Toolbar */}
       <div className="glass-panel p-3 shadow-xl rounded-[24px] border border-white/80 bg-white/92 backdrop-blur-2xl">
         <div className="flex flex-col md:flex-row gap-3 p-2">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
             <Input
-              placeholder="Search by hospital name, district, area, or specialty (e.g. AIIMS, Medanta, Noida, Cardiology)..."
+              placeholder="Search by hospital name, district, area, or specialty (e.g. AIIMS, Medanta, Fortis, Noida, Cardiology)..."
               className="pl-11 h-11 text-xs rounded-xl border-slate-200 focus-visible:ring-teal-500 bg-white font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="w-full md:w-56">
+
+          <div className="w-full md:w-52">
             <Select value={regionFilter} onValueChange={(val) => val && setRegionFilter(val)}>
               <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
                 <SelectValue placeholder="All Regions" />
@@ -310,20 +518,22 @@ export default function HospitalsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full md:w-56">
+
+          <div className="w-full md:w-48">
             <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
               <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-xs font-medium">All Types</SelectItem>
+                <SelectItem value="ALL" className="text-xs font-medium">All Hospital Types</SelectItem>
                 <SelectItem value="Government" className="text-xs font-medium">Government Hospitals</SelectItem>
-                <SelectItem value="Private" className="text-xs font-medium">Private / Tertiary</SelectItem>
+                <SelectItem value="Private" className="text-xs font-medium">Private / Super-Specialty</SelectItem>
                 <SelectItem value="Tertiary" className="text-xs font-medium">Tertiary Only</SelectItem>
-                <SelectItem value="District" className="text-xs font-medium">District Only</SelectItem>
+                <SelectItem value="Specialized" className="text-xs font-medium">Specialized Only</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
           <div className="w-full md:w-56">
             <Select value={schemeFilter} onValueChange={(val) => val && setSchemeFilter(val)}>
               <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
@@ -338,25 +548,50 @@ export default function HospitalsPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {userLocation && (
+            <button
+              type="button"
+              onClick={() => setSortByDistance(!sortByDistance)}
+              className={`h-11 px-3.5 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 transition-all ${
+                sortByDistance
+                  ? "bg-teal-700 text-white shadow-xs"
+                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+              <span>{sortByDistance ? "Nearest First" : "Sort Distance"}</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Map Section */}
       {showMap && (
         <div className="glass-panel shadow-2xl border border-white/80 overflow-hidden rounded-[28px] bg-white/92 backdrop-blur-2xl">
-          <div className="p-4 sm:p-5 border-b border-slate-200/80 bg-slate-50/80 flex justify-between items-center">
+          <div className="p-4 sm:p-5 border-b border-slate-200/80 bg-slate-50/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-2">
               <MapIcon className="w-4 h-4 text-teal-600" />
               <h2 className="font-black text-sm text-slate-900">
-                Interactive Delhi-NCR Healthcare Map ({filteredFacilities.length} Facilities)
+                Interactive Delhi-NCR Hospital Network ({filteredFacilities.length} Verified Hospitals)
               </h2>
             </div>
-            <span className="text-xs text-slate-500 font-semibold">Click markers for details &amp; online booking</span>
+            <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold">
+              {userLocation ? (
+                <span className="text-sky-700 font-bold flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-sky-500 animate-ping" />
+                  Your location active on map
+                </span>
+              ) : (
+                <span>Click markers for real-time beds &amp; direct OPD booking</span>
+              )}
+            </div>
           </div>
           <div className="p-0 h-[480px]">
             <FacilityMapWrapper
               facilities={filteredFacilities}
               selectedFacilityId={selectedFacilityId}
+              userLocation={userLocation}
               onFacilityClick={(id) => setSelectedFacilityId(id)}
               className="h-full border-none rounded-none"
             />
@@ -393,6 +628,18 @@ export default function HospitalsPage() {
                       </Badge>
                     )}
                   </div>
+
+                  {/* GPS Distance Badge */}
+                  {facility.distanceKm !== undefined && (
+                    <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-xl text-xs font-extrabold w-fit shadow-2xs">
+                      <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{facility.distanceKm} km from you</span>
+                      <span className="text-[10px] text-emerald-600 font-medium">
+                        (~{Math.max(4, Math.round(facility.distanceKm * 3.5))} min drive)
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-2 items-center">
                     <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 uppercase tracking-wider text-[10px] font-bold">
                       {facility.type}
@@ -507,7 +754,7 @@ export default function HospitalsPage() {
                     )}
                     <Link href={`/scheduling?facilityId=${facility.id}`} className="flex-1">
                       <button type="button" className="btn-3d-primary w-full h-9 rounded-xl text-xs font-black">
-                        Book Appt
+                        Book OPD
                       </button>
                     </Link>
                   </div>
@@ -520,7 +767,7 @@ export default function HospitalsPage() {
         {filteredFacilities.length === 0 && (
           <div className="col-span-full py-16 text-center glass-panel rounded-[28px] bg-white/90 border border-white/80">
             <Building2 className="mx-auto h-12 w-12 text-slate-400 mb-3" />
-            <h3 className="text-base font-black text-slate-900">No facilities match your search</h3>
+            <h3 className="text-base font-black text-slate-900">No hospitals match your search</h3>
             <p className="text-slate-500 text-xs font-semibold mt-1">Try adjusting your search criteria, region, or type filter.</p>
           </div>
         )}
