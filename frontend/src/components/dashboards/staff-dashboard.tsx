@@ -297,13 +297,13 @@ export function StaffDashboard() {
           priority
           className="object-cover object-center scale-105"
         />
-        {/* Soft Dark Operations Veil */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-900/60 to-slate-950/85 backdrop-blur-[4px]" />
+        {/* Soft daylight luminescent veil */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/20 via-slate-900/10 to-slate-950/40 backdrop-blur-[1.5px]" />
       </div>
 
       {/* 2. Floating Ambient Glows */}
-      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-sky-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-teal-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="relative max-w-7xl mx-auto space-y-6 pb-16 z-10 page-enter">
 
@@ -382,104 +382,88 @@ export function StaffDashboard() {
           <TabsContent value="overview" className="mt-4 space-y-5">
             {/* KPI Summary Cards */}
             <div className="grid gap-3.5 grid-cols-2 md:grid-cols-4">
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-teal-50 text-teal-700 rounded-xl border border-teal-100">
-                    <CalendarCheck className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{todayAppointments.length}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Today&apos;s Appointments</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-teal-50 text-teal-700 rounded-2xl border border-teal-100/80 shadow-2xs">
+                  <CalendarCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{todayAppointments.length}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">Today&apos;s Appointments</p>
+                </div>
+              </div>
 
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl border border-amber-100">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{pendingRequests.length}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Pending Requests</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100/80 shadow-2xs">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{pendingRequests.length}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">Pending Requests</p>
+                </div>
+              </div>
 
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
-                    <Bed className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{icuAvail + generalAvail}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Available Beds</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100/80 shadow-2xs">
+                  <Bed className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{icuAvail + generalAvail}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">Available Beds</p>
+                </div>
+              </div>
 
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
-                    <AmbulanceIcon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{ambulancesAvailable}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Ambulances Ready</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100/80 shadow-2xs">
+                  <AmbulanceIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{ambulancesAvailable}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">Ambulances Ready</p>
+                </div>
+              </div>
             </div>
 
             {/* Second Row KPIs */}
             <div className="grid gap-3.5 grid-cols-2 md:grid-cols-4">
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-100">
-                    <Stethoscope className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{inConsultToday.length}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">In Consultation</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-indigo-50 text-indigo-700 rounded-2xl border border-indigo-100/80 shadow-2xs">
+                  <Stethoscope className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{inConsultToday.length}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">In Consultation</p>
+                </div>
+              </div>
 
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-sky-50 text-sky-700 rounded-xl border border-sky-100">
-                    <Bed className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{icuAvail}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">ICU Beds Free</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-sky-50 text-sky-700 rounded-2xl border border-sky-100/80 shadow-2xs">
+                  <Bed className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{icuAvail}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">ICU Beds Free</p>
+                </div>
+              </div>
 
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100">
-                    <Droplets className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{bloodAlertCount}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Blood Alerts</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-red-50 text-red-600 rounded-2xl border border-red-100/80 shadow-2xs">
+                  <Droplets className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{bloodAlertCount}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">Blood Alerts</p>
+                </div>
+              </div>
 
-              <Card className="bg-white shadow-xs border border-slate-200/80 rounded-2xl">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2.5 bg-violet-50 text-violet-700 rounded-xl border border-violet-100">
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{patients.length}</p>
-                    <p className="text-[11px] text-slate-500 font-medium">Registered Patients</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="glass-panel bg-white/92 backdrop-blur-2xl shadow-xl border border-white/80 rounded-[24px] p-4 flex items-center gap-3 card-hover">
+                <div className="p-3 bg-violet-50 text-violet-700 rounded-2xl border border-violet-100/80 shadow-2xs">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{patients.length}</p>
+                  <p className="text-[11px] text-slate-500 font-bold">Registered Patients</p>
+                </div>
+              </div>
             </div>
 
             {/* Ward Occupancy Telemetry */}
