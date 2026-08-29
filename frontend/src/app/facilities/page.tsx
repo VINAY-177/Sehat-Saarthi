@@ -26,6 +26,17 @@ const REGIONS = [
   { value: 'Faridabad', label: 'Faridabad' },
 ] as const;
 
+const HEALTHCARE_SCHEMES = [
+  { value: 'All', label: 'All Healthcare Schemes' },
+  { value: 'DAK', label: 'Delhi Arogya Kosh (DAK)' },
+  { value: 'DFSS', label: 'Delhi Free Surgery Scheme' },
+  { value: 'DIAG', label: 'Delhi Free Diagnostics (450+ Tests)' },
+  { value: 'DAN', label: 'Delhi Arogya Nidhi (DAN)' },
+  { value: 'PMJAY', label: 'Ayushman Bharat PM-JAY' },
+  { value: 'CGHS', label: 'CGHS / ECHS' },
+  { value: 'JSY', label: 'Janani Suraksha Yojana (JSY)' },
+] as const;
+
 function getRegion(facility: { district: string; state: string; city?: string; area?: string }): string {
   const city = (facility.city || '').toLowerCase();
   const district = (facility.district || '').toLowerCase();
@@ -53,6 +64,7 @@ export default function FacilitiesPage() {
   const { facilities, updateFacility } = useStore();
   const [selectedType, setSelectedType] = useState<string>('All');
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
+  const [selectedScheme, setSelectedScheme] = useState<string>('All');
   const [pmjayOnly, setPmjayOnly] = useState(false);
   const [hasIcuOnly, setHasIcuOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,6 +82,17 @@ export default function FacilitiesPage() {
         const region = getRegion(f);
         if (region !== selectedRegion) return false;
       }
+
+      // Scheme filter
+      if (selectedScheme !== 'All') {
+        if (selectedScheme === 'DAK' && !f.dakEmpanelled && !f.schemes?.some(s => s.includes('DAK') || s.includes('Arogya Kosh'))) return false;
+        if (selectedScheme === 'DFSS' && !f.freeSurgeryEmpanelled && !f.schemes?.some(s => s.includes('Free Surgery') || s.includes('DFSS'))) return false;
+        if (selectedScheme === 'DIAG' && !f.freeDiagnosticsAvailable && !f.schemes?.some(s => s.includes('Diagnostic') || s.includes('Mohalla') || s.includes('Free Diagnostics'))) return false;
+        if (selectedScheme === 'DAN' && !f.danEmpanelled && !f.schemes?.some(s => s.includes('DAN') || s.includes('Arogya Nidhi'))) return false;
+        if (selectedScheme === 'PMJAY' && !f.pmjayEmpanelled && !f.schemes?.some(s => s.includes('PM-JAY') || s.includes('Ayushman'))) return false;
+        if (selectedScheme === 'CGHS' && !f.cghsEmpanelled && !f.echsEmpanelled && !f.schemes?.some(s => s.includes('CGHS') || s.includes('ECHS'))) return false;
+        if (selectedScheme === 'JSY' && !f.jsyAvailable && !f.schemes?.some(s => s.includes('Janani') || s.includes('JSY') || s.includes('Maternity'))) return false;
+      }
       
       // Search filter
       if (searchQuery.trim()) {
@@ -81,6 +104,7 @@ export default function FacilitiesPage() {
           f.phone,
           ...(f.specialists || []),
           ...(f.specialties || []),
+          ...(f.schemes || []),
           f.type,
           f.city || '',
           f.area || '',
@@ -92,7 +116,7 @@ export default function FacilitiesPage() {
       
       return true;
     });
-  }, [facilities, selectedType, selectedRegion, pmjayOnly, hasIcuOnly, searchQuery]);
+  }, [facilities, selectedType, selectedRegion, selectedScheme, pmjayOnly, hasIcuOnly, searchQuery]);
 
   // Count facilities per region
   const regionCounts = useMemo(() => {
@@ -175,6 +199,23 @@ export default function FacilitiesPage() {
                 <SelectItem value="Specialized" className="text-xs font-medium">Specialized Hospital</SelectItem>
                 <SelectItem value="PHC" className="text-xs font-medium">PHC / Dispensary</SelectItem>
                 <SelectItem value="CHC" className="text-xs font-medium">CHC / Sub-district</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Healthcare Scheme filter */}
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Healthcare Scheme</Label>
+            <Select value={selectedScheme} onValueChange={(val) => val && setSelectedScheme(val)}>
+              <SelectTrigger className="h-10 w-full rounded-xl bg-white border-slate-200 text-xs font-semibold">
+                <SelectValue placeholder="All Healthcare Schemes" />
+              </SelectTrigger>
+              <SelectContent>
+                {HEALTHCARE_SCHEMES.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs font-medium">
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -327,7 +368,7 @@ export default function FacilitiesPage() {
 
                   {/* Specialties pills */}
                   {(f.specialties || f.specialists).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
+                    <div className="flex flex-wrap gap-1.5 mb-2.5">
                       {(f.specialties || f.specialists).slice(0, 5).map((spec) => (
                         <span key={spec} className="text-[10px] bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2 py-0.5 font-medium">
                           {spec}
@@ -340,6 +381,40 @@ export default function FacilitiesPage() {
                       )}
                     </div>
                   )}
+
+                  {/* Delhi & National Healthcare Schemes */}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {f.dakEmpanelled && (
+                      <span className="inline-flex items-center text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-300 rounded-lg px-2 py-0.5 shadow-2xs">
+                        ⭐ DAK Covered (₹5L)
+                      </span>
+                    )}
+                    {f.freeSurgeryEmpanelled && (
+                      <span className="inline-flex items-center text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-lg px-2 py-0.5 shadow-2xs">
+                        ✂️ Free Surgery Scheme
+                      </span>
+                    )}
+                    {f.freeDiagnosticsAvailable && (
+                      <span className="inline-flex items-center text-[10px] font-black bg-sky-50 text-sky-800 border border-sky-300 rounded-lg px-2 py-0.5 shadow-2xs">
+                        🧪 Free Diagnostics
+                      </span>
+                    )}
+                    {f.danEmpanelled && (
+                      <span className="inline-flex items-center text-[10px] font-bold bg-orange-50 text-orange-800 border border-orange-200 rounded-lg px-2 py-0.5">
+                        DAN Aid (₹1.5L)
+                      </span>
+                    )}
+                    {f.cghsEmpanelled && (
+                      <span className="inline-flex items-center text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200 rounded-lg px-2 py-0.5">
+                        CGHS / ECHS
+                      </span>
+                    )}
+                    {f.jsyAvailable && (
+                      <span className="inline-flex items-center text-[10px] font-bold bg-pink-50 text-pink-800 border border-pink-200 rounded-lg px-2 py-0.5">
+                        JSY Maternity
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="flex flex-wrap gap-2 items-center">
                     {f.pmjayEmpanelled && (

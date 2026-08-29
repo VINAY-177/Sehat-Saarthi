@@ -29,6 +29,14 @@ interface HospitalDb extends FacilityMapItem {
   area?: string;
   rating?: number;
   emergencyAvailable?: boolean;
+  schemes?: string[];
+  dakEmpanelled?: boolean;
+  freeSurgeryEmpanelled?: boolean;
+  freeDiagnosticsAvailable?: boolean;
+  cghsEmpanelled?: boolean;
+  danEmpanelled?: boolean;
+  jsyAvailable?: boolean;
+  echsEmpanelled?: boolean;
 }
 
 // Region definitions for filtering
@@ -40,6 +48,17 @@ const REGIONS = [
   { value: "Ghaziabad", label: "Ghaziabad" },
   { value: "Gurugram", label: "Gurugram" },
   { value: "Faridabad", label: "Faridabad" },
+] as const;
+
+const SCHEME_FILTERS = [
+  { value: "ALL", label: "All Healthcare Schemes" },
+  { value: "DAK", label: "Delhi Arogya Kosh (DAK)" },
+  { value: "DFSS", label: "Delhi Free Surgery Scheme" },
+  { value: "DIAG", label: "Delhi Free Diagnostics (450+ Tests)" },
+  { value: "DAN", label: "Delhi Arogya Nidhi (DAN)" },
+  { value: "PMJAY", label: "Ayushman Bharat PM-JAY" },
+  { value: "CGHS", label: "CGHS / ECHS" },
+  { value: "JSY", label: "Janani Suraksha Yojana" },
 ] as const;
 
 function getHospitalRegion(facility: { district?: string; state?: string; city?: string; area?: string; location?: string }): string {
@@ -115,6 +134,14 @@ const FALLBACK_HOSPITALS: HospitalDb[] = DEFAULT_DELHI_HOSPITALS.map((f) => ({
   rating: f.rating,
   emergencyAvailable: f.emergencyAvailable,
   pmjayEmpanelled: f.pmjayEmpanelled,
+  schemes: f.schemes,
+  dakEmpanelled: f.dakEmpanelled,
+  freeSurgeryEmpanelled: f.freeSurgeryEmpanelled,
+  freeDiagnosticsAvailable: f.freeDiagnosticsAvailable,
+  cghsEmpanelled: f.cghsEmpanelled,
+  danEmpanelled: f.danEmpanelled,
+  jsyAvailable: f.jsyAvailable,
+  echsEmpanelled: f.echsEmpanelled,
 }));
 
 export default function HospitalsPage() {
@@ -122,6 +149,7 @@ export default function HospitalsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [regionFilter, setRegionFilter] = useState<string>("ALL");
+  const [schemeFilter, setSchemeFilter] = useState<string>("ALL");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | undefined>();
   const [showMap, setShowMap] = useState(true);
 
@@ -151,9 +179,17 @@ export default function HospitalsPage() {
             rating: typeof item.rating === "number" ? item.rating : undefined,
             emergencyAvailable: typeof item.emergencyAvailable === "boolean" ? item.emergencyAvailable : undefined,
             pmjayEmpanelled: item.pmjayEmpanelled !== false,
+            schemes: Array.isArray(item.schemes) ? (item.schemes as string[]) : undefined,
+            dakEmpanelled: typeof item.dakEmpanelled === "boolean" ? item.dakEmpanelled : undefined,
+            freeSurgeryEmpanelled: typeof item.freeSurgeryEmpanelled === "boolean" ? item.freeSurgeryEmpanelled : undefined,
+            freeDiagnosticsAvailable: typeof item.freeDiagnosticsAvailable === "boolean" ? item.freeDiagnosticsAvailable : undefined,
+            cghsEmpanelled: typeof item.cghsEmpanelled === "boolean" ? item.cghsEmpanelled : undefined,
+            danEmpanelled: typeof item.danEmpanelled === "boolean" ? item.danEmpanelled : undefined,
+            jsyAvailable: typeof item.jsyAvailable === "boolean" ? item.jsyAvailable : undefined,
+            echsEmpanelled: typeof item.echsEmpanelled === "boolean" ? item.echsEmpanelled : undefined,
           }));
 
-          // Merge by ID with fallback 32 hospitals so no hospitals are lost
+          // Merge by ID with fallback hospitals so no hospitals are lost
           const apiMap = new Map(mapped.map((h) => [h.id, h]));
           const merged = FALLBACK_HOSPITALS.map((fb) => apiMap.get(fb.id) || fb);
           // Add any new hospitals from API not in fallback
@@ -179,7 +215,8 @@ export default function HospitalsPage() {
         facility.location.toLowerCase().includes(q) ||
         (facility.city && facility.city.toLowerCase().includes(q)) ||
         (facility.area && facility.area.toLowerCase().includes(q)) ||
-        (facility.specialties && facility.specialties.toLowerCase().includes(q));
+        (facility.specialties && facility.specialties.toLowerCase().includes(q)) ||
+        (facility.schemes && facility.schemes.some((s) => s.toLowerCase().includes(q)));
 
       const matchesType =
         typeFilter === "ALL" ||
@@ -190,9 +227,20 @@ export default function HospitalsPage() {
       const region = getHospitalRegion(facility);
       const matchesRegion = regionFilter === "ALL" || region === regionFilter;
 
-      return matchesSearch && matchesType && matchesRegion;
+      let matchesScheme = true;
+      if (schemeFilter !== "ALL") {
+        if (schemeFilter === "DAK" && !facility.dakEmpanelled && !facility.schemes?.some((s) => s.includes("DAK") || s.includes("Arogya Kosh"))) matchesScheme = false;
+        if (schemeFilter === "DFSS" && !facility.freeSurgeryEmpanelled && !facility.schemes?.some((s) => s.includes("Free Surgery") || s.includes("DFSS"))) matchesScheme = false;
+        if (schemeFilter === "DIAG" && !facility.freeDiagnosticsAvailable && !facility.schemes?.some((s) => s.includes("Diagnostic") || s.includes("Mohalla") || s.includes("Free Diagnostics"))) matchesScheme = false;
+        if (schemeFilter === "DAN" && !facility.danEmpanelled && !facility.schemes?.some((s) => s.includes("DAN") || s.includes("Arogya Nidhi"))) matchesScheme = false;
+        if (schemeFilter === "PMJAY" && !facility.pmjayEmpanelled && !facility.schemes?.some((s) => s.includes("PM-JAY") || s.includes("Ayushman"))) matchesScheme = false;
+        if (schemeFilter === "CGHS" && !facility.cghsEmpanelled && !facility.echsEmpanelled && !facility.schemes?.some((s) => s.includes("CGHS") || s.includes("ECHS"))) matchesScheme = false;
+        if (schemeFilter === "JSY" && !facility.jsyAvailable && !facility.schemes?.some((s) => s.includes("Janani") || s.includes("JSY") || s.includes("Maternity"))) matchesScheme = false;
+      }
+
+      return matchesSearch && matchesType && matchesRegion && matchesScheme;
     });
-  }, [facilities, searchQuery, typeFilter, regionFilter]);
+  }, [facilities, searchQuery, typeFilter, regionFilter, schemeFilter]);
 
   // Region counts
   const regionCounts = useMemo(() => {
@@ -276,6 +324,20 @@ export default function HospitalsPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="w-full md:w-56">
+            <Select value={schemeFilter} onValueChange={(val) => val && setSchemeFilter(val)}>
+              <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
+                <SelectValue placeholder="All Schemes" />
+              </SelectTrigger>
+              <SelectContent>
+                {SCHEME_FILTERS.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs font-medium">
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -347,6 +409,40 @@ export default function HospitalsPage() {
                       <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 uppercase tracking-wider text-[10px] font-bold flex items-center gap-1">
                         <ShieldCheck className="h-3 w-3 text-emerald-600" /> PM-JAY
                       </Badge>
+                    )}
+                  </div>
+
+                  {/* Schemes Badges */}
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {facility.dakEmpanelled && (
+                      <span className="inline-flex items-center text-[9px] font-black bg-amber-100/90 text-amber-900 border border-amber-300 rounded-md px-1.5 py-0.5 shadow-2xs">
+                        ⭐ DAK ₹5L
+                      </span>
+                    )}
+                    {facility.freeSurgeryEmpanelled && (
+                      <span className="inline-flex items-center text-[9px] font-black bg-emerald-100/90 text-emerald-900 border border-emerald-300 rounded-md px-1.5 py-0.5 shadow-2xs">
+                        ✂️ Free Surgery
+                      </span>
+                    )}
+                    {facility.freeDiagnosticsAvailable && (
+                      <span className="inline-flex items-center text-[9px] font-black bg-sky-100/90 text-sky-900 border border-sky-300 rounded-md px-1.5 py-0.5 shadow-2xs">
+                        🧪 Free Tests
+                      </span>
+                    )}
+                    {facility.danEmpanelled && (
+                      <span className="inline-flex items-center text-[9px] font-bold bg-orange-100/90 text-orange-900 border border-orange-200 rounded-md px-1.5 py-0.5">
+                        DAN ₹1.5L
+                      </span>
+                    )}
+                    {facility.cghsEmpanelled && (
+                      <span className="inline-flex items-center text-[9px] font-bold bg-purple-100/90 text-purple-900 border border-purple-200 rounded-md px-1.5 py-0.5">
+                        CGHS/ECHS
+                      </span>
+                    )}
+                    {facility.jsyAvailable && (
+                      <span className="inline-flex items-center text-[9px] font-bold bg-pink-100/90 text-pink-900 border border-pink-200 rounded-md px-1.5 py-0.5">
+                        JSY
+                      </span>
                     )}
                   </div>
                   <div className="flex items-center text-xs text-slate-500 font-semibold mt-1">

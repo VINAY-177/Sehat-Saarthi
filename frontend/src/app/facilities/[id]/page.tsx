@@ -112,10 +112,21 @@ export default function FacilityDetailPage() {
                 </div>
 
                 <div className="pt-4 border-t space-y-2 text-sm">
-                  <h4 className="font-semibold">Facility Highlights</h4>
+                  <h4 className="font-semibold text-slate-900">Supported Healthcare Schemes</h4>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {(facility.schemes || ["PM-JAY (Ayushman Bharat)", "Free Essential Diagnostics", "Janani Suraksha Yojana"]).map((sc) => (
+                      <Badge key={sc} variant="outline" className="bg-teal-50/80 text-teal-900 border-teal-300 text-xs font-bold py-1 px-2.5">
+                        {sc}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t space-y-2 text-sm">
+                  <h4 className="font-semibold text-slate-900">Facility Highlights</h4>
                   <ul className="space-y-1 text-xs text-muted-foreground">
                     <li>• Emergency triage capabilities and direct referral intake</li>
-                    <li>• Ayushman Bharat PM-JAY cashless treatment supported</li>
+                    <li>• 100% Cashless emergency trauma under Farishte Dilli Ke &amp; DAK</li>
                     <li>• Connected to 108 Emergency Ambulance dispatch network</li>
                   </ul>
                 </div>

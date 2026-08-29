@@ -345,6 +345,15 @@ export interface Facility {
   bedCapacity?: number;
   availableBeds?: number;
   availableIcuBeds?: number;
+  // Delhi & National Healthcare Schemes
+  schemes?: string[];
+  dakEmpanelled?: boolean; // Delhi Arogya Kosh (Financial aid up to ₹5 Lakhs + Farishte Dilli Ke)
+  freeSurgeryEmpanelled?: boolean; // Delhi Free Surgery Scheme (1,100+ surgeries)
+  freeDiagnosticsAvailable?: boolean; // Delhi Free Diagnostics Scheme (450+ tests)
+  cghsEmpanelled?: boolean; // Central Government Health Scheme
+  danEmpanelled?: boolean; // Delhi Arogya Nidhi (Direct assistance up to ₹1.5 Lakhs)
+  jsyAvailable?: boolean; // Janani Suraksha Yojana / Maternal health
+  echsEmpanelled?: boolean; // Ex-Servicemen Contributory Health Scheme
 }
 
 export interface Referral {

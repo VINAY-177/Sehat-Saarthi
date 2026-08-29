@@ -503,8 +503,8 @@ export function PatientDashboard() {
                 </div>
                 <p className="text-xs text-slate-500 font-medium mt-1">
                   {language === "hi"
-                    ? "दिल्ली, नजफगढ़, नोएडा, ग्रेटर नोएडा, गाजियाबाद, गुरुग्राम और फरीदाबाद के 32 अस्पताल"
-                    : "Live verified bed capacity, ICU availability, and direct appointment booking across 32 facilities"}
+                    ? "दिल्ली-एनसीआर के 108+ अस्पताल, पॉलीक्लिनिक व स्वास्थ्य योजनाएं (DAK, मुफ़्त सर्जरी, डायग्नोस्टिक्स, PM-JAY)"
+                    : "Live verified bed telemetry, 108+ Delhi-NCR facilities & Delhi Healthcare Schemes (DAK, Free Surgery, Free Diagnostics)"}
                 </p>
               </div>
 
@@ -650,6 +650,30 @@ export function PatientDashboard() {
                           )}
                         </div>
                       )}
+
+                      {/* Schemes Badges */}
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {hosp.dakEmpanelled && (
+                          <span className="text-[9px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded-md">
+                            DAK ₹5L
+                          </span>
+                        )}
+                        {hosp.freeSurgeryEmpanelled && (
+                          <span className="text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                            Free Surgery
+                          </span>
+                        )}
+                        {hosp.freeDiagnosticsAvailable && (
+                          <span className="text-[9px] font-bold bg-sky-50 text-sky-800 border border-sky-200 px-1.5 py-0.5 rounded-md">
+                            Free Tests
+                          </span>
+                        )}
+                        {hosp.pmjayEmpanelled && (
+                          <span className="text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                            PM-JAY
+                          </span>
+                        )}
+                      </div>
 
                     </div>
 
