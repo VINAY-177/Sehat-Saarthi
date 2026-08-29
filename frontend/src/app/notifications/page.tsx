@@ -4,9 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Notification, Role } from "@/lib/types";
 import { useStore } from "@/lib/store";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Bell,
   CheckCheck,
@@ -85,23 +83,23 @@ export default function NotificationsPage() {
   }, [roleScopedNotifications, activeCategory]);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-6">
+    <div className="max-w-5xl mx-auto space-y-6 pb-20 page-enter">
+      {/* Header Glass Card */}
+      <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/92 backdrop-blur-2xl section-enter">
         <div className="flex items-center gap-4">
           <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20">
             <Bell className="h-8 w-8" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Notification Center</h1>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Notification Center</h1>
               {unreadCount > 0 && (
-                <Badge className="bg-rose-500 text-white font-bold px-2.5 py-0.5 text-xs">
+                <Badge className="bg-rose-500 text-white font-extrabold px-2.5 py-0.5 text-xs shadow-xs">
                   {unreadCount} Unread
                 </Badge>
               )}
             </div>
-            <p className="text-slate-500 mt-1 font-medium text-sm">
+            <p className="text-slate-500 mt-1 font-semibold text-xs sm:text-sm">
               Clinical alerts, schedule updates, diagnostic lab releases, and emergency telemetry.
             </p>
           </div>
@@ -109,20 +107,20 @@ export default function NotificationsPage() {
 
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
-            <Button
-              variant="outline"
+            <button
+              type="button"
               onClick={markAllAsRead}
-              className="rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs gap-1.5 h-11"
+              className="btn-3d-glass h-11 px-4 text-xs font-extrabold text-slate-800 border-slate-200 gap-2 rounded-2xl"
             >
               <CheckCheck className="w-4 h-4 text-teal-600" />
-              Mark All as Read
-            </Button>
+              <span>Mark All as Read</span>
+            </button>
           )}
         </div>
       </div>
 
       {/* Category Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold">
+      <div className="glass-panel p-2 rounded-[22px] border border-white/80 bg-white/90 shadow-md flex items-center gap-1.5 overflow-x-auto text-xs font-bold scrollbar-hide">
         {[
           { key: "ALL", label: "All Alerts" },
           { key: "UNREAD", label: `Unread (${unreadCount})` },
@@ -135,10 +133,10 @@ export default function NotificationsPage() {
           <button
             key={tab.key}
             onClick={() => setActiveCategory(tab.key)}
-            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap ${
+            className={`px-4 py-2.5 rounded-xl transition-all whitespace-nowrap text-xs font-bold ${
               activeCategory === tab.key
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+                ? "bg-teal-700 text-white shadow-xs"
+                : "bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-200/60"
             }`}
           >
             {tab.label}
@@ -148,17 +146,17 @@ export default function NotificationsPage() {
 
       {/* Notification Stream */}
       {isLoading ? (
-        <Card className="border-dashed border-2 border-slate-200 shadow-sm bg-slate-50/50 rounded-3xl py-20 text-center">
-          <h3 className="font-bold text-slate-800 text-lg animate-pulse">Loading notifications...</h3>
-        </Card>
+        <div className="glass-panel border border-white/80 shadow-xl bg-white/90 rounded-[28px] py-20 text-center">
+          <h3 className="font-extrabold text-slate-800 text-base animate-pulse">Loading notifications...</h3>
+        </div>
       ) : filteredNotifications.length === 0 ? (
-        <Card className="border-dashed border-2 border-slate-200 shadow-sm bg-slate-50/50 rounded-3xl py-20 text-center">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm mb-3">
+        <div className="glass-panel border-dashed border-2 border-white/80 shadow-xl bg-white/90 rounded-[28px] py-20 text-center">
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xs mb-3 border border-slate-100">
             <Bell className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="font-bold text-slate-800 text-lg">No notifications in this category</h3>
-          <p className="text-xs text-slate-400 mt-1">You are all caught up!</p>
-        </Card>
+          <h3 className="font-extrabold text-slate-800 text-lg">No notifications in this category</h3>
+          <p className="text-xs text-slate-500 mt-1 font-medium">You are all caught up!</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {filteredNotifications.map((notif) => {
@@ -166,115 +164,111 @@ export default function NotificationsPage() {
             const isHigh = notif.urgency === "HIGH";
 
             return (
-              <Card
+              <div
                 key={notif.id}
-                className={`border rounded-2xl transition-all overflow-hidden ${
+                className={`glass-panel border border-white/80 shadow-lg rounded-[24px] transition-all overflow-hidden bg-white/92 backdrop-blur-2xl card-hover p-5 flex flex-col sm:flex-row items-start justify-between gap-4 ${
                   !notif.read
                     ? isEmergency
-                      ? "bg-rose-50/40 border-rose-200 shadow-sm"
-                      : "bg-teal-50/20 border-teal-200/80 shadow-sm"
-                    : "bg-white border-slate-200/80"
+                      ? "border-rose-300 ring-2 ring-rose-200/50"
+                      : "border-teal-300 ring-2 ring-teal-200/50"
+                    : ""
                 }`}
               >
-                <CardContent className="p-5 flex flex-col sm:flex-row items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    {/* Category Icon */}
-                    <div
-                      className={`p-3 rounded-2xl shrink-0 mt-0.5 ${
-                        isEmergency
-                          ? "bg-rose-100 text-rose-600"
-                          : notif.category === "APPOINTMENT"
-                          ? "bg-purple-100 text-purple-700"
-                          : notif.category === "LAB"
-                          ? "bg-blue-100 text-blue-700"
-                          : notif.category === "REFERRAL"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-teal-100 text-teal-700"
-                      }`}
-                    >
-                      {isEmergency ? (
-                        <ShieldAlert className="w-5 h-5 animate-pulse" />
-                      ) : notif.category === "APPOINTMENT" ? (
-                        <Calendar className="w-5 h-5" />
-                      ) : notif.category === "LAB" ? (
-                        <FlaskConical className="w-5 h-5" />
-                      ) : notif.category === "REFERRAL" ? (
-                        <Ambulance className="w-5 h-5" />
-                      ) : (
-                        <ShieldCheck className="w-5 h-5" />
+                <div className="flex items-start gap-4">
+                  {/* Category Icon */}
+                  <div
+                    className={`p-3 rounded-2xl shrink-0 mt-0.5 shadow-2xs ${
+                      isEmergency
+                        ? "bg-rose-100 text-rose-600 border border-rose-200"
+                        : notif.category === "APPOINTMENT"
+                        ? "bg-purple-100 text-purple-700 border border-purple-200"
+                        : notif.category === "LAB"
+                        ? "bg-blue-100 text-blue-700 border border-blue-200"
+                        : notif.category === "REFERRAL"
+                        ? "bg-amber-100 text-amber-800 border border-amber-200"
+                        : "bg-teal-100 text-teal-700 border border-teal-200"
+                    }`}
+                  >
+                    {isEmergency ? (
+                      <ShieldAlert className="w-5 h-5 animate-pulse" />
+                    ) : notif.category === "APPOINTMENT" ? (
+                      <Calendar className="w-5 h-5" />
+                    ) : notif.category === "LAB" ? (
+                      <FlaskConical className="w-5 h-5" />
+                    ) : notif.category === "REFERRAL" ? (
+                      <Ambulance className="w-5 h-5" />
+                    ) : (
+                      <ShieldCheck className="w-5 h-5" />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{notif.title}</h4>
+                      {!notif.read && (
+                        <span className="w-2.5 h-2.5 rounded-full bg-teal-600 shrink-0 shadow-xs" />
                       )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-extrabold text-slate-900 text-sm">{notif.title}</h4>
-                        {!notif.read && (
-                          <span className="w-2 h-2 rounded-full bg-teal-500 shrink-0" />
-                        )}
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] font-bold py-0 ${
-                            isEmergency
-                              ? "bg-rose-100 text-rose-800 border-rose-300"
-                              : isHigh
-                              ? "bg-amber-100 text-amber-800 border-amber-300"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {notif.category}
-                        </Badge>
-                      </div>
-
-                      <p className="text-xs text-slate-600 leading-relaxed font-medium">{notif.message}</p>
-
-                      <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-400 font-medium">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {notif.createdAt}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    {notif.link && (
-                      <Link href={notif.link}>
-                        <Button
-                          size="sm"
-                          className="h-9 px-3.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-xl gap-1.5"
-                        >
-                          <span>Review</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Button>
-                      </Link>
-                    )}
-
-                    {!notif.read && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => markAsRead(notif.id)}
-                        className="h-9 w-9 text-slate-400 hover:text-teal-600 rounded-xl"
-                        title="Mark as read"
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-extrabold py-0.5 px-2 rounded-md ${
+                          isEmergency
+                            ? "bg-rose-100 text-rose-800 border-rose-300"
+                            : isHigh
+                            ? "bg-amber-100 text-amber-800 border-amber-300"
+                            : "bg-slate-100 text-slate-700 border-slate-200"
+                        }`}
                       >
-                        <CheckCheck className="w-4 h-4" />
-                      </Button>
-                    )}
+                        {notif.category}
+                      </Badge>
+                    </div>
 
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => deleteNotification(notif.id)}
-                      className="h-9 w-9 text-slate-300 hover:text-rose-600 rounded-xl"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold">{notif.message}</p>
+
+                    <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-500 font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-teal-600" />
+                        {notif.createdAt}
+                      </span>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  {notif.link && (
+                    <Link href={notif.link}>
+                      <button
+                        type="button"
+                        className="btn-3d-primary h-9 px-4 text-xs font-extrabold rounded-xl gap-1.5"
+                      >
+                        <span>Review</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </Link>
+                  )}
+
+                  {!notif.read && (
+                    <button
+                      type="button"
+                      onClick={() => markAsRead(notif.id)}
+                      className="btn-3d-glass h-9 w-9 rounded-xl p-0 flex items-center justify-center text-slate-600 hover:text-teal-700"
+                      title="Mark as read"
+                    >
+                      <CheckCheck className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => deleteNotification(notif.id)}
+                    className="btn-3d-glass h-9 w-9 rounded-xl p-0 flex items-center justify-center text-slate-400 hover:text-rose-600"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>

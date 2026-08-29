@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -390,16 +388,16 @@ export default function SchemesPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-in fade-in duration-300">
+    <div className="max-w-6xl mx-auto space-y-6 pb-20 page-enter">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-teal-600 to-emerald-600 text-white rounded-2xl shadow-sm">
-            <ShieldCheck className="h-6 w-6" />
+      <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/92 backdrop-blur-2xl section-enter">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20">
+            <ShieldCheck className="h-7 w-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900">{t("govSchemes")}</h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">{t("govSchemes")}</h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
               {language === "hi"
                 ? "राष्ट्रीय एवं राज्य-स्तरीय सरकारी स्वास्थ्य योजनाओं हेतु स्वचालित पात्रता मूल्यांकन।"
                 : "Automated AI rule engine evaluating eligibility for national and state-specific healthcare assurance programs."}
@@ -408,30 +406,30 @@ export default function SchemesPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold px-3 py-1 text-xs gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <Badge variant="outline" className="bg-emerald-100/80 text-emerald-800 border-emerald-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             {language === "hi" ? "11 योजनाएं सक्रिय" : "11 Schemes Synced"}
           </Badge>
         </div>
       </div>
 
       {/* Citizen Demographic & Occupation Profile Input Card */}
-      <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden bg-white">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+      <div className="glass-panel border border-white/80 shadow-2xl rounded-[28px] overflow-hidden bg-white/92 backdrop-blur-2xl">
+        <div className="bg-slate-50/80 border-b border-slate-200/80 p-6">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-teal-600" />
-            <CardTitle className="text-lg font-bold text-slate-900">
+            <h2 className="text-base font-black text-slate-900">
               {language === "hi" ? "नागरिक जनसांख्यिकी एवं व्यवसाय प्रोफ़ाइल" : "Citizen Demographic & Household Profile"}
-            </CardTitle>
+            </h2>
           </div>
-          <CardDescription className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-500 font-semibold mt-1">
             {language === "hi"
               ? "पात्रता नियमों का मूल्यांकन करने के लिए अपनी सामाजिक-आर्थिक श्रेणी, व्यवसाय और राज्य का चयन करें।"
               : "Select your socio-economic category, occupation, and state to run automated qualification rules."}
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
         
-        <CardContent className="space-y-6 p-6">
+        <div className="space-y-6 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* 1. Occupation Category Dropdown (Requested by User) */}
@@ -558,94 +556,90 @@ export default function SchemesPage() {
               </span>
             </label>
           </div>
-        </CardContent>
+        </div>
 
-        <CardFooter className="bg-slate-50/50 p-6 border-t border-slate-100 flex justify-between items-center">
-          <Button 
+        <div className="bg-slate-50/80 p-6 border-t border-slate-200/80 flex justify-between items-center">
+          <button 
+            type="button"
             onClick={checkEligibility} 
-            className="w-full h-12 text-sm font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-md rounded-2xl transition-all hover:shadow-lg gap-2"
+            className="btn-3d-primary w-full h-12 text-xs font-black rounded-2xl gap-2"
           >
             <ShieldCheck className="w-4 h-4" />
-            {t("evaluateEligibility")}
-          </Button>
-        </CardFooter>
-      </Card>
+            <span>{t("evaluateEligibility")}</span>
+          </button>
+        </div>
+      </div>
 
       {/* Evaluated Scheme Results */}
       {results && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-500">
           <div className="flex items-center justify-between px-2">
             <div>
-              <h2 className="text-xl font-black text-slate-900">
-                {language === "hi" ? "पहचानी गई सरकारी लाभ योजनाएं" : "Identified Government Benefit Programs"} <span className="text-teal-600">({results.length})</span>
+              <h2 className="text-xl font-black text-white drop-shadow-md">
+                {language === "hi" ? "पहचानी गई सरकारी लाभ योजनाएं" : "Identified Government Benefit Programs"} <span className="text-teal-400">({results.length})</span>
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-200 font-semibold mt-0.5 drop-shadow-xs">
                 {language === "hi"
                   ? `व्यवसाय (${occupationCategory}), आय श्रेणी (${incomeCategory}), आयु (${age || 40}), और राज्य (${stateName}) के आधार पर मूल्यांकित।`
                   : `Matched based on occupation (${occupationCategory}), income tier (${incomeCategory}), age (${age || 40}), and state (${stateName}).`}
               </p>
             </div>
-            <Badge variant="outline" className="text-xs bg-teal-50 text-teal-700 border-teal-200 px-3 py-1 font-bold">
+            <Badge variant="outline" className="text-xs bg-teal-100 text-teal-800 border-teal-300 px-3 py-1 font-extrabold shadow-2xs">
               {language === "hi" ? "AI नियम इंजन सक्रिय" : "AI Rule Engine Active"}
             </Badge>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
             {results.map((res, idx) => (
-              <Card 
+              <div 
                 key={idx} 
-                className={`transition-all duration-300 rounded-3xl overflow-hidden border ${
+                className={`glass-panel p-6 rounded-[28px] border border-white/80 shadow-xl bg-white/92 backdrop-blur-2xl card-hover flex flex-col md:flex-row gap-6 items-start md:items-center justify-between ${
                   res.status === "POTENTIALLY_ELIGIBLE" 
-                    ? "border-emerald-200 bg-white shadow-sm hover:shadow-md hover:border-emerald-300" 
-                    : "border-slate-200 bg-slate-50/40"
+                    ? "border-emerald-300 ring-1 ring-emerald-200/50" 
+                    : "border-slate-200/80"
                 }`}
               >
-                <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3.5 bg-slate-50 rounded-2xl shrink-0 shadow-sm border border-slate-100">
-                      {getSchemeIcon(res.schemeName)}
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-extrabold text-base text-slate-900">{res.schemeName}</h3>
-                        {getStatusBadge(res.status)}
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed max-w-2xl font-medium">{res.reason}</p>
-                    </div>
+                <div className="flex items-start gap-4">
+                  <div className="p-3.5 bg-slate-50 rounded-2xl shrink-0 shadow-2xs border border-slate-200/80">
+                    {getSchemeIcon(res.schemeName)}
                   </div>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="font-black text-base text-slate-900">{res.schemeName}</h3>
+                      {getStatusBadge(res.status)}
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed max-w-2xl font-semibold">{res.reason}</p>
+                  </div>
+                </div>
 
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => window.open(res.officialLink, '_blank')} 
-                    className="shrink-0 group text-xs h-10 px-4 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-teal-700 font-bold gap-1"
-                  >
-                    {t("officialPortal")}
-                    <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </CardContent>
-              </Card>
+                <button 
+                  type="button"
+                  onClick={() => window.open(res.officialLink, '_blank')} 
+                  className="btn-3d-glass shrink-0 text-xs h-10 px-4 rounded-xl border-slate-200 font-extrabold gap-1.5"
+                >
+                  <span>{t("officialPortal")}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             ))}
           </div>
 
           {/* Official Disclaimer */}
-          <Card className="bg-amber-50/80 border-amber-200 rounded-3xl shadow-sm">
-            <CardContent className="p-5 flex items-start gap-3.5">
-              <div className="shrink-0 mt-0.5 text-amber-600">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-xs font-bold text-amber-950">
-                  {language === "hi" ? "आधिकारिक सत्यापन एवं ई-कार्ड जारी करना" : "Official Verification & e-Card Issuance"}
-                </h4>
-                <p className="text-xs text-amber-900/90 leading-relaxed font-medium">
-                  {language === "hi"
-                    ? "यह नेविगेटर राष्ट्रीय स्वास्थ्य स्टैक मानकों के अनुसार मार्गदर्शन प्रदान करता है। अंतिम सत्यापन और आयुष्मान गोल्डन कार्ड जारी करने के लिए अपने नजदीकी आयुष्मान आरोग्य मंदिर, सीएससी केंद्र या अस्पताल में बायोमेट्रिक ई-केवाईसी करवाएं।"
-                    : "This navigator provides automated rule-based guidance in compliance with National Health Stack standards. Final verification and Ayushman golden card issuance can be completed with biometric Aadhaar e-KYC at any Ayushman Arogya Mandir, CSC Kiosk, or Empanelled Public/Private Hospital."}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass-panel bg-amber-50/90 border border-amber-200/90 rounded-[24px] shadow-lg p-5 flex items-start gap-3.5 backdrop-blur-xl">
+            <div className="shrink-0 mt-0.5 text-amber-600">
+              <FileCheck className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-black text-amber-950">
+                {language === "hi" ? "आधिकारिक सत्यापन एवं ई-कार्ड जारी करना" : "Official Verification & e-Card Issuance"}
+              </h4>
+              <p className="text-xs text-amber-900 leading-relaxed font-semibold">
+                {language === "hi"
+                  ? "यह नेविगेटर राष्ट्रीय स्वास्थ्य स्टैक मानकों के अनुसार मार्गदर्शन प्रदान करता है। अंतिम सत्यापन और आयुष्मान गोल्डन कार्ड जारी करने के लिए अपने नजदीकी आयुष्मान आरोग्य मंदिर, सीएससी केंद्र या अस्पताल में बायोमेट्रिक ई-केवाईसी करवाएं।"
+                  : "This navigator provides automated rule-based guidance in compliance with National Health Stack standards. Final verification and Ayushman golden card issuance can be completed with biometric Aadhaar e-KYC at any Ayushman Arogya Mandir, CSC Kiosk, or Empanelled Public/Private Hospital."}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
