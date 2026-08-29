@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { MapPin, ShieldCheck, Search, Activity, Stethoscope, Building2, Phone, Map as MapIcon, Star, Ambulance } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FacilityMapWrapper from "@/components/facility-map-wrapper";
@@ -207,56 +205,57 @@ export default function HospitalsPage() {
   }, [facilities]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto space-y-6 pb-16 page-enter">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-3xl shadow-sm border border-slate-200/80">
-        <div className="flex items-center gap-5">
-          <div className="bg-gradient-to-br from-teal-500 to-emerald-600 p-4 rounded-2xl text-white shadow-lg shrink-0">
-            <Building2 size={36} />
+      <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 backdrop-blur-2xl bg-white/92 section-enter">
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-teal-500 to-emerald-600 p-3.5 rounded-2xl text-white shadow-md shadow-teal-500/20 shrink-0">
+            <Building2 size={30} />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Delhi-NCR Hospital Network</h1>
-            <p className="text-slate-500 text-sm mt-1.5 font-medium">Real-time facility capacity, doctor specialties, ER/ICU telemetry, and direct appointments across Delhi-NCR.</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Delhi-NCR Hospital Network</h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Real-time facility capacity, doctor specialties, ER/ICU telemetry, and direct appointments across Delhi-NCR.</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <Badge className="bg-teal-600 text-white text-sm px-3.5 py-1.5 font-bold shadow-sm">
+          <Badge variant="outline" className="bg-teal-100/80 text-teal-800 border-teal-300 font-extrabold px-3.5 py-1 text-xs gap-1.5 shadow-2xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-teal-600 animate-pulse" />
             {facilities.length} Hospitals in Network
           </Badge>
-          <Button
-            variant={showMap ? "default" : "outline"}
+          <button
+            type="button"
             onClick={() => setShowMap(!showMap)}
-            className={`rounded-2xl font-bold text-xs gap-2 h-11 px-4 ${
-              showMap ? "bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20" : "border-slate-200"
+            className={`btn-3d-glass font-bold text-xs gap-2 h-10 px-4 rounded-xl ${
+              showMap ? "bg-teal-50 text-teal-900 border-teal-300" : ""
             }`}
           >
-            <MapIcon className="w-4 h-4" />
-            {showMap ? "Hide Map" : "Show Map"}
-          </Button>
+            <MapIcon className="w-4 h-4 text-teal-600 inline mr-1" />
+            <span>{showMap ? "Hide Map" : "Show Map"}</span>
+          </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <Card className="p-2 shadow-sm rounded-2xl border-slate-200/80 bg-white">
-        <div className="flex flex-col md:flex-row gap-3 p-3">
+      <div className="glass-panel p-3 shadow-xl rounded-[24px] border border-white/80 bg-white/92 backdrop-blur-2xl">
+        <div className="flex flex-col md:flex-row gap-3 p-2">
           <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-3.5 h-5 w-5 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
+            <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
             <Input
               placeholder="Search by hospital name, district, area, or specialty (e.g. AIIMS, Medanta, Noida, Cardiology)..."
-              className="pl-12 h-12 text-sm rounded-xl border-slate-200 focus-visible:ring-teal-500 bg-slate-50 focus-visible:bg-white transition-colors font-medium"
+              className="pl-11 h-11 text-xs rounded-xl border-slate-200 focus-visible:ring-teal-500 bg-white font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="w-full md:w-56">
             <Select value={regionFilter} onValueChange={(val) => val && setRegionFilter(val)}>
-              <SelectTrigger className="h-12 text-sm rounded-xl border-slate-200 focus:ring-teal-500 bg-slate-50 font-medium">
+              <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
                 {REGIONS.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
+                  <SelectItem key={r.value} value={r.value} className="text-xs font-medium">
                     {r.label} ({regionCounts[r.value] || 0})
                   </SelectItem>
                 ))}
@@ -265,42 +264,42 @@ export default function HospitalsPage() {
           </div>
           <div className="w-full md:w-56">
             <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
-              <SelectTrigger className="h-12 text-sm rounded-xl border-slate-200 focus:ring-teal-500 bg-slate-50 font-medium">
+              <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All Facility Types</SelectItem>
-                <SelectItem value="Government">Government Hospitals</SelectItem>
-                <SelectItem value="Tertiary">Tertiary / Super-Specialty</SelectItem>
-                <SelectItem value="District">District Hospitals</SelectItem>
-                <SelectItem value="Specialized">Specialized Centers</SelectItem>
+                <SelectItem value="ALL" className="text-xs font-medium">All Types</SelectItem>
+                <SelectItem value="Government" className="text-xs font-medium">Government Hospitals</SelectItem>
+                <SelectItem value="Private" className="text-xs font-medium">Private / Tertiary</SelectItem>
+                <SelectItem value="Tertiary" className="text-xs font-medium">Tertiary Only</SelectItem>
+                <SelectItem value="District" className="text-xs font-medium">District Only</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Interactive Map Section */}
+      {/* Map Section */}
       {showMap && (
-        <Card className="shadow-sm rounded-3xl border-slate-200/80 overflow-hidden bg-white">
-          <CardHeader className="py-4 px-6 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
+        <div className="glass-panel shadow-2xl border border-white/80 overflow-hidden rounded-[28px] bg-white/92 backdrop-blur-2xl">
+          <div className="p-4 sm:p-5 border-b border-slate-200/80 bg-slate-50/80 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <MapIcon className="h-4 w-4 text-teal-600" />
-              <h2 className="text-sm font-bold text-slate-800">
+              <MapIcon className="w-4 h-4 text-teal-600" />
+              <h2 className="font-black text-sm text-slate-900">
                 Interactive Delhi-NCR Healthcare Map ({filteredFacilities.length} Facilities)
               </h2>
             </div>
-            <span className="text-xs text-slate-400 font-medium">Click markers for details, emergency contacts &amp; online booking</span>
-          </CardHeader>
-          <CardContent className="p-0 h-[480px]">
+            <span className="text-xs text-slate-500 font-semibold">Click markers for details &amp; online booking</span>
+          </div>
+          <div className="p-0 h-[480px]">
             <FacilityMapWrapper
               facilities={filteredFacilities}
               selectedFacilityId={selectedFacilityId}
               onFacilityClick={(id) => setSelectedFacilityId(id)}
               className="h-full border-none rounded-none"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Hospital Cards Grid */}
@@ -311,22 +310,22 @@ export default function HospitalsPage() {
           const region = getHospitalRegion(facility);
 
           return (
-            <Card
+            <div
               key={facility.id}
-              className={`overflow-hidden group hover:shadow-xl transition-all duration-300 rounded-3xl border bg-white flex flex-col ${
-                isSelected ? "ring-2 ring-teal-500 border-teal-300 shadow-lg" : "border-slate-200/80"
+              className={`glass-panel overflow-hidden group hover:shadow-2xl transition-all duration-300 rounded-[28px] border border-white/80 bg-white/92 backdrop-blur-2xl flex flex-col ${
+                isSelected ? "ring-2 ring-teal-500 shadow-2xl" : ""
               }`}
             >
-              <CardHeader className="p-6 bg-gradient-to-b from-slate-50/80 to-white border-b border-slate-100">
+              <div className="p-6 bg-slate-50/80 border-b border-slate-200/80">
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <Link href={`/facilities/${facility.id}`}>
-                      <h2 className="text-lg font-bold text-slate-900 leading-snug group-hover:text-teal-700 transition-colors">
+                      <h2 className="text-base font-black text-slate-900 leading-snug group-hover:text-teal-700 transition-colors">
                         {facility.name}
                       </h2>
                     </Link>
                     {facility.rating && (
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-bold gap-1 shrink-0">
+                      <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-300 text-xs font-black gap-1 shrink-0 shadow-2xs">
                         <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                         {facility.rating.toFixed(1)}
                       </Badge>
@@ -346,23 +345,23 @@ export default function HospitalsPage() {
                     )}
                     {facility.pmjayEmpanelled && (
                       <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 uppercase tracking-wider text-[10px] font-bold flex items-center gap-1">
-                        <ShieldCheck className="h-3 w-3" /> PM-JAY
+                        <ShieldCheck className="h-3 w-3 text-emerald-600" /> PM-JAY
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center text-xs text-slate-500 mt-1">
+                  <div className="flex items-center text-xs text-slate-500 font-semibold mt-1">
                     <MapPin className="h-3.5 w-3.5 mr-1.5 text-teal-600 shrink-0" />
                     <span className="truncate">{facility.location || `${facility.district}, ${facility.state}`}</span>
                   </div>
                 </div>
-              </CardHeader>
+              </div>
 
-              <CardContent className="p-0 flex-1 flex flex-col">
+              <div className="p-0 flex-1 flex flex-col">
                 <div className="divide-y divide-slate-100 flex-1">
                   {/* Beds Section */}
                   <div className="p-5 space-y-3.5 bg-white">
-                    <h3 className="font-bold text-xs text-slate-700 flex items-center uppercase tracking-wider">
-                      <Activity className="h-3.5 w-3.5 mr-1.5 text-teal-500" /> Bed Telemetry
+                    <h3 className="font-black text-xs text-slate-800 flex items-center uppercase tracking-wider">
+                      <Activity className="h-3.5 w-3.5 mr-1.5 text-teal-600" /> Bed Telemetry
                     </h3>
                     <div className="space-y-3">
                       <ProgressBar available={facility.availableIcu} total={facility.icuBeds} type="icu" />
@@ -372,19 +371,19 @@ export default function HospitalsPage() {
 
                   {/* Doctors Summary */}
                   <div className="p-5 bg-slate-50/50 space-y-2.5 flex-1">
-                    <h3 className="font-bold text-xs text-slate-700 flex items-center uppercase tracking-wider">
-                      <Stethoscope className="h-3.5 w-3.5 mr-1.5 text-teal-500" />
+                    <h3 className="font-black text-xs text-slate-800 flex items-center uppercase tracking-wider">
+                      <Stethoscope className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
                       Departments &amp; Specialties
                     </h3>
                     {specialists.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
                         {specialists.slice(0, 4).map((spec: string, i: number) => (
-                          <Badge key={i} variant="secondary" className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-medium text-[11px]">
+                          <Badge key={i} variant="secondary" className="bg-white border border-slate-200 text-slate-700 font-semibold text-[11px]">
                             {spec.trim()}
                           </Badge>
                         ))}
                         {specialists.length > 4 && (
-                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-dashed border-slate-300 text-[11px]">
+                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-dashed border-slate-300 text-[11px] font-bold">
                             +{specialists.length - 4} more
                           </Badge>
                         )}
@@ -396,37 +395,37 @@ export default function HospitalsPage() {
                 </div>
 
                 {/* Direct Contact & Booking Footer */}
-                <div className="p-4 bg-white border-t border-slate-100 flex flex-col gap-2">
+                <div className="p-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col gap-2">
                   <div className="flex items-center gap-2">
                     {facility.phone ? (
                       <a href={`tel:${facility.phone}`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full h-9 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs gap-1.5">
-                          <Phone className="h-3.5 w-3.5" />
-                          {facility.phone}
-                        </Button>
+                        <button type="button" className="btn-3d-glass w-full h-9 rounded-xl text-slate-700 font-bold text-xs gap-1.5">
+                          <Phone className="h-3.5 w-3.5 inline mr-1 text-teal-600" />
+                          <span>{facility.phone}</span>
+                        </button>
                       </a>
                     ) : (
-                      <Button variant="outline" size="sm" disabled className="flex-1 h-9 rounded-xl text-xs">
+                      <button type="button" disabled className="btn-3d-glass opacity-50 flex-1 h-9 rounded-xl text-xs font-semibold">
                         Emergency 108
-                      </Button>
+                      </button>
                     )}
                     <Link href={`/scheduling?facilityId=${facility.id}`} className="flex-1">
-                      <Button size="sm" className="w-full h-9 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs">
+                      <button type="button" className="btn-3d-primary w-full h-9 rounded-xl text-xs font-black">
                         Book Appt
-                      </Button>
+                      </button>
                     </Link>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
 
         {filteredFacilities.length === 0 && (
-          <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-200/80 border-dashed">
-            <Building2 className="mx-auto h-12 w-12 text-slate-300 mb-3" />
-            <h3 className="text-lg font-bold text-slate-900">No facilities match your search</h3>
-            <p className="text-slate-500 text-sm mt-1">Try adjusting your search criteria, region, or type filter.</p>
+          <div className="col-span-full py-16 text-center glass-panel rounded-[28px] bg-white/90 border border-white/80">
+            <Building2 className="mx-auto h-12 w-12 text-slate-400 mb-3" />
+            <h3 className="text-base font-black text-slate-900">No facilities match your search</h3>
+            <p className="text-slate-500 text-xs font-semibold mt-1">Try adjusting your search criteria, region, or type filter.</p>
           </div>
         )}
       </div>
