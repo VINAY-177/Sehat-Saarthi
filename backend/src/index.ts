@@ -1230,14 +1230,18 @@ const DELHI_NCR_HOSPITALS = [
 // Get all hospitals / facilities
 app.get(['/api/hospitals', '/api/facilities'], async (req: Request, res: Response) => {
   try {
-    const hospitals = await prisma.hospital.findMany({
+    const dbHospitals = await prisma.hospital.findMany({
       include: { doctors: true },
       orderBy: { availableBeds: 'desc' },
     });
-    if (hospitals.length > 0) {
-      return res.json(hospitals);
-    }
-    res.json(DELHI_NCR_HOSPITALS);
+
+    // Merge: DB records override hardcoded entries with matching IDs,
+    // then append any hardcoded hospitals not present in DB.
+    const dbIds = new Set(dbHospitals.map((h) => h.id));
+    const hardcodedExtras = DELHI_NCR_HOSPITALS.filter((h) => !dbIds.has(h.id));
+    const merged = [...dbHospitals, ...hardcodedExtras];
+
+    res.json(merged);
   } catch (error) {
     console.warn('DB lookup for hospitals failed, falling back to 32 Delhi-NCR hospitals dataset');
     res.json(DELHI_NCR_HOSPITALS);

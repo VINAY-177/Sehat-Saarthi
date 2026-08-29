@@ -1399,6 +1399,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       availableIcu?: number;
       specialties?: string;
       phone?: string;
+      location?: string;
+      city?: string;
+      area?: string;
+      rating?: number;
+      emergencyAvailable?: boolean;
     }
 
     fetch(`${API}/api/hospitals`).then(r => r.ok ? r.json() : []).then((data: ApiHospital[]) => {
@@ -1423,10 +1428,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
           bloodStock: { "O+": 10, "O-": 5, "A+": 12, "A-": 4, "B+": 14, "B-": 3, "AB+": 6, "AB-": 2 },
           pmjayEmpanelled: true,
           phone: h.phone || "011-23404440",
+          location: h.location,
+          city: h.city,
+          area: h.area,
+          rating: h.rating,
+          emergencyAvailable: h.emergencyAvailable !== false,
         }));
         setFacilities(mapped);
       }
-    }).catch(() => {});
+      // If API returns empty, keep DEFAULT_DELHI_HOSPITALS (initial state)
+    }).catch(() => {
+      // On network/API error, keep DEFAULT_DELHI_HOSPITALS (initial state)
+    });
   }, [refreshPatients, refreshReferrals, refreshAppointments, refreshNotifications]);
 
   // ---------- Patient operations ----------
