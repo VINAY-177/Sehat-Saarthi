@@ -81,95 +81,95 @@ export default function PatientsPage() {
   const stableCount = patients.filter((p) => p.riskLevel === "LOW" || p.riskLevel === "MODERATE" || !p.riskLevel).length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-16">
+    <div className="space-y-6 max-w-7xl mx-auto pb-20 page-enter">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-200/80 pb-6">
+      <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/92 backdrop-blur-2xl section-enter">
         <div className="flex items-center gap-4">
           <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20">
             <Users className="h-8 w-8" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Patient Registry</h1>
-              <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-bold px-2.5 py-0.5">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Patient Registry</h1>
+              <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-extrabold px-2.5 py-0.5">
                 Live Records
               </Badge>
             </div>
-            <p className="text-slate-500 mt-1 font-medium">
+            <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">
               Centralized clinical intake, risk stratification &amp; longitudinal records.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Button
-            variant="outline"
+          <button
+            type="button"
             onClick={fetchPatients}
-            className="h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 gap-2"
+            className="btn-3d-glass h-11 px-4 text-xs font-extrabold text-slate-800 border-slate-200 gap-2 rounded-2xl"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
-          </Button>
+          </button>
 
           <Link href="/register" className="w-full sm:w-auto">
-            <Button className="w-full sm:w-auto h-11 px-5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-bold">
+            <button type="button" className="btn-3d-primary w-full sm:w-auto h-11 px-5 rounded-2xl text-xs font-black gap-2">
               <UserPlus className="h-4 w-4" />
               <span>Register Patient</span>
-            </Button>
+            </button>
           </Link>
         </div>
       </div>
 
       {/* Metrics Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-2xl">
-          <CardContent className="p-5 flex items-center justify-between">
+        <div className="glass-panel p-5 card-hover bg-white/92 border-white/80 rounded-[24px]">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Registered</p>
+              <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Registered</p>
               <p className="text-3xl font-black text-slate-900 mt-1">{totalCount}</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
+            <div className="w-12 h-12 rounded-2xl bg-teal-100/80 text-teal-800 flex items-center justify-center font-bold shadow-2xs border border-teal-200">
               <Users className="w-6 h-6" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-rose-50/40 border border-rose-100/60 rounded-2xl">
-          <CardContent className="p-5 flex items-center justify-between">
+        <div className="glass-panel p-5 card-hover bg-white/92 border-white/80 rounded-[24px]">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">High Risk &amp; Emergency</p>
+              <p className="text-[11px] font-extrabold text-rose-500 uppercase tracking-wider">High Risk &amp; Emergency</p>
               <p className="text-3xl font-black text-rose-600 mt-1">{emergencyCount}</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100/80 text-rose-700 flex items-center justify-center font-bold shadow-2xs border border-rose-200">
               <AlertTriangle className="w-6 h-6" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-blue-50/40 border border-blue-100/60 rounded-2xl">
-          <CardContent className="p-5 flex items-center justify-between">
+        <div className="glass-panel p-5 card-hover bg-white/92 border-white/80 rounded-[24px]">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Stable &amp; Regular Care</p>
+              <p className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider">Stable &amp; Regular Care</p>
               <p className="text-3xl font-black text-emerald-700 mt-1">
-                {stableCount} <span className="text-sm font-normal text-slate-400">({totalCount > 0 ? Math.round((stableCount / totalCount) * 100) : 0}%)</span>
+                {stableCount} <span className="text-xs font-semibold text-slate-400">({totalCount > 0 ? Math.round((stableCount / totalCount) * 100) : 0}%)</span>
               </p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100/80 text-emerald-800 flex items-center justify-center font-bold shadow-2xs border border-emerald-200">
               <Stethoscope className="w-6 h-6" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Search & Filter Toolbar */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 space-y-4">
+      <div className="glass-panel p-4 rounded-[24px] shadow-xl border border-white/80 space-y-4 bg-white/90 backdrop-blur-2xl">
         <div className="flex flex-col md:flex-row gap-3 items-center">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
               type="search"
               placeholder="Search by Patient Name, MRN, ABHA ID, Mobile or District..."
-              className="pl-11 h-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white text-base shadow-none focus-visible:ring-teal-500"
+              className="pl-11 h-12 rounded-xl border-slate-200 bg-white/80 focus:bg-white text-sm font-semibold shadow-none focus-visible:ring-teal-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -184,11 +184,11 @@ export default function PatientsPage() {
           </div>
 
           <div className="flex items-center gap-2 w-full md:w-auto">
-            <Button
-              variant={showAdvancedFilters ? "default" : "outline"}
+            <button
+              type="button"
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className={`h-12 px-4 rounded-xl font-bold flex items-center gap-2 ${
-                showAdvancedFilters ? "bg-teal-600 hover:bg-teal-700 text-white" : "border-slate-200 text-slate-700"
+              className={`h-12 px-4 rounded-xl font-bold flex items-center gap-2 text-xs transition-all ${
+                showAdvancedFilters ? "bg-teal-700 text-white shadow-xs" : "btn-3d-glass text-slate-700"
               }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
@@ -196,7 +196,7 @@ export default function PatientsPage() {
               {(filterRisk !== "ALL" || filterDistrict !== "ALL" || filterGender !== "ALL") && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
               )}
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -208,7 +208,7 @@ export default function PatientsPage() {
               <select
                 value={filterRisk}
                 onChange={(e) => setFilterRisk(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="ALL">All Risk Levels</option>
                 <option value="EMERGENCY">Emergency</option>
@@ -223,7 +223,7 @@ export default function PatientsPage() {
               <select
                 value={filterDistrict}
                 onChange={(e) => setFilterDistrict(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="ALL">All Districts</option>
                 <option value="New Delhi">New Delhi</option>
@@ -241,7 +241,7 @@ export default function PatientsPage() {
               <select
                 value={filterGender}
                 onChange={(e) => setFilterGender(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
               >
                 <option value="ALL">All Genders</option>
                 <option value="Male">Male</option>
@@ -268,29 +268,29 @@ export default function PatientsPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center space-y-3">
           <RefreshCw className="h-8 w-8 text-teal-600 animate-spin" />
-          <p className="text-slate-500 font-medium">Loading patient directory...</p>
+          <p className="text-white font-bold drop-shadow-md">Loading patient directory...</p>
         </div>
       ) : patients.length === 0 ? (
-        <Card className="border-dashed border-2 border-slate-200 shadow-sm bg-slate-50/50 rounded-2xl">
+        <Card className="glass-panel border-dashed border-2 border-white/80 shadow-xl bg-white/90 rounded-[28px]">
           <CardContent className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
               <Users className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">No patients found</h3>
-            <p className="text-slate-500 max-w-sm mb-6">
+            <h3 className="text-xl font-black text-slate-800 mb-2">No patients found</h3>
+            <p className="text-slate-500 max-w-sm mb-6 text-xs font-medium">
               No records match your search or filter parameters. Try clearing your filters or add a new patient.
             </p>
-            <Button onClick={clearAllFilters} className="h-11 px-6 rounded-xl bg-teal-600 hover:bg-teal-700">
+            <button type="button" onClick={clearAllFilters} className="btn-3d-primary h-11 px-6 text-xs font-extrabold rounded-xl">
               Clear Filters
-            </Button>
+            </button>
           </CardContent>
         </Card>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div className="glass-panel rounded-[28px] shadow-2xl border border-white/80 overflow-hidden bg-white/92 backdrop-blur-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-5">MRN & Patient</th>
                   <th className="py-4 px-4">Demographics</th>
                   <th className="py-4 px-4">Location</th>

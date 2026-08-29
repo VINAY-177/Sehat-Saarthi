@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { Role, ReferralStatus, Urgency, Referral } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -130,13 +129,13 @@ export default function ReferralsPage() {
           const toFacility = facilities.find(f => f.id === ref.toFacilityId);
 
           return (
-            <Card key={ref.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow border-slate-200/60">
-              <CardContent className="p-0">
+            <div key={ref.id} className="glass-panel overflow-hidden shadow-xl border border-white/80 rounded-[24px] bg-white/92 backdrop-blur-2xl card-hover">
+              <div className="p-0">
                 <div className="flex flex-col md:flex-row">
                   <div className="p-6 flex-1 space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <Link href={`/patients/${ref.patientId}`} className="text-xl font-bold hover:text-teal-600 transition-colors text-slate-800">
+                        <Link href={`/patients/${ref.patientId}`} className="text-xl font-black hover:text-teal-700 transition-colors text-slate-900">
                           {patient?.name || ref.patientName}
                         </Link>
                         <UrgencyBadge urgency={ref.urgency} size="sm" />
@@ -144,47 +143,47 @@ export default function ReferralsPage() {
                       {getStatusBadge(ref.status)}
                     </div>
                     
-                    <div className="flex items-center flex-wrap gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <div className="flex items-center flex-wrap gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/80">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-xs font-bold text-slate-700">
                           {fromFacility ? fromFacility.name : 'Community Intake'}
                         </span>
                       </div>
-                      <ArrowRight className="h-4 w-4 text-teal-500" />
+                      <ArrowRight className="h-4 w-4 text-teal-600" />
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-teal-600" />
-                        <span className="font-semibold text-sm text-teal-700">
+                        <span className="font-extrabold text-xs text-teal-800">
                           {toFacility?.name || ref.toFacilityName}
                         </span>
                       </div>
                     </div>
 
-                    <div className="text-sm text-slate-600 bg-white border border-slate-100 p-3 rounded-lg">
-                      <span className="font-semibold text-slate-800 mb-1 block">Clinical Reason</span>
+                    <div className="text-xs text-slate-700 bg-white/90 border border-slate-200/80 p-3.5 rounded-xl font-medium">
+                      <span className="font-extrabold text-slate-900 mb-1 block text-[11px] uppercase tracking-wider">Clinical Reason</span>
                       {ref.reason}
                     </div>
                   </div>
                   
-                  <div className="bg-slate-50 border-t md:border-t-0 md:border-l border-slate-100 p-6 flex flex-row md:flex-col items-center md:justify-center gap-3 shrink-0 md:w-48">
-                    <Button 
-                      variant="outline" 
-                      className="w-full bg-white hover:bg-slate-100 hover:text-slate-900 shadow-sm transition-colors text-sm"
+                  <div className="bg-slate-50/80 border-t md:border-t-0 md:border-l border-slate-200/80 p-6 flex flex-row md:flex-col items-center md:justify-center gap-3 shrink-0 md:w-48">
+                    <button 
+                      type="button"
+                      className="btn-3d-glass w-full h-10 text-xs font-bold text-slate-800 rounded-xl"
                       onClick={() => setSelectedReferralForSlip(ref)}
                     >
-                      <FileText className="h-4 w-4 mr-2 text-teal-600" />
+                      <FileText className="h-4 w-4 mr-1.5 text-teal-600 inline" />
                       View Slip
-                    </Button>
+                    </button>
                     <div className="w-full">
                       {renderActionButtons(ref.id, ref.status)}
                     </div>
-                    <div className="text-[11px] text-slate-400 font-medium text-center mt-auto md:mt-4">
+                    <div className="text-[11px] text-slate-400 font-bold text-center mt-auto md:mt-4">
                       {new Date(ref.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>
@@ -195,38 +194,38 @@ export default function ReferralsPage() {
   const activeSlipFacility = selectedReferralForSlip ? facilities.find(f => f.id === selectedReferralForSlip.toFacilityId) : undefined;
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-10">
+    <div className="space-y-6 max-w-5xl mx-auto pb-16 page-enter">
       {/* Header section */}
-      <div className="bg-white rounded-2xl p-8 border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-64 h-64 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-full blur-3xl opacity-50 pointer-events-none -translate-y-1/2 translate-x-1/2" />
-        <div className="flex items-center gap-5 relative z-10">
-          <div className="bg-gradient-to-br from-teal-500 to-emerald-600 p-4 rounded-2xl text-white shadow-lg shadow-teal-500/20">
+      <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/92 backdrop-blur-2xl section-enter">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20">
             <Ambulance size={32} strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Referral Management</h1>
-            <p className="text-slate-500 mt-1.5 font-medium">Coordinate inter-facility transfers and triage</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Referral Management</h1>
+            <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">Coordinate inter-facility transfers and triage</p>
           </div>
         </div>
-        <Button 
+        <button 
+          type="button"
           onClick={() => setCreateDialogOpen(true)} 
-          className="bg-slate-900 hover:bg-teal-700 text-white shadow-md transition-all px-6 py-6 rounded-xl relative z-10"
+          className="btn-3d-primary h-11 px-5 rounded-2xl text-xs font-black gap-2"
         >
-          <Plus className="h-5 w-5 mr-2" /> New Referral
-        </Button>
+          <Plus className="h-4 w-4" /> <span>New Referral</span>
+        </button>
       </div>
 
-      <Card className="border-0 shadow-sm bg-transparent">
+      <div className="w-full">
         <Tabs defaultValue="active" className="w-full">
-          <div className="flex items-center justify-between mb-6">
-            <TabsList className="bg-white border shadow-sm p-1 rounded-xl h-auto">
-              <TabsTrigger value="active" className="rounded-lg px-6 py-2.5 text-sm font-medium data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 data-[state=active]:shadow-none transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList className="glass-panel p-1 rounded-2xl border border-white/80 bg-white/90 shadow-md h-auto">
+              <TabsTrigger value="active" className="rounded-xl px-5 py-2 text-xs font-bold data-[state=active]:bg-teal-700 data-[state=active]:text-white transition-all">
                 Active Referrals
-                <Badge variant="secondary" className="ml-2 bg-white text-teal-700">{activeReferrals.length}</Badge>
+                <Badge variant="secondary" className="ml-2 bg-white/90 text-teal-800 font-extrabold">{activeReferrals.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="completed" className="rounded-lg px-6 py-2.5 text-sm font-medium data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 data-[state=active]:shadow-none transition-all">
+              <TabsTrigger value="completed" className="rounded-xl px-5 py-2 text-xs font-bold data-[state=active]:bg-teal-700 data-[state=active]:text-white transition-all">
                 Completed
-                <Badge variant="secondary" className="ml-2 bg-white text-teal-700">{completedReferrals.length}</Badge>
+                <Badge variant="secondary" className="ml-2 bg-white/90 text-teal-800 font-extrabold">{completedReferrals.length}</Badge>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -239,7 +238,7 @@ export default function ReferralsPage() {
             <ReferralList items={completedReferrals} emptyMsg="No completed referrals recorded yet." />
           </TabsContent>
         </Tabs>
-      </Card>
+      </div>
 
       {/* Create Referral Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

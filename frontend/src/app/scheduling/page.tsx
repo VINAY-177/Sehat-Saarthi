@@ -289,52 +289,53 @@ export default function SchedulingPage() {
   const completedCount = appointments.filter((a) => a.status === "COMPLETED").length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-20 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-200/80 pb-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-20 page-enter">
+      {/* Glass Header Card */}
+      <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/80 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/92 backdrop-blur-2xl section-enter">
         <div className="flex items-center gap-4">
           <div className="p-3.5 bg-gradient-to-br from-teal-500 to-emerald-600 text-white rounded-2xl shadow-md shadow-teal-500/20">
             <CalendarIcon className="h-8 w-8" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
                 Scheduling & Consultation Queue
               </h1>
-              <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-bold px-2.5 py-0.5">
+              <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-extrabold px-2.5 py-0.5">
                 Real-Time Roster
               </Badge>
             </div>
-            <p className="text-slate-500 mt-1 font-medium">
+            <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">
               Manage clinical appointments, facility check-ins, and consultation lifecycles.
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Button
-            variant="outline"
+          <button
+            type="button"
             onClick={fetchData}
-            className="h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 gap-2"
+            className="btn-3d-glass h-11 px-4 text-xs font-extrabold text-slate-800 border-slate-200 gap-2 rounded-2xl"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
-          </Button>
+          </button>
 
-          <Button
+          <button
+            type="button"
             onClick={handleOpenBookingModal}
             disabled={loading || Boolean(bookingDataError)}
-            className="h-11 px-5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-md font-bold gap-2"
+            className="btn-3d-primary h-11 px-5 text-xs font-black gap-2 rounded-2xl"
           >
             <Plus className="h-4 w-4" />
             <span>Book Appointment</span>
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Authentication Error Banner */}
       {authError && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+        <div className="bg-amber-50/95 backdrop-blur-md border border-amber-200 rounded-2xl p-5 flex items-start gap-4 shadow-md">
           <div className="p-2 bg-amber-100 rounded-xl">
             <LogIn className="w-5 h-5 text-amber-700" />
           </div>
@@ -344,9 +345,9 @@ export default function SchedulingPage() {
               You need to log in to view patients and book appointments. The patient registry requires a valid session token.
             </p>
             <Link href="/login">
-              <Button className="mt-3 h-9 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 gap-2">
+              <button type="button" className="btn-3d-primary mt-3 h-9 text-xs px-4 gap-2">
                 <LogIn className="w-3.5 h-3.5" /> Log In to Continue
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
@@ -354,20 +355,20 @@ export default function SchedulingPage() {
 
       {/* Fetch Error Banner */}
       {fetchError && !authError && (
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex items-start gap-4">
+        <div className="bg-rose-50/95 backdrop-blur-md border border-rose-200 rounded-2xl p-5 flex items-start gap-4 shadow-md">
           <div className="p-2 bg-rose-100 rounded-xl">
             <AlertTriangle className="w-5 h-5 text-rose-700" />
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-rose-900 text-sm">Unable to load booking data</h3>
             <p className="text-rose-700 text-xs mt-1 break-words">{fetchError}</p>
-            <Button
+            <button
+              type="button"
               onClick={fetchData}
-              variant="outline"
-              className="mt-3 h-9 rounded-xl border-rose-300 text-rose-700 hover:bg-rose-100 font-bold text-xs px-4 gap-2"
+              className="btn-3d-glass mt-3 h-9 text-xs font-bold px-4 gap-2"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Retry
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -376,10 +377,10 @@ export default function SchedulingPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div
           onClick={() => setSelectedStatus("ALL")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`glass-panel p-4 rounded-2xl border transition-all cursor-pointer card-hover ${
             selectedStatus === "ALL"
-              ? "bg-slate-900 text-white border-slate-900 shadow-md"
-              : "bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50"
+              ? "bg-slate-900 text-white border-slate-900 shadow-xl"
+              : "bg-white/90 text-slate-700 border-white/80"
           }`}
         >
           <span className="text-[10px] font-bold uppercase tracking-wider block opacity-70">Total Roster</span>
@@ -388,10 +389,10 @@ export default function SchedulingPage() {
 
         <div
           onClick={() => setSelectedStatus("REQUESTED")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`glass-panel p-4 rounded-2xl border transition-all cursor-pointer card-hover ${
             selectedStatus === "REQUESTED"
-              ? "bg-blue-600 text-white border-blue-600 shadow-md"
-              : "bg-white text-slate-700 border-slate-200/80 hover:bg-blue-50/50"
+              ? "bg-blue-600 text-white border-blue-600 shadow-xl"
+              : "bg-white/90 text-slate-700 border-white/80 hover:bg-blue-50/50"
           }`}
         >
           <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-500">Requested</span>
@@ -400,10 +401,10 @@ export default function SchedulingPage() {
 
         <div
           onClick={() => setSelectedStatus("CONFIRMED")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`glass-panel p-4 rounded-2xl border transition-all cursor-pointer card-hover ${
             selectedStatus === "CONFIRMED"
-              ? "bg-purple-600 text-white border-purple-600 shadow-md"
-              : "bg-white text-slate-700 border-slate-200/80 hover:bg-purple-50/50"
+              ? "bg-purple-600 text-white border-purple-600 shadow-xl"
+              : "bg-white/90 text-slate-700 border-white/80 hover:bg-purple-50/50"
           }`}
         >
           <span className="text-[10px] font-bold uppercase tracking-wider block text-purple-500">Confirmed</span>
@@ -412,10 +413,10 @@ export default function SchedulingPage() {
 
         <div
           onClick={() => setSelectedStatus("CHECKED_IN")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`glass-panel p-4 rounded-2xl border transition-all cursor-pointer card-hover ${
             selectedStatus === "CHECKED_IN"
-              ? "bg-amber-600 text-white border-amber-600 shadow-md"
-              : "bg-white text-slate-700 border-slate-200/80 hover:bg-amber-50/50"
+              ? "bg-amber-600 text-white border-amber-600 shadow-xl"
+              : "bg-white/90 text-slate-700 border-white/80 hover:bg-amber-50/50"
           }`}
         >
           <span className="text-[10px] font-bold uppercase tracking-wider block text-amber-600">Checked-In</span>
@@ -424,10 +425,10 @@ export default function SchedulingPage() {
 
         <div
           onClick={() => setSelectedStatus("IN_CONSULTATION")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`glass-panel p-4 rounded-2xl border transition-all cursor-pointer card-hover ${
             selectedStatus === "IN_CONSULTATION"
-              ? "bg-teal-600 text-white border-teal-600 shadow-md"
-              : "bg-white text-slate-700 border-slate-200/80 hover:bg-teal-50/50"
+              ? "bg-teal-600 text-white border-teal-600 shadow-xl"
+              : "bg-white/90 text-slate-700 border-white/80 hover:bg-teal-50/50"
           }`}
         >
           <span className="text-[10px] font-bold uppercase tracking-wider block text-teal-600">In Consult</span>
@@ -436,10 +437,10 @@ export default function SchedulingPage() {
 
         <div
           onClick={() => setSelectedStatus("COMPLETED")}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+          className={`glass-panel p-4 rounded-2xl border transition-all cursor-pointer card-hover ${
             selectedStatus === "COMPLETED"
-              ? "bg-emerald-600 text-white border-emerald-600 shadow-md"
-              : "bg-white text-slate-700 border-slate-200/80 hover:bg-emerald-50/50"
+              ? "bg-emerald-600 text-white border-emerald-600 shadow-xl"
+              : "bg-white/90 text-slate-700 border-white/80 hover:bg-emerald-50/50"
           }`}
         >
           <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">Completed</span>
@@ -448,14 +449,14 @@ export default function SchedulingPage() {
       </div>
 
       {/* Control & Filter Toolbar */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col md:flex-row gap-3 justify-between items-center">
+      <div className="glass-panel p-4 rounded-[24px] shadow-xl border border-white/80 flex flex-col md:flex-row gap-3 justify-between items-center bg-white/90 backdrop-blur-2xl">
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto flex-1">
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               type="search"
               placeholder="Search by patient, doctor or reason..."
-              className="pl-10 h-11 rounded-xl border-slate-200 bg-slate-50 text-sm focus:bg-white"
+              className="pl-10 h-11 rounded-xl border-slate-200 bg-white/80 text-sm focus:bg-white font-semibold"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -464,7 +465,7 @@ export default function SchedulingPage() {
           <select
             value={selectedDoctor}
             onChange={(e) => setSelectedDoctor(e.target.value)}
-            className="h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 w-full sm:w-auto"
+            className="h-11 px-3 rounded-xl border border-slate-200 bg-white/80 text-xs font-bold text-slate-700 w-full sm:w-auto"
           >
             <option value="ALL">All Attending Clinicians</option>
             {doctors.map((d) => (
@@ -501,30 +502,30 @@ export default function SchedulingPage() {
       {loading ? (
         <div className="py-24 flex flex-col items-center justify-center space-y-3">
           <RefreshCw className="h-8 w-8 text-teal-600 animate-spin" />
-          <p className="text-slate-500 font-medium">Assembling Appointment Queue...</p>
+          <p className="text-white font-bold drop-shadow-md">Assembling Appointment Queue...</p>
         </div>
       ) : filteredAppointments.length === 0 ? (
-        <Card className="border-dashed border-2 border-slate-200 shadow-sm bg-slate-50/50 rounded-2xl">
+        <Card className="glass-panel border-dashed border-2 border-white/80 shadow-xl bg-white/90 rounded-[28px]">
           <CardContent className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
               <CalendarIcon className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">No appointments scheduled</h3>
-            <p className="text-slate-500 max-w-sm mb-6">
+            <h3 className="text-xl font-black text-slate-800 mb-2">No appointments scheduled</h3>
+            <p className="text-slate-500 max-w-sm mb-6 text-xs font-medium">
               No clinical visits match your filter parameters. Book an intake to populate the roster.
             </p>
-            <Button onClick={handleOpenBookingModal} className="h-11 px-6 rounded-xl bg-teal-600 hover:bg-teal-700">
+            <button type="button" onClick={handleOpenBookingModal} className="btn-3d-primary h-11 px-6 text-xs font-extrabold rounded-xl">
               Book First Appointment
-            </Button>
+            </button>
           </CardContent>
         </Card>
       ) : viewMode === "list" ? (
         /* Queue Table View */
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div className="glass-panel rounded-[28px] shadow-2xl border border-white/80 overflow-hidden bg-white/92 backdrop-blur-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-5">Date & Time</th>
                   <th className="py-4 px-4">Patient Details</th>
                   <th className="py-4 px-4">Doctor & Department</th>
