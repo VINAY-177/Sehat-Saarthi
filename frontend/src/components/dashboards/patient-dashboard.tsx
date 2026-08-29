@@ -149,13 +149,13 @@ export function PatientDashboard() {
           priority
           className="object-cover object-center scale-105"
         />
-        {/* Soft Glass Frost & Ambient Dark-Teal Atmospheric Veil */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-900/60 to-slate-950/80 backdrop-blur-[4px]" />
+        {/* Soft daylight luminescent veil */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/20 via-slate-900/10 to-slate-950/40 backdrop-blur-[1.5px]" />
       </div>
 
       {/* ── 2. Ambient Floating Light Orbs ── */}
-      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="relative space-y-6 max-w-7xl mx-auto pb-16 z-10 page-enter">
         

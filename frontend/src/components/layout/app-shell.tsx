@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { DataProvider, useStore } from "@/lib/store";
+import { Role } from "@/lib/types";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
@@ -16,12 +17,18 @@ interface AppShellProps {
 }
 
 function AppContent({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useStore();
+  const { isAuthenticated, role } = useStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isPublicRoute = pathname === '/login' || pathname === '/signup' || pathname === '/emergency';
+
+  const bgImage = role === Role.DOCTOR 
+    ? "/backgrounds/doctor-dashboard.jpg" 
+    : role === Role.HOSPITAL_STAFF 
+    ? "/backgrounds/staff-dashboard.jpg" 
+    : "/backgrounds/patient-dashboard.jpg";
 
   useEffect(() => {
     if (!isAuthenticated && !isPublicRoute) {
@@ -62,14 +69,14 @@ function AppContent({ children }: { children: React.ReactNode }) {
         {/* Global Background Image for ALL authenticated pages */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <Image
-            src="/backgrounds/patient-dashboard.jpg"
+            src={bgImage}
             alt="Healthcare background"
             fill
             priority
             className="object-cover object-center scale-105"
           />
           {/* Atmospheric overlay veil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/70 via-slate-900/55 to-teal-950/70 backdrop-blur-[3px]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/70 via-slate-900/50 to-teal-950/70 backdrop-blur-[2px]" />
         </div>
 
         {/* Ambient floating color orbs */}
