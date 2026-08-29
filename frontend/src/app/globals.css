@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* Sehat Saathi — Modern Healthcare Design System */
-    --background: 210 40% 98%;    /* #F8FAFC */
-    --foreground: 222 47% 11%;    /* #0F172A */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -14,23 +14,22 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Deep Healthcare Teal & Navy */
-    --primary: 173 80% 26%;       /* #0F766E */
+    --primary: 173 80% 26%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 174 25% 94%;
     --secondary-foreground: 174 80% 20%;
 
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;  /* #64748B */
+    --muted-foreground: 215 16% 47%;
 
     --accent: 174 35% 92%;
     --accent-foreground: 174 80% 20%;
 
-    --destructive: 0 84% 60%;     /* #DC2626 */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 214 32% 91%;        /* #E2E8F0 */
+    --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 173 80% 26%;
 
@@ -44,58 +43,28 @@
     --sidebar-accent-foreground: 174 80% 20%;
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 173 80% 26%;
-
-    /* Status & Chart Colors */
-    --chart-1: 173 80% 26%;       /* Teal */
-    --chart-2: 152 65% 45%;       /* Green — Success */
-    --chart-3: 215 80% 50%;       /* Blue — Info */
-    --chart-4: 35 92% 55%;        /* Amber — Warning */
-    --chart-5: 0 75% 55%;         /* Red — Danger */
   }
 
   .dark {
     --background: 222 47% 6%;
     --foreground: 0 0% 98%;
-
     --card: 222 47% 9%;
     --card-foreground: 0 0% 98%;
-
     --popover: 222 47% 9%;
     --popover-foreground: 0 0% 98%;
-
     --primary: 173 70% 45%;
     --primary-foreground: 222 47% 6%;
-
     --secondary: 215 25% 18%;
     --secondary-foreground: 0 0% 98%;
-
     --muted: 215 25% 18%;
     --muted-foreground: 215 16% 65%;
-
     --accent: 173 40% 20%;
     --accent-foreground: 0 0% 98%;
-
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 215 25% 20%;
     --input: 215 25% 20%;
     --ring: 173 70% 45%;
-
-    --sidebar: 222 47% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 173 70% 45%;
-    --sidebar-primary-foreground: 222 47% 6%;
-    --sidebar-accent: 173 40% 20%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 215 25% 18%;
-    --sidebar-ring: 173 70% 45%;
-
-    --chart-1: 173 70% 45%;
-    --chart-2: 152 60% 50%;
-    --chart-3: 215 75% 55%;
-    --chart-4: 35 85% 60%;
-    --chart-5: 0 70% 60%;
   }
 }
 
@@ -115,162 +84,179 @@
   isolation: isolate;
 }
 
-/* ── 3D BUTTON SYSTEM & TACTILE INTERACTION ── */
+/* ── REAL PHYSICAL 3D BUTTON SYSTEM ── */
 @layer components {
-  /* Primary 3D Physical Button */
+  /* Teal / Emerald Physical 3D Button */
   .btn-3d-primary {
-    @apply relative inline-flex items-center justify-center font-bold text-white transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #ffffff;
     background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);
-    box-shadow: 0 4px 0 0 #0f5b55, 0 8px 16px -2px rgba(15, 118, 110, 0.35);
+    border: 1px solid #14b8a6;
+    border-bottom: 4px solid #0a4f4a;
     border-radius: 1rem;
+    box-shadow: 0 6px 16px -2px rgba(15, 118, 110, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease, border-bottom 120ms ease, filter 120ms ease;
     transform: translateY(0);
-  }
-  .btn-3d-primary::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 4px;
-    right: 4px;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
-    border-radius: 9999px;
-    pointer-events: none;
+    user-select: none;
+    cursor: pointer;
+    outline: none;
   }
   .btn-3d-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 0 0 #0f5b55, 0 12px 24px -3px rgba(15, 118, 110, 0.45);
-    filter: brightness(1.03);
+    border-bottom: 5px solid #0a4f4a;
+    box-shadow: 0 10px 22px -3px rgba(15, 118, 110, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    filter: brightness(1.05);
   }
   .btn-3d-primary:active {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 0 #0f5b55, 0 3px 6px -1px rgba(15, 118, 110, 0.25);
-    filter: brightness(0.97);
+    border-bottom: 1px solid #0a4f4a;
+    box-shadow: 0 2px 6px -1px rgba(15, 118, 110, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    filter: brightness(0.96);
   }
   .btn-3d-primary:disabled {
     transform: none;
     box-shadow: none;
+    border-bottom: 1px solid #0a4f4a;
     opacity: 0.6;
     cursor: not-allowed;
   }
 
-  /* Navy 3D Physical Button */
+  /* Navy Physical 3D Button */
   .btn-3d-navy {
-    @apply relative inline-flex items-center justify-center font-bold text-white transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #ffffff;
     background: linear-gradient(180deg, #1e3a5f 0%, #0f243d 100%);
-    box-shadow: 0 4px 0 0 #0a1829, 0 8px 16px -2px rgba(15, 36, 61, 0.4);
+    border: 1px solid #2d5588;
+    border-bottom: 4px solid #081525;
     border-radius: 1rem;
+    box-shadow: 0 6px 16px -2px rgba(15, 36, 61, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease, border-bottom 120ms ease, filter 120ms ease;
     transform: translateY(0);
-  }
-  .btn-3d-navy::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 4px;
-    right: 4px;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 100%);
-    border-radius: 9999px;
-    pointer-events: none;
+    user-select: none;
+    cursor: pointer;
+    outline: none;
   }
   .btn-3d-navy:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 0 0 #0a1829, 0 12px 24px -3px rgba(15, 36, 61, 0.5);
-    filter: brightness(1.05);
+    border-bottom: 5px solid #081525;
+    box-shadow: 0 10px 22px -3px rgba(15, 36, 61, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    filter: brightness(1.06);
   }
   .btn-3d-navy:active {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 0 #0a1829, 0 3px 6px -1px rgba(15, 36, 61, 0.25);
+    border-bottom: 1px solid #081525;
+    box-shadow: 0 2px 6px -1px rgba(15, 36, 61, 0.3);
+    filter: brightness(0.95);
   }
 
-  /* Emergency 108 Red 3D Button */
+  /* Emergency 108 Physical 3D Red Button */
   .btn-3d-emergency {
-    @apply relative inline-flex items-center justify-center font-bold text-white transition-all duration-200 ease-out select-none cursor-pointer outline-none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #ffffff;
     background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 4px 0 0 #991b1b, 0 8px 20px -2px rgba(220, 38, 38, 0.45);
+    border: 1px solid #f87171;
+    border-bottom: 4px solid #7f1d1d;
     border-radius: 1rem;
+    box-shadow: 0 6px 18px -2px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease, border-bottom 120ms ease;
     transform: translateY(0);
-  }
-  .btn-3d-emergency::before {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 4px;
-    right: 4px;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.1) 100%);
-    border-radius: 9999px;
-    pointer-events: none;
+    user-select: none;
+    cursor: pointer;
+    outline: none;
   }
   .btn-3d-emergency:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 0 0 #991b1b, 0 14px 28px -3px rgba(220, 38, 38, 0.55);
-    filter: brightness(1.05);
+    border-bottom: 5px solid #7f1d1d;
+    box-shadow: 0 10px 24px -3px rgba(220, 38, 38, 0.65);
+    filter: brightness(1.06);
   }
   .btn-3d-emergency:active {
     transform: translateY(3px);
-    box-shadow: 0 1px 0 0 #991b1b, 0 4px 8px -1px rgba(220, 38, 38, 0.3);
+    border-bottom: 1px solid #7f1d1d;
+    box-shadow: 0 2px 6px -1px rgba(220, 38, 38, 0.35);
   }
 
-  /* Glassmorphic Outline 3D Button */
+  /* Frosted Glass Physical 3D Button */
   .btn-3d-glass {
-    @apply relative inline-flex items-center justify-center font-bold transition-all duration-200 ease-out select-none cursor-pointer outline-none;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 3px 0 0 #cbd5e1, 0 6px 12px -2px rgba(15, 23, 42, 0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-bottom: 3.5px solid #cbd5e1;
     border-radius: 1rem;
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease, border-bottom 120ms ease, background 120ms ease;
     transform: translateY(0);
+    user-select: none;
+    cursor: pointer;
+    outline: none;
   }
   .btn-3d-glass:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 0 0 #cbd5e1, 0 10px 20px -3px rgba(15, 23, 42, 0.1);
-    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 4.5px solid #cbd5e1;
+    box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.18), inset 0 1px 0 #ffffff;
+    background: #ffffff;
   }
   .btn-3d-glass:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 0 #cbd5e1, 0 2px 4px -1px rgba(15, 23, 42, 0.05);
+    transform: translateY(2.5px);
+    border-bottom: 1px solid #cbd5e1;
+    box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.08);
   }
 }
 
-/* ── PREMIUM GLASSMORPHISM PANELS ── */
+/* ── PREMIUM FROSTED GLASS PANELS ── */
 @layer components {
   /* Auth Centered Glass Card */
   .glass-card-auth {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
     box-shadow: 
-      0 20px 50px -10px rgba(15, 23, 42, 0.15),
-      0 10px 20px -5px rgba(13, 148, 136, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      0 24px 60px -12px rgba(15, 23, 42, 0.25),
+      0 12px 24px -6px rgba(13, 148, 136, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
     border-radius: 2rem;
   }
 
   /* General Dashboard Glass Panel */
   .glass-panel {
-    background: rgba(255, 255, 255, 0.80);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 
+      0 16px 40px -8px rgba(15, 23, 42, 0.14),
+      0 4px 12px -2px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: 1.75rem;
   }
 
-  /* Dark Operations Glass Panel */
-  .glass-panel-dark {
-    background: rgba(15, 23, 42, 0.78);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    border-radius: 1.5rem;
+  /* High-Contrast Clinical Card */
+  .glass-card-clinical {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 14px 36px -6px rgba(15, 23, 42, 0.15), inset 0 1px 0 #ffffff;
+    border-radius: 1.75rem;
   }
 }
 
 /* ── Sehat Saathi Healthcare Animations & Micro-Interactions ── */
 @layer utilities {
-  /* Page & Section Entrances */
   .page-enter {
     animation: pageFadeUp 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
@@ -305,7 +291,6 @@
     }
   }
 
-  /* Staggered Entrance Delays */
   .stagger-1 { animation-delay: 50ms; }
   .stagger-2 { animation-delay: 100ms; }
   .stagger-3 { animation-delay: 160ms; }
@@ -313,7 +298,6 @@
   .stagger-5 { animation-delay: 280ms; }
   .stagger-6 { animation-delay: 340ms; }
 
-  /* Interactive Card Elevation on Hover */
   .card-hover {
     transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), 
                 box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), 
@@ -321,38 +305,9 @@
   }
   .card-hover:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.09), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.18), 0 6px 14px -3px rgba(15, 23, 42, 0.08);
   }
 
-  /* Responsive Button Press Micro-interaction */
-  .btn-press {
-    transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease;
-  }
-  .btn-press:hover {
-    transform: translateY(-1px);
-  }
-  .btn-press:active {
-    transform: translateY(2px) scale(0.98);
-  }
-
-  /* Shimmer Loading Skeleton */
-  .skeleton-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(241, 245, 249, 0.8) 0%,
-      rgba(226, 232, 240, 0.95) 50%,
-      rgba(241, 245, 249, 0.8) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmerSweep 1.5s infinite linear;
-  }
-
-  @keyframes shimmerSweep {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* Subtle Telemetry Live Feed Indicator */
   .pulse-subtle {
     animation: subtlePulse 2.5s infinite ease-in-out;
   }
@@ -371,29 +326,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.6);
-}
-
-/* ── Accessibility: Reduced Motion Support ── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .card-hover:hover,
-  .btn-3d-primary:hover,
-  .btn-3d-navy:hover,
-  .btn-3d-emergency:hover,
-  .btn-3d-glass:hover {
-    transform: none !important;
-  }
+  background: rgba(148, 163, 184, 0.7);
 }

@@ -138,24 +138,24 @@ export function PatientDashboard() {
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="relative min-h-screen w-full p-4 sm:p-8 overflow-x-hidden font-sans">
+    <div className="relative min-h-screen w-full p-4 sm:p-8 font-sans isolate overflow-hidden">
       
       {/* ── 1. Full-bleed Luminous Patient Wellness Photography Background ── */}
-      <div className="fixed inset-0 pointer-events-none -z-20 overflow-hidden">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
         <Image
           src="/backgrounds/patient-dashboard.jpg"
           alt="Patient wellness sanctuary"
           fill
           priority
-          className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
+          className="object-cover object-center scale-105"
         />
         {/* Soft Glass Frost & Ambient Dark-Teal Atmospheric Veil */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-900/40 to-slate-950/70 backdrop-blur-[5px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-900/60 to-slate-950/80 backdrop-blur-[4px]" />
       </div>
 
       {/* ── 2. Ambient Floating Light Orbs ── */}
-      <div className="fixed top-1/4 right-10 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-      <div className="fixed bottom-1/4 left-10 w-[450px] h-[450px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
+      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="relative space-y-6 max-w-7xl mx-auto pb-16 z-10 page-enter">
         
