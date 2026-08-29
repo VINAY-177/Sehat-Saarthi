@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MapPin, ShieldCheck, Search, Activity, Stethoscope, Building2, Phone, Map, Star, Ambulance } from "lucide-react";
+import { MapPin, ShieldCheck, Search, Activity, Stethoscope, Building2, Phone, Map as MapIcon, Star, Ambulance } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import FacilityMapWrapper from "@/components/facility-map-wrapper";
 import type { FacilityMapItem } from "@/components/facility-map";
@@ -97,30 +97,30 @@ function ProgressBar({ available, total, type }: { available: number; total: num
   );
 }
 
-export default function HospitalsPage() {
-  const fallbackHospitals: HospitalDb[] = DEFAULT_DELHI_HOSPITALS.map((f) => ({
-    id: f.id,
-    name: f.name,
-    type: f.type,
-    district: f.district,
-    state: f.state,
-    location: f.address || f.location || `${f.district}, ${f.state}`,
-    phone: f.phone,
-    lat: f.lat,
-    lng: f.lng,
-    totalBeds: f.generalBeds + f.icuBeds,
-    availableBeds: f.generalBeds - f.generalBedsUsed,
-    icuBeds: f.icuBeds,
-    availableIcu: f.icuBeds - f.icuBedsUsed,
-    specialties: (f.specialties || f.specialists || []).join(", "),
-    city: f.city,
-    area: f.area,
-    rating: f.rating,
-    emergencyAvailable: f.emergencyAvailable,
-    pmjayEmpanelled: f.pmjayEmpanelled,
-  }));
+const FALLBACK_HOSPITALS: HospitalDb[] = DEFAULT_DELHI_HOSPITALS.map((f) => ({
+  id: f.id,
+  name: f.name,
+  type: f.type,
+  district: f.district,
+  state: f.state,
+  location: f.address || f.location || `${f.district}, ${f.state}`,
+  phone: f.phone,
+  lat: f.lat,
+  lng: f.lng,
+  totalBeds: f.generalBeds + f.icuBeds,
+  availableBeds: f.generalBeds - f.generalBedsUsed,
+  icuBeds: f.icuBeds,
+  availableIcu: f.icuBeds - f.icuBedsUsed,
+  specialties: (f.specialties || f.specialists || []).join(", "),
+  city: f.city,
+  area: f.area,
+  rating: f.rating,
+  emergencyAvailable: f.emergencyAvailable,
+  pmjayEmpanelled: f.pmjayEmpanelled,
+}));
 
-  const [facilities, setFacilities] = useState<HospitalDb[]>(fallbackHospitals);
+export default function HospitalsPage() {
+  const [facilities, setFacilities] = useState<HospitalDb[]>(FALLBACK_HOSPITALS);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [regionFilter, setRegionFilter] = useState<string>("ALL");
@@ -154,7 +154,18 @@ export default function HospitalsPage() {
             emergencyAvailable: typeof item.emergencyAvailable === "boolean" ? item.emergencyAvailable : undefined,
             pmjayEmpanelled: item.pmjayEmpanelled !== false,
           }));
-          setFacilities(mapped);
+
+          // Merge by ID with fallback 32 hospitals so no hospitals are lost
+          const apiMap = new Map(mapped.map((h) => [h.id, h]));
+          const merged = FALLBACK_HOSPITALS.map((fb) => apiMap.get(fb.id) || fb);
+          // Add any new hospitals from API not in fallback
+          mapped.forEach((h) => {
+            if (!FALLBACK_HOSPITALS.some((fb) => fb.id === h.id)) {
+              merged.push(h);
+            }
+          });
+
+          setFacilities(merged);
         }
       })
       .catch(() => {});
@@ -220,7 +231,7 @@ export default function HospitalsPage() {
               showMap ? "bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20" : "border-slate-200"
             }`}
           >
-            <Map className="w-4 h-4" />
+            <MapIcon className="w-4 h-4" />
             {showMap ? "Hide Map" : "Show Map"}
           </Button>
         </div>
@@ -274,7 +285,7 @@ export default function HospitalsPage() {
         <Card className="shadow-sm rounded-3xl border-slate-200/80 overflow-hidden bg-white">
           <CardHeader className="py-4 px-6 bg-slate-50/70 border-b border-slate-100 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
-              <Map className="h-4 w-4 text-teal-600" />
+              <MapIcon className="h-4 w-4 text-teal-600" />
               <h2 className="text-sm font-bold text-slate-800">
                 Interactive Delhi-NCR Healthcare Map ({filteredFacilities.length} Facilities)
               </h2>

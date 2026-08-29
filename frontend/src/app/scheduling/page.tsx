@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Appointment, Doctor, Patient } from "@/lib/types";
-import { useStore } from "@/lib/store";
+import { useStore, DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
 import { apiGet, apiPost, apiPut, isAuthenticationError } from "@/lib/api";
 import {
   appointmentDateTimeInputToIso,
@@ -50,6 +50,13 @@ const STATUS_CONFIG: Record<
 
 export default function SchedulingPage() {
   const { refreshAppointments, currentUser, facilities } = useStore();
+
+  const networkFacilities = useMemo(() => {
+    return facilities && facilities.length >= DEFAULT_DELHI_HOSPITALS.length
+      ? facilities
+      : DEFAULT_DELHI_HOSPITALS;
+  }, [facilities]);
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -924,7 +931,7 @@ export default function SchedulingPage() {
                     className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="">— All Network Facilities —</option>
-                    {facilities.map((fac) => (
+                    {networkFacilities.map((fac) => (
                       <option key={fac.id} value={fac.id}>
                         {fac.name} ({fac.city || fac.district}, {fac.state})
                       </option>
