@@ -56,9 +56,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       {/* Main Content Area */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden w-full">
+      <div className="flex flex-col flex-1 h-full overflow-hidden w-full relative">
         <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 w-full">
+        <main className="flex-1 overflow-y-auto w-full relative">
           {children}
         </main>
       </div>

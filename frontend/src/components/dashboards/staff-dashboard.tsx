@@ -286,61 +286,58 @@ export function StaffDashboard() {
   // RENDER
   // ============================================================
   return (
-    <div className="relative min-h-[calc(100vh-5rem)] -m-4 sm:-m-6 p-4 sm:p-6 overflow-hidden bg-[#F8FAFC]">
+    <div className="relative min-h-screen w-full p-4 sm:p-8 overflow-x-hidden font-sans">
 
-      {/* 1. Unique Staff Hospital Command Operations Background Image */}
-      <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
+      {/* 1. Full-bleed Hospital Command Photography Background */}
+      <div className="fixed inset-0 pointer-events-none -z-20 overflow-hidden">
         <Image
           src="/backgrounds/staff-dashboard.jpg"
           alt="Hospital Command & Operations Center"
           fill
           priority
-          className="object-cover object-center opacity-15 mix-blend-multiply scale-105"
+          className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/15 via-slate-50/85 to-[#F8FAFC]/95 backdrop-blur-[2px]" />
+        {/* Soft Dark Operations Veil */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-900/50 to-slate-950/80 backdrop-blur-[5px]" />
       </div>
 
-      {/* Background Accents */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-indigo-500/8 via-teal-500/4 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-500/6 via-indigo-500/3 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px] opacity-15 pointer-events-none -z-10" />
+      {/* 2. Floating Ambient Glows */}
+      <div className="fixed top-1/4 right-10 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
+      <div className="fixed bottom-1/4 left-10 w-[450px] h-[450px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="relative max-w-7xl mx-auto space-y-5 pb-12 z-10 page-enter">
+      <div className="relative max-w-7xl mx-auto space-y-6 pb-16 z-10 page-enter">
 
         {/* ===== HEADER ===== */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-1 section-enter">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+        <div className="glass-card-auth p-6 sm:p-7 rounded-[28px] border border-white/70 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-5 backdrop-blur-2xl bg-white/90 section-enter">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-extrabold shadow-2xs">
+              <Building2 className="w-4 h-4 text-indigo-600" />
+              <span>Hospital Operations Center • {facilityName}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               {greeting}, {firstName} 👋
             </h1>
-            <p className="text-slate-500 text-sm font-medium">
-              {language === "hi" ? "यहाँ आज का अस्पताल संचालन अवलोकन है।" : "Hospital Operations Center — Real-time dashboard"}
+            <p className="text-slate-500 text-xs sm:text-sm font-medium">
+              {language === "hi" ? "यहाँ आज का अस्पताल संचालन अवलोकन एवं बेड व एम्बुलेंस नियंत्रण कक्ष है।" : "Unified operational command center for beds, ambulances, blood bank & OPD queue."}
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs text-xs font-semibold text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 pulse-subtle" />
-              <span>Operations Lead</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-slate-600 font-medium truncate max-w-[180px]">{facilityName}</span>
-            </div>
-
             <Button
               onClick={handleRefresh}
               variant="outline"
-              className="h-9 px-3 rounded-xl text-xs font-bold gap-1.5 border-slate-200"
+              className="btn-3d-glass h-11 px-4 rounded-xl text-xs font-bold gap-2 border-slate-200"
               disabled={isRefreshing}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-              {isRefreshing ? "Refreshing..." : "Refresh"}
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "Refreshing..." : "Refresh Live Data"}
             </Button>
 
             <Link href="/register">
-              <Button className="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5 transition-all btn-press">
-                <UserPlus className="w-3.5 h-3.5" />
-                {language === "hi" ? "मरीज पंजीकरण" : "Register Patient"}
-              </Button>
+              <button type="button" className="btn-3d-primary h-11 px-5 rounded-2xl text-xs font-extrabold gap-2">
+                <UserPlus className="w-4 h-4" />
+                <span>{language === "hi" ? "मरीज पंजीकरण" : "Register Patient"}</span>
+              </button>
             </Link>
           </div>
         </div>
