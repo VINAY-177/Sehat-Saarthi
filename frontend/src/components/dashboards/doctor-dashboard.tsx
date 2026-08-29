@@ -72,13 +72,13 @@ export function DoctorDashboard() {
           priority
           className="object-cover object-center scale-105"
         />
-        {/* Soft Dark-Teal Atmospheric Veil for Clinical Depth & Contrast */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-900/60 to-teal-950/75 backdrop-blur-[4px]" />
+        {/* Soft daylight luminescent veil */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/20 via-slate-900/10 to-slate-950/40 backdrop-blur-[1.5px]" />
       </div>
 
       {/* ── 2. Ambient Floating Glowing Flares ── */}
-      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-sky-500/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-teal-500/20 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-10 right-10 w-[500px] h-[500px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 left-10 w-[450px] h-[450px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="relative max-w-7xl mx-auto space-y-6 pb-16 z-10 page-enter">
         
