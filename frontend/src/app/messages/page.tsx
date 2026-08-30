@@ -44,7 +44,8 @@ interface Thread {
 }
 
 export default function MessagesPage() {
-  const { role, currentUser } = useStore();
+  const { role, currentUser, language } = useStore();
+  const isHindi = language === "hi";
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedThreadId, setSelectedThreadId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -225,30 +226,30 @@ export default function MessagesPage() {
   const roleFilterTabs = useMemo(() => {
     if (isDoctor) {
       return [
-        { key: "ALL", label: "All Messages" },
-        { key: "PATIENTS", label: "Patients" },
-        { key: "COLLEAGUES", label: "Colleagues" },
-        { key: "STAFF", label: "Specialists" },
-        { key: "AMBULANCE", label: "Ops" },
+        { key: "ALL", label: isHindi ? "सभी संदेश" : "All Messages" },
+        { key: "PATIENTS", label: isHindi ? "मरीज" : "Patients" },
+        { key: "COLLEAGUES", label: isHindi ? "सहकर्मी" : "Colleagues" },
+        { key: "STAFF", label: isHindi ? "विशेषज्ञ" : "Specialists" },
+        { key: "AMBULANCE", label: isHindi ? "संचालन" : "Ops" },
       ];
     }
     if (isStaff) {
       return [
-        { key: "ALL", label: "All Communications" },
-        { key: "PATIENTS", label: "Patients" },
-        { key: "STAFF", label: "Colleagues" },
-        { key: "HELPDESK", label: "Specialists" },
-        { key: "AMBULANCE", label: "Ops" },
+        { key: "ALL", label: isHindi ? "सभी संचार" : "All Communications" },
+        { key: "PATIENTS", label: isHindi ? "मरीज" : "Patients" },
+        { key: "STAFF", label: isHindi ? "सहकर्मी" : "Colleagues" },
+        { key: "HELPDESK", label: isHindi ? "विशेषज्ञ" : "Specialists" },
+        { key: "AMBULANCE", label: isHindi ? "संचालन" : "Ops" },
       ];
     }
     // Patient / Citizen
     return [
-      { key: "ALL", label: "All Chats" },
-      { key: "DOCTORS", label: "My Doctors" },
-      { key: "HELPDESK", label: "Hospital Helpdesk" },
-      { key: "AMBULANCE", label: "Emergency Ops" },
+      { key: "ALL", label: isHindi ? "सभी चैट" : "All Chats" },
+      { key: "DOCTORS", label: isHindi ? "मेरे डॉक्टर" : "My Doctors" },
+      { key: "HELPDESK", label: isHindi ? "अस्पताल हेल्पडेस्क" : "Hospital Helpdesk" },
+      { key: "AMBULANCE", label: isHindi ? "आपातकालीन संचालन" : "Emergency Ops" },
     ];
-  }, [isDoctor, isStaff]);
+  }, [isDoctor, isStaff, isHindi]);
 
   // Filtered threads list
   const filteredThreads = currentRoleThreads.filter((t) => {
@@ -272,21 +273,21 @@ export default function MessagesPage() {
             <div className="flex items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
                 {isDoctor 
-                  ? "Clinical Consultations & Colleague Messaging" 
+                  ? (isHindi ? "क्लिनिकल परामर्श एवं सहकर्मी संदेश" : "Clinical Consultations & Colleague Messaging")
                   : isStaff 
-                  ? "Hospital Operations & Fleet Dispatch Comms" 
-                  : "Doctor Consultations & Care Helpdesk"}
+                  ? (isHindi ? "अस्पताल संचालन एवं बेड़ा प्रेषण संचार" : "Hospital Operations & Fleet Dispatch Comms")
+                  : (isHindi ? "डॉक्टर परामर्श एवं सहायता केंद्र" : "Doctor Consultations & Care Helpdesk")}
               </h1>
               <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-extrabold text-[11px] px-2.5 py-0.5">
-                {isDoctor ? "Doctor Portal" : isStaff ? "Staff Operations" : "Patient Portal"}
+                {isDoctor ? (isHindi ? "डॉक्टर पोर्टल" : "Doctor Portal") : isStaff ? (isHindi ? "स्टाफ संचालन" : "Staff Operations") : (isHindi ? "रोगी पोर्टल" : "Patient Portal")}
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
               {isDoctor
-                ? "Encrypted patient triage inquiries, specialist case consults, and bed coordination."
+                ? (isHindi ? "एन्क्रिप्टेड रोगी ट्रायज पूछताछ, विशेषज्ञ केस परामर्श, और बेड समन्वय।" : "Encrypted patient triage inquiries, specialist case consults, and bed coordination.")
                 : isStaff
-                ? "Live 108 ambulance telemetry, bed reservations, and patient registration support."
-                : "Direct messaging with your consulting doctors, prescription guidance, and hospital OPD tokens."}
+                ? (isHindi ? "लाइव 108 एम्बुलेंस टेलीमेट्री, बेड आरक्षण, और रोगी पंजीकरण सहायता।" : "Live 108 ambulance telemetry, bed reservations, and patient registration support.")
+                : (isHindi ? "अपने डॉक्टरों से सीधे संदेश, पर्चे का मार्गदर्शन, और अस्पताल ओपीडी टोकन।" : "Direct messaging with your consulting doctors, prescription guidance, and hospital OPD tokens.")}
             </p>
           </div>
         </div>
@@ -294,7 +295,7 @@ export default function MessagesPage() {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-emerald-100/80 text-emerald-800 border-emerald-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            256-bit Encrypted Channel
+            {isHindi ? "256-बिट एन्क्रिप्टेड चैनल" : "256-bit Encrypted Channel"}
           </Badge>
         </div>
       </div>

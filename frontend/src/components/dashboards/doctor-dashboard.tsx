@@ -26,15 +26,15 @@ export function DoctorDashboard() {
   const pendingReferrals = referrals.filter((r) => r.status === "PENDING");
 
   const currentHour = new Date().getHours();
-  let greeting = "Good evening";
+  let greeting = language === "hi" ? "शुभ संध्या" : "Good evening";
   if (currentHour >= 5 && currentHour < 12) {
-    greeting = "Good morning";
+    greeting = language === "hi" ? "शुभ प्रभात" : "Good morning";
   } else if (currentHour >= 12 && currentHour < 17) {
-    greeting = "Good afternoon";
+    greeting = language === "hi" ? "शुभ दोपहर" : "Good afternoon";
   } else if (currentHour >= 17 && currentHour < 22) {
-    greeting = "Good evening";
+    greeting = language === "hi" ? "शुभ संध्या" : "Good evening";
   } else {
-    greeting = "Good night";
+    greeting = language === "hi" ? "शुभ रात्रि" : "Good night";
   }
 
   const today = getAppointmentDateKey(new Date());
@@ -218,11 +218,11 @@ export function DoctorDashboard() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-slate-50/90 border-b border-slate-200/80 text-slate-500 uppercase tracking-wider font-extrabold">
-                        <th className="py-4 px-4 text-left">Time</th>
-                        <th className="py-4 px-4 text-left">Patient</th>
-                        <th className="py-4 px-4 text-left">Chief Complaint</th>
-                        <th className="py-4 px-4 text-left">Status</th>
-                        <th className="py-4 px-4 text-right">Action</th>
+                        <th className="py-4 px-4 text-left">{language === "hi" ? "समय" : "Time"}</th>
+                        <th className="py-4 px-4 text-left">{language === "hi" ? "मरीज" : "Patient"}</th>
+                        <th className="py-4 px-4 text-left">{language === "hi" ? "प्रमुख लक्षण / कारण" : "Chief Complaint"}</th>
+                        <th className="py-4 px-4 text-left">{language === "hi" ? "स्थिति" : "Status"}</th>
+                        <th className="py-4 px-4 text-right">{language === "hi" ? "क्रिया" : "Action"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -259,7 +259,7 @@ export function DoctorDashboard() {
                                 className="btn-3d-primary h-8 px-3.5 text-[11px] font-black rounded-xl gap-1.5"
                               >
                                 <Play className="w-3 h-3 fill-current" />
-                                <span>Consult</span>
+                                <span>{language === "hi" ? "परामर्श" : "Consult"}</span>
                               </button>
                             </Link>
                           </td>

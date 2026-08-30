@@ -24,7 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import FacilityMapWrapper from "@/components/facility-map-wrapper";
 import type { FacilityMapItem } from "@/components/facility-map";
-import { DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
+import { useStore, DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
 import Link from "next/link";
 
 interface HospitalDb extends FacilityMapItem {
@@ -59,24 +59,24 @@ interface HospitalDb extends FacilityMapItem {
 
 // Region definitions for filtering
 const REGIONS = [
-  { value: "ALL", label: "All Regions" },
-  { value: "Delhi", label: "Delhi" },
-  { value: "Noida", label: "Noida" },
-  { value: "Greater Noida", label: "Greater Noida" },
-  { value: "Ghaziabad", label: "Ghaziabad" },
-  { value: "Gurugram", label: "Gurugram" },
-  { value: "Faridabad", label: "Faridabad" },
+  { value: "ALL", label: "All Regions", labelHi: "सभी क्षेत्र" },
+  { value: "Delhi", label: "Delhi", labelHi: "दिल्ली" },
+  { value: "Noida", label: "Noida", labelHi: "नोएडा" },
+  { value: "Greater Noida", label: "Greater Noida", labelHi: "ग्रेटर नोएडा" },
+  { value: "Ghaziabad", label: "Ghaziabad", labelHi: "गाजियाबाद" },
+  { value: "Gurugram", label: "Gurugram", labelHi: "गुरुग्राम" },
+  { value: "Faridabad", label: "Faridabad", labelHi: "फरीदाबाद" },
 ] as const;
 
 const SCHEME_FILTERS = [
-  { value: "ALL", label: "All Healthcare Schemes" },
-  { value: "DAK", label: "Delhi Arogya Kosh (DAK ₹5L)" },
-  { value: "DFSS", label: "Delhi Free Surgery (1,100+ Procedures)" },
-  { value: "DIAG", label: "Delhi Free Diagnostics (450+ Tests)" },
-  { value: "DAN", label: "Delhi Arogya Nidhi (DAN ₹1.5L)" },
-  { value: "PMJAY", label: "Ayushman Bharat PM-JAY (₹5L)" },
-  { value: "CGHS", label: "CGHS / ECHS Contributory" },
-  { value: "JSY", label: "Janani Suraksha Yojana (Maternal)" },
+  { value: "ALL", label: "All Healthcare Schemes", labelHi: "सभी स्वास्थ्य योजनाएं" },
+  { value: "DAK", label: "Delhi Arogya Kosh (DAK ₹5L)", labelHi: "दिल्ली आरोग्य कोष (DAK ₹5 लाख)" },
+  { value: "DFSS", label: "Delhi Free Surgery (1,100+ Procedures)", labelHi: "दिल्ली मुफ्त सर्जरी (1,100+ प्रक्रियाएं)" },
+  { value: "DIAG", label: "Delhi Free Diagnostics (450+ Tests)", labelHi: "दिल्ली मुफ्त जांच (450+ टेस्ट)" },
+  { value: "DAN", label: "Delhi Arogya Nidhi (DAN ₹1.5L)", labelHi: "दिल्ली आरोग्य निधि (DAN ₹1.5 लाख)" },
+  { value: "PMJAY", label: "Ayushman Bharat PM-JAY (₹5L)", labelHi: "आयुष्मान भारत PM-JAY (₹5 लाख)" },
+  { value: "CGHS", label: "CGHS / ECHS Contributory", labelHi: "CGHS / ECHS अंशदायी" },
+  { value: "JSY", label: "Janani Suraksha Yojana (Maternal)", labelHi: "जननी सुरक्षा योजना (मातृत्व)" },
 ] as const;
 
 function getHospitalRegion(facility: { district?: string; state?: string; city?: string; area?: string; location?: string }): string {
@@ -124,20 +124,43 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 }
 
 // Helper component for progress bar
-function ProgressBar({ available, total, type }: { available: number; total: number; type: "icu" | "general" | "private" }) {
+function ProgressBar({
+  available,
+  total,
+  type,
+  isHindi,
+}: {
+  available: number;
+  total: number;
+  type: "icu" | "general" | "private";
+  isHindi: boolean;
+}) {
   const percentage = total > 0 ? (available / total) * 100 : 0;
 
   let color = "bg-rose-500";
   if (percentage > 50) color = "bg-emerald-500";
   else if (percentage > 20) color = "bg-amber-500";
 
+  const typeLabel =
+    type === "private"
+      ? isHindi
+        ? "प्राइवेट रूम"
+        : "Private Beds"
+      : type === "icu"
+      ? isHindi
+        ? "आईसीयू बेड"
+        : "ICU Beds"
+      : isHindi
+      ? "सामान्य वार्ड बेड"
+      : "General Beds";
+
   return (
     <div className="space-y-1.5 w-full">
       <div className="flex justify-between text-xs font-semibold text-slate-700">
-        <span className="capitalize">{type === "private" ? "Private" : type.toUpperCase()} Beds</span>
+        <span className="capitalize">{typeLabel}</span>
         <span className={`${percentage > 50 ? "text-emerald-700" : percentage > 20 ? "text-amber-700" : "text-rose-700"} font-bold`}>
           {available}
-          <span className="text-slate-400 font-normal">/{total} free</span>
+          <span className="text-slate-400 font-normal">/{total} {isHindi ? "उपलब्ध" : "free"}</span>
         </span>
       </div>
       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
@@ -178,6 +201,9 @@ const FALLBACK_HOSPITALS: HospitalDb[] = DEFAULT_DELHI_HOSPITALS.map((f) => ({
 }));
 
 export default function HospitalsPage() {
+  const { language } = useStore();
+  const isHindi = language === "hi";
+
   const [facilities, setFacilities] = useState<HospitalDb[]>(FALLBACK_HOSPITALS);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
@@ -246,7 +272,7 @@ export default function HospitalsPage() {
   // GPS Geolocation trigger
   const handleGetLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser.");
+      setLocationError(isHindi ? "आपके ब्राउज़र में जीपीएस सुविधा समर्थित नहीं है।" : "Geolocation is not supported by your browser.");
       return;
     }
 
@@ -266,10 +292,10 @@ export default function HospitalsPage() {
       },
       (err) => {
         setIsLocating(false);
-        let msg = "Could not detect your location.";
-        if (err.code === 1) msg = "Location permission denied. Please allow GPS access in your browser settings.";
-        else if (err.code === 2) msg = "Location unavailable. Please check your network or GPS connection.";
-        else if (err.code === 3) msg = "Location request timed out. Please try again.";
+        let msg = isHindi ? "आपका स्थान ज्ञात नहीं हो सका।" : "Could not detect your location.";
+        if (err.code === 1) msg = isHindi ? "स्थान की अनुमति अस्वीकृत। कृपया ब्राउज़र सेटिंग में जीपीएस अनुमति दें।" : "Location permission denied. Please allow GPS access in your browser settings.";
+        else if (err.code === 2) msg = isHindi ? "स्थान अनुपलब्ध। कृपया अपना नेटवर्क या जीपीएस कनेक्शन जांचें।" : "Location unavailable. Please check your network or GPS connection.";
+        else if (err.code === 3) msg = isHindi ? "स्थान अनुरोध का समय समाप्त हो गया। पुनः प्रयास करें।" : "Location request timed out. Please try again.";
         setLocationError(msg);
       },
       {
@@ -278,7 +304,7 @@ export default function HospitalsPage() {
         maximumAge: 60000,
       }
     );
-  }, []);
+  }, [isHindi]);
 
   // Filter and sort facilities
   const filteredFacilities = useMemo(() => {
@@ -360,13 +386,17 @@ export default function HospitalsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Delhi-NCR Hospital Network</h1>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                {isHindi ? "दिल्ली-एनसीआर अस्पताल नेटवर्क" : "Delhi-NCR Hospital Network"}
+              </h1>
               <Badge className="bg-teal-100 text-teal-900 border-teal-300 font-extrabold text-[11px] px-2.5 py-0.5">
-                Hospitals Only
+                {isHindi ? "केवल अस्पताल" : "Hospitals Only"}
               </Badge>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
-              Verified hospital network across Delhi, Noida, Greater Noida, Ghaziabad, Gurugram &amp; Faridabad with live bed telemetry &amp; GPS nearest locator.
+              {isHindi
+                ? "दिल्ली, नोएडा, ग्रेटर नोएडा, गाजियाबाद, गुरुग्राम एवं फरीदाबाद के 118 सत्यापित अस्पताल, लाइव बेड व जीपीएस ट्रैकिंग।"
+                : "Verified hospital network across Delhi, Noida, Greater Noida, Ghaziabad, Gurugram & Faridabad with live bed telemetry & GPS nearest locator."}
             </p>
           </div>
         </div>
@@ -380,19 +410,31 @@ export default function HospitalsPage() {
             className={`btn-3d-primary font-black text-xs gap-2 h-10 px-4 rounded-xl flex items-center shadow-md ${
               userLocation ? "bg-emerald-600 hover:bg-emerald-700" : ""
             }`}
-            title="Use your device GPS to locate nearest hospitals"
+            title={isHindi ? "निकटतम अस्पताल खोजने के लिए जीपीएस का उपयोग करें" : "Use your device GPS to locate nearest hospitals"}
           >
             {isLocating ? (
               <Loader2 className="w-4 h-4 animate-spin inline mr-1" />
             ) : (
               <Navigation className="w-4 h-4 inline mr-1" />
             )}
-            <span>{isLocating ? "Detecting GPS..." : userLocation ? "📍 GPS Active" : "Find Nearest Hospital"}</span>
+            <span>
+              {isLocating
+                ? isHindi
+                  ? "जीपीएस खोज रहे हैं..."
+                  : "Detecting GPS..."
+                : userLocation
+                ? isHindi
+                  ? "📍 जीपीएस सक्रिय"
+                  : "📍 GPS Active"
+                : isHindi
+                ? "निकटतम अस्पताल खोजें"
+                : "Find Nearest Hospital"}
+            </span>
           </button>
 
           <Badge variant="outline" className="bg-teal-100/80 text-teal-800 border-teal-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs h-10 flex items-center">
             <span className="w-2 h-2 rounded-full bg-teal-600 animate-pulse" />
-            {facilities.length} Hospitals
+            {facilities.length} {isHindi ? "अस्पताल नेटवर्क में" : "Hospitals in Network"}
           </Badge>
 
           <button
@@ -403,7 +445,15 @@ export default function HospitalsPage() {
             }`}
           >
             <MapIcon className="w-4 h-4 text-teal-600 inline mr-1" />
-            <span>{showMap ? "Hide Map" : "Show Map"}</span>
+            <span>
+              {showMap
+                ? isHindi
+                  ? "नक्शा छुपाएं"
+                  : "Hide Map"
+                : isHindi
+                ? "नक्शा देखें"
+                : "Show Map"}
+            </span>
           </button>
         </div>
       </div>
@@ -420,7 +470,7 @@ export default function HospitalsPage() {
             onClick={handleGetLocation}
             className="text-xs font-bold text-amber-800 underline hover:text-amber-950"
           >
-            Try Again
+            {isHindi ? "पुनः प्रयास करें" : "Try Again"}
           </button>
         </div>
       )}
@@ -433,9 +483,9 @@ export default function HospitalsPage() {
             <div className="space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/40 text-emerald-200 text-xs font-black">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                <span>CLOSEST HOSPITAL TO YOUR LOCATION</span>
+                <span>{isHindi ? "आपके स्थान के सबसे निकट अस्पताल" : "CLOSEST HOSPITAL TO YOUR LOCATION"}</span>
                 <span className="bg-emerald-500 text-slate-950 px-2 py-0.2 rounded-full font-black text-[10px]">
-                  {nearestHospital.distanceKm} km away
+                  {nearestHospital.distanceKm} {isHindi ? "किमी दूर" : "km away"}
                 </span>
               </div>
 
@@ -446,19 +496,21 @@ export default function HospitalsPage() {
 
               <p className="text-xs text-emerald-100 font-medium max-w-2xl">
                 📍 {nearestHospital.location || `${nearestHospital.district}, ${nearestHospital.state}`} •{" "}
-                <span className="font-bold text-white">Estimated Drive: {Math.max(4, Math.round((nearestHospital.distanceKm || 1) * 3.5))} mins</span>
+                <span className="font-bold text-white">
+                  {isHindi ? "अनुमानित ड्राइव:" : "Estimated Drive:"} {Math.max(4, Math.round((nearestHospital.distanceKm || 1) * 3.5))} {isHindi ? "मिनट" : "mins"}
+                </span>
               </p>
 
               <div className="flex flex-wrap gap-2 pt-1">
                 <Badge className="bg-emerald-500/30 text-emerald-100 border border-emerald-400/40 text-xs font-bold">
-                  ICU Beds: {nearestHospital.availableIcu} Free
+                  {isHindi ? "आईसीयू बेड:" : "ICU Beds:"} {nearestHospital.availableIcu} {isHindi ? "उपलब्ध" : "Free"}
                 </Badge>
                 <Badge className="bg-emerald-500/30 text-emerald-100 border border-emerald-400/40 text-xs font-bold">
-                  General Beds: {nearestHospital.availableBeds} Free
+                  {isHindi ? "सामान्य बेड:" : "General Beds:"} {nearestHospital.availableBeds} {isHindi ? "उपलब्ध" : "Free"}
                 </Badge>
                 {nearestHospital.emergencyAvailable !== false && (
                   <Badge className="bg-rose-500/80 text-white border border-rose-400 text-xs font-bold">
-                    🚨 24/7 Emergency Active
+                    🚨 {isHindi ? "24/7 आपातकालीन सक्रिय" : "24/7 Emergency Active"}
                   </Badge>
                 )}
               </div>
@@ -472,7 +524,7 @@ export default function HospitalsPage() {
                     className="h-11 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 border border-white/20 transition-all"
                   >
                     <Phone className="w-4 h-4 text-emerald-300" />
-                    <span>Call ({nearestHospital.phone})</span>
+                    <span>{isHindi ? "कॉल करें" : "Call"} ({nearestHospital.phone})</span>
                   </button>
                 </a>
               )}
@@ -482,7 +534,7 @@ export default function HospitalsPage() {
                   type="button"
                   className="h-11 px-5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 text-xs font-black flex items-center gap-2 shadow-lg transition-all"
                 >
-                  <span>Book OPD Instantly</span>
+                  <span>{isHindi ? "तुरंत ओपीडी बुक करें" : "Book OPD Instantly"}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </Link>
@@ -497,7 +549,11 @@ export default function HospitalsPage() {
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
             <Input
-              placeholder="Search by hospital name, district, area, or specialty (e.g. AIIMS, Medanta, Fortis, Noida, Cardiology)..."
+              placeholder={
+                isHindi
+                  ? "अस्पताल का नाम, जिला, क्षेत्र या विशेषज्ञता खोजें (जैसे एम्स, मेदांता, फोर्टिस, कार्डियोलॉजी)..."
+                  : "Search by hospital name, district, area, or specialty (e.g. AIIMS, Medanta, Fortis, Noida, Cardiology)..."
+              }
               className="pl-11 h-11 text-xs rounded-xl border-slate-200 focus-visible:ring-teal-500 bg-white font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -507,12 +563,12 @@ export default function HospitalsPage() {
           <div className="w-full md:w-52">
             <Select value={regionFilter} onValueChange={(val) => val && setRegionFilter(val)}>
               <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
-                <SelectValue placeholder="All Regions" />
+                <SelectValue placeholder={isHindi ? "सभी क्षेत्र" : "All Regions"} />
               </SelectTrigger>
               <SelectContent>
                 {REGIONS.map((r) => (
                   <SelectItem key={r.value} value={r.value} className="text-xs font-medium">
-                    {r.label} ({regionCounts[r.value] || 0})
+                    {isHindi ? r.labelHi : r.label} ({regionCounts[r.value] || 0})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -522,14 +578,14 @@ export default function HospitalsPage() {
           <div className="w-full md:w-48">
             <Select value={typeFilter} onValueChange={(val) => val && setTypeFilter(val)}>
               <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
-                <SelectValue placeholder="Filter by type" />
+                <SelectValue placeholder={isHindi ? "प्रकार चुनें" : "Filter by type"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL" className="text-xs font-medium">All Hospital Types</SelectItem>
-                <SelectItem value="Government" className="text-xs font-medium">Government Hospitals</SelectItem>
-                <SelectItem value="Private" className="text-xs font-medium">Private / Super-Specialty</SelectItem>
-                <SelectItem value="Tertiary" className="text-xs font-medium">Tertiary Only</SelectItem>
-                <SelectItem value="Specialized" className="text-xs font-medium">Specialized Only</SelectItem>
+                <SelectItem value="ALL" className="text-xs font-medium">{isHindi ? "सभी प्रकार" : "All Hospital Types"}</SelectItem>
+                <SelectItem value="Government" className="text-xs font-medium">{isHindi ? "सरकारी अस्पताल" : "Government Hospitals"}</SelectItem>
+                <SelectItem value="Private" className="text-xs font-medium">{isHindi ? "निजी / सुपर-स्पेशियलिटी" : "Private / Super-Specialty"}</SelectItem>
+                <SelectItem value="Tertiary" className="text-xs font-medium">{isHindi ? "तृतीयक (Tertiary)" : "Tertiary Only"}</SelectItem>
+                <SelectItem value="Specialized" className="text-xs font-medium">{isHindi ? "विशिष्ट (Specialized)" : "Specialized Only"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -537,12 +593,12 @@ export default function HospitalsPage() {
           <div className="w-full md:w-56">
             <Select value={schemeFilter} onValueChange={(val) => val && setSchemeFilter(val)}>
               <SelectTrigger className="h-11 text-xs rounded-xl border-slate-200 focus:ring-teal-500 bg-white font-semibold">
-                <SelectValue placeholder="All Schemes" />
+                <SelectValue placeholder={isHindi ? "योजना चुनें" : "All Schemes"} />
               </SelectTrigger>
               <SelectContent>
                 {SCHEME_FILTERS.map((s) => (
                   <SelectItem key={s.value} value={s.value} className="text-xs font-medium">
-                    {s.label}
+                    {isHindi ? s.labelHi : s.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -560,7 +616,15 @@ export default function HospitalsPage() {
               }`}
             >
               <Compass className="w-4 h-4" />
-              <span>{sortByDistance ? "Nearest First" : "Sort Distance"}</span>
+              <span>
+                {sortByDistance
+                  ? isHindi
+                    ? "निकटतम पहले"
+                    : "Nearest First"
+                  : isHindi
+                  ? "दूरी अनुसार"
+                  : "Sort Distance"}
+              </span>
             </button>
           )}
         </div>
@@ -573,17 +637,23 @@ export default function HospitalsPage() {
             <div className="flex items-center gap-2">
               <MapIcon className="w-4 h-4 text-teal-600" />
               <h2 className="font-black text-sm text-slate-900">
-                Interactive Delhi-NCR Hospital Network ({filteredFacilities.length} Verified Hospitals)
+                {isHindi
+                  ? `इंटरैक्टिव दिल्ली-एनसीआर अस्पताल नेटवर्क (${filteredFacilities.length} अस्पताल)`
+                  : `Interactive Delhi-NCR Hospital Network (${filteredFacilities.length} Verified Hospitals)`}
               </h2>
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold">
               {userLocation ? (
                 <span className="text-sky-700 font-bold flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-sky-500 animate-ping" />
-                  Your location active on map
+                  {isHindi ? "नक्शे पर आपका स्थान सक्रिय है" : "Your location active on map"}
                 </span>
               ) : (
-                <span>Click markers for real-time beds &amp; direct OPD booking</span>
+                <span>
+                  {isHindi
+                    ? "बेड उपलब्धता व ओपीडी बुकिंग हेतु मार्कर पर क्लिक करें"
+                    : "Click markers for real-time beds & direct OPD booking"}
+                </span>
               )}
             </div>
           </div>
@@ -633,9 +703,11 @@ export default function HospitalsPage() {
                   {facility.distanceKm !== undefined && (
                     <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-xl text-xs font-extrabold w-fit shadow-2xs">
                       <Navigation className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{facility.distanceKm} km from you</span>
+                      <span>
+                        {facility.distanceKm} {isHindi ? "किमी दूर" : "km from you"}
+                      </span>
                       <span className="text-[10px] text-emerald-600 font-medium">
-                        (~{Math.max(4, Math.round(facility.distanceKm * 3.5))} min drive)
+                        (~{Math.max(4, Math.round(facility.distanceKm * 3.5))} {isHindi ? "मिनट ड्राइव" : "min drive"})
                       </span>
                     </div>
                   )}
@@ -649,7 +721,7 @@ export default function HospitalsPage() {
                     </Badge>
                     {facility.emergencyAvailable !== false && (
                       <Badge className="bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold gap-1">
-                        <Ambulance className="h-3 w-3" /> 24/7 ER
+                        <Ambulance className="h-3 w-3" /> {isHindi ? "24/7 आपातकाल" : "24/7 ER"}
                       </Badge>
                     )}
                     {facility.pmjayEmpanelled && (
@@ -668,12 +740,12 @@ export default function HospitalsPage() {
                     )}
                     {facility.freeSurgeryEmpanelled && (
                       <span className="inline-flex items-center text-[9px] font-black bg-emerald-100/90 text-emerald-900 border border-emerald-300 rounded-md px-1.5 py-0.5 shadow-2xs">
-                        ✂️ Free Surgery
+                        ✂️ {isHindi ? "मुफ्त सर्जरी" : "Free Surgery"}
                       </span>
                     )}
                     {facility.freeDiagnosticsAvailable && (
                       <span className="inline-flex items-center text-[9px] font-black bg-sky-100/90 text-sky-900 border border-sky-300 rounded-md px-1.5 py-0.5 shadow-2xs">
-                        🧪 Free Tests
+                        🧪 {isHindi ? "मुफ्त जांच" : "Free Tests"}
                       </span>
                     )}
                     {facility.danEmpanelled && (
@@ -704,11 +776,11 @@ export default function HospitalsPage() {
                   {/* Beds Section */}
                   <div className="p-5 space-y-3.5 bg-white">
                     <h3 className="font-black text-xs text-slate-800 flex items-center uppercase tracking-wider">
-                      <Activity className="h-3.5 w-3.5 mr-1.5 text-teal-600" /> Bed Telemetry
+                      <Activity className="h-3.5 w-3.5 mr-1.5 text-teal-600" /> {isHindi ? "लाइव बेड टेलीमेट्री" : "Bed Telemetry"}
                     </h3>
                     <div className="space-y-3">
-                      <ProgressBar available={facility.availableIcu} total={facility.icuBeds} type="icu" />
-                      <ProgressBar available={facility.availableBeds} total={facility.totalBeds} type="general" />
+                      <ProgressBar available={facility.availableIcu} total={facility.icuBeds} type="icu" isHindi={isHindi} />
+                      <ProgressBar available={facility.availableBeds} total={facility.totalBeds} type="general" isHindi={isHindi} />
                     </div>
                   </div>
 
@@ -716,7 +788,7 @@ export default function HospitalsPage() {
                   <div className="p-5 bg-slate-50/50 space-y-2.5 flex-1">
                     <h3 className="font-black text-xs text-slate-800 flex items-center uppercase tracking-wider">
                       <Stethoscope className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
-                      Departments &amp; Specialties
+                      {isHindi ? "विभाग एवं विशेषताएं" : "Departments & Specialties"}
                     </h3>
                     {specialists.length > 0 ? (
                       <div className="flex flex-wrap gap-1.5">
@@ -727,12 +799,14 @@ export default function HospitalsPage() {
                         ))}
                         {specialists.length > 4 && (
                           <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-dashed border-slate-300 text-[11px] font-bold">
-                            +{specialists.length - 4} more
+                            +{specialists.length - 4} {isHindi ? "अन्य" : "more"}
                           </Badge>
                         )}
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">General OPD &amp; Emergency services</p>
+                      <p className="text-xs text-slate-400 italic">
+                        {isHindi ? "सामान्य ओपीडी एवं आपातकालीन सेवाएं" : "General OPD & Emergency services"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -749,12 +823,12 @@ export default function HospitalsPage() {
                       </a>
                     ) : (
                       <button type="button" disabled className="btn-3d-glass opacity-50 flex-1 h-9 rounded-xl text-xs font-semibold">
-                        Emergency 108
+                        {isHindi ? "आपातकालीन 108" : "Emergency 108"}
                       </button>
                     )}
                     <Link href={`/scheduling?facilityId=${facility.id}`} className="flex-1">
                       <button type="button" className="btn-3d-primary w-full h-9 rounded-xl text-xs font-black">
-                        Book OPD
+                        {isHindi ? "ओपीडी बुक करें" : "Book OPD"}
                       </button>
                     </Link>
                   </div>
@@ -767,8 +841,14 @@ export default function HospitalsPage() {
         {filteredFacilities.length === 0 && (
           <div className="col-span-full py-16 text-center glass-panel rounded-[28px] bg-white/90 border border-white/80">
             <Building2 className="mx-auto h-12 w-12 text-slate-400 mb-3" />
-            <h3 className="text-base font-black text-slate-900">No hospitals match your search</h3>
-            <p className="text-slate-500 text-xs font-semibold mt-1">Try adjusting your search criteria, region, or type filter.</p>
+            <h3 className="text-base font-black text-slate-900">
+              {isHindi ? "आपकी खोज से मेल खाने वाला कोई अस्पताल नहीं मिला" : "No hospitals match your search"}
+            </h3>
+            <p className="text-slate-500 text-xs font-semibold mt-1">
+              {isHindi
+                ? "कृपया खोज मानदंड, क्षेत्र या फ़िल्टर समायोजित करने का प्रयास करें।"
+                : "Try adjusting your search criteria, region, or type filter."}
+            </p>
           </div>
         )}
       </div>

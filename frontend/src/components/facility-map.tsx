@@ -9,6 +9,7 @@ import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import 'leaflet-defaulticon-compatibility';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useStore } from '@/lib/store';
 import Link from 'next/link';
 
 export interface FacilityMapItem {
@@ -75,6 +76,9 @@ export default function FacilityMap({
   userLocation,
   className,
 }: FacilityMapProps) {
+  const { language } = useStore();
+  const isHindi = language === 'hi';
+
   // Center on Delhi-NCR region to show the full network
   const defaultCenter: [number, number] = [28.6139, 77.2090];
   const targetCenter: [number, number] = userLocation
@@ -104,7 +108,7 @@ export default function FacilityMap({
             <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
               <Popup>
                 <div className="p-1 font-bold text-xs text-sky-900">
-                  📍 <strong className="text-sky-700">Your Current GPS Location</strong>
+                  📍 <strong className="text-sky-700">{isHindi ? 'आपका वर्तमान जीपीएस स्थान' : 'Your Current GPS Location'}</strong>
                 </div>
               </Popup>
             </Marker>
@@ -143,7 +147,7 @@ export default function FacilityMap({
                   {/* Distance badge if GPS active */}
                   {facility.distanceKm !== undefined && (
                     <div className="inline-flex items-center gap-1 w-fit bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">
-                      📍 <span>{facility.distanceKm} km from your location</span>
+                      📍 <span>{facility.distanceKm} {isHindi ? 'किमी आपके स्थान से' : 'km from your location'}</span>
                     </div>
                   )}
 
@@ -153,7 +157,7 @@ export default function FacilityMap({
                     </Badge>
                     {hasEmergency && (
                       <Badge className="bg-red-500 text-white text-[10px] px-1.5 py-0">
-                        🚨 Emergency
+                        🚨 {isHindi ? '24/7 आपातकाल' : 'Emergency'}
                       </Badge>
                     )}
                     {facility.pmjayEmpanelled && (
@@ -182,8 +186,8 @@ export default function FacilityMap({
                   
                   {/* Bed availability */}
                   <div className="pt-1 font-bold text-slate-800 flex justify-between border-t border-slate-100 text-xs">
-                    <span>ICU: <strong className="text-red-600">{icuAvail}</strong> free</span>
-                    <span>Gen: <strong className="text-emerald-600">{genAvail}</strong> free</span>
+                    <span>{isHindi ? 'आईसीयू:' : 'ICU:'} <strong className="text-red-600">{icuAvail}</strong> {isHindi ? 'उपलब्ध' : 'free'}</span>
+                    <span>{isHindi ? 'सामान्य:' : 'Gen:'} <strong className="text-emerald-600">{genAvail}</strong> {isHindi ? 'उपलब्ध' : 'free'}</span>
                   </div>
 
                   {/* Specialties pills */}
@@ -196,7 +200,7 @@ export default function FacilityMap({
                       ))}
                       {specList.length > 4 && (
                         <span className="text-[9px] text-slate-500 font-medium py-0.5">
-                          +{specList.length - 4} more
+                          +{specList.length - 4} {isHindi ? 'अन्य' : 'more'}
                         </span>
                       )}
                     </div>
@@ -215,12 +219,12 @@ export default function FacilityMap({
                   <div className="flex gap-1.5">
                     <Link href={`/facilities/${facility.id}`} className="flex-1">
                       <Button size="sm" variant="outline" className="w-full h-7 text-[10px] font-bold border-teal-300 text-teal-700 hover:bg-teal-50">
-                        View Hospital
+                        {isHindi ? 'विवरण देखें' : 'View Hospital'}
                       </Button>
                     </Link>
                     <Link href={`/scheduling?facilityId=${facility.id}`} className="flex-1">
                       <Button size="sm" className="w-full h-7 text-[10px] font-bold bg-teal-600 hover:bg-teal-700 text-white">
-                        Book Appointment
+                        {isHindi ? 'अपॉइंटमेंट बुक करें' : 'Book Appointment'}
                       </Button>
                     </Link>
                   </div>

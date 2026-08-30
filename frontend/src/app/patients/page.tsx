@@ -26,7 +26,8 @@ import { apiGet } from "@/lib/api";
 import { useStore } from "@/lib/store";
 
 export default function PatientsPage() {
-  const { patients: storePatients } = useStore();
+  const { patients: storePatients, language } = useStore();
+  const isHindi = language === "hi";
   const [patients, setPatients] = useState<Patient[]>(storePatients || []);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,13 +91,17 @@ export default function PatientsPage() {
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Patient Registry</h1>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                {isHindi ? "रोगी रजिस्टर" : "Patient Registry"}
+              </h1>
               <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-extrabold px-2.5 py-0.5">
-                Live Records
+                {isHindi ? "लाइव रिकॉर्ड" : "Live Records"}
               </Badge>
             </div>
             <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">
-              Centralized clinical intake, risk stratification &amp; longitudinal records.
+              {isHindi
+                ? "केंद्रीकृत क्लिनिकल डेटा, जोखिम वर्गीकरण एवं दीर्घकालिक स्वास्थ्य रिकॉर्ड।"
+                : "Centralized clinical intake, risk stratification & longitudinal records."}
             </p>
           </div>
         </div>
@@ -108,13 +113,13 @@ export default function PatientsPage() {
             className="btn-3d-glass h-11 px-4 text-xs font-extrabold text-slate-800 border-slate-200 gap-2 rounded-2xl"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{isHindi ? "रिफ्रेश" : "Refresh"}</span>
           </button>
 
           <Link href="/register" className="w-full sm:w-auto">
             <button type="button" className="btn-3d-primary w-full sm:w-auto h-11 px-5 rounded-2xl text-xs font-black gap-2">
               <UserPlus className="h-4 w-4" />
-              <span>Register Patient</span>
+              <span>{isHindi ? "रोगी पंजीकृत करें" : "Register Patient"}</span>
             </button>
           </Link>
         </div>
@@ -125,7 +130,9 @@ export default function PatientsPage() {
         <div className="glass-panel p-5 card-hover bg-white/92 border-white/80 rounded-[24px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total Registered</p>
+              <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+                {isHindi ? "कुल पंजीकृत मरीज" : "Total Registered"}
+              </p>
               <p className="text-3xl font-black text-slate-900 mt-1">{totalCount}</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-teal-100/80 text-teal-800 flex items-center justify-center font-bold shadow-2xs border border-teal-200">
@@ -137,7 +144,9 @@ export default function PatientsPage() {
         <div className="glass-panel p-5 card-hover bg-white/92 border-white/80 rounded-[24px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-extrabold text-rose-500 uppercase tracking-wider">High Risk &amp; Emergency</p>
+              <p className="text-[11px] font-extrabold text-rose-500 uppercase tracking-wider">
+                {isHindi ? "उच्च जोखिम व आपातकाल" : "High Risk & Emergency"}
+              </p>
               <p className="text-3xl font-black text-rose-600 mt-1">{emergencyCount}</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-rose-100/80 text-rose-700 flex items-center justify-center font-bold shadow-2xs border border-rose-200">
@@ -149,7 +158,9 @@ export default function PatientsPage() {
         <div className="glass-panel p-5 card-hover bg-white/92 border-white/80 rounded-[24px]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider">Stable &amp; Regular Care</p>
+              <p className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider">
+                {isHindi ? "स्थिर व सामान्य देखभाल" : "Stable & Regular Care"}
+              </p>
               <p className="text-3xl font-black text-emerald-700 mt-1">
                 {stableCount} <span className="text-xs font-semibold text-slate-400">({totalCount > 0 ? Math.round((stableCount / totalCount) * 100) : 0}%)</span>
               </p>
@@ -168,7 +179,7 @@ export default function PatientsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
               type="search"
-              placeholder="Search by Patient Name, MRN, ABHA ID, Mobile or District..."
+              placeholder={isHindi ? "मरीज का नाम, एमआरएन, आभा आईडी, मोबाइल या जिले से खोजें..." : "Search by Patient Name, MRN, ABHA ID, Mobile or District..."}
               className="pl-11 h-12 rounded-xl border-slate-200 bg-white/80 focus:bg-white text-sm font-semibold shadow-none focus-visible:ring-teal-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,7 +203,7 @@ export default function PatientsPage() {
               }`}
             >
               <SlidersHorizontal className="h-4 w-4" />
-              <span>Filters</span>
+              <span>{isHindi ? "फ़िल्टर" : "Filters"}</span>
               {(filterRisk !== "ALL" || filterDistrict !== "ALL" || filterGender !== "ALL") && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
               )}
@@ -204,17 +215,17 @@ export default function PatientsPage() {
         {showAdvancedFilters && (
           <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in duration-200">
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Risk Level</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">{isHindi ? "जोखिम स्तर" : "Risk Level"}</label>
               <select
                 value={filterRisk}
                 onChange={(e) => setFilterRisk(e.target.value)}
                 className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:ring-2 focus:ring-teal-500 outline-none"
               >
-                <option value="ALL">All Risk Levels</option>
-                <option value="EMERGENCY">Emergency</option>
-                <option value="HIGH">High Risk</option>
-                <option value="MODERATE">Moderate Risk</option>
-                <option value="LOW">Low Risk</option>
+                <option value="ALL">{isHindi ? "सभी जोखिम स्तर" : "All Risk Levels"}</option>
+                <option value="EMERGENCY">{isHindi ? "आपातकाल" : "Emergency"}</option>
+                <option value="HIGH">{isHindi ? "उच्च जोखिम" : "High Risk"}</option>
+                <option value="MODERATE">{isHindi ? "मध्यम जोखिम" : "Moderate Risk"}</option>
+                <option value="LOW">{isHindi ? "कम जोखिम" : "Low Risk"}</option>
               </select>
             </div>
 

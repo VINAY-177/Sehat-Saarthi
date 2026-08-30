@@ -21,7 +21,8 @@ const PATIENT_LNG = 82.9739;
 
 export default function AssessPage() {
   const router = useRouter();
-  const { facilities } = useStore();
+  const { facilities, language } = useStore();
+  const isHindi = language === "hi";
   
   const [age, setAge] = useState<number>(30);
   const [gender, setGender] = useState<string>("Male");
@@ -100,9 +101,13 @@ export default function AssessPage() {
             <Activity className="h-7 w-7" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">AI Clinical Risk &amp; Triage Assessment</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              {isHindi ? "एआई क्लिनिकल जोखिम व ट्रायज मूल्यांकन" : "AI Clinical Risk & Triage Assessment"}
+            </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
-              Instant rule-based triage scoring, explainable risk factors, and optimal facility matching.
+              {isHindi
+                ? "तत्काल नियम-आधारित ट्रायज स्कोरिंग, व्याख्या योग्य जोखिम कारक, और निकटतम अस्पताल मिलान।"
+                : "Instant rule-based triage scoring, explainable risk factors, and optimal facility matching."}
             </p>
           </div>
         </div>
@@ -110,7 +115,7 @@ export default function AssessPage() {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-emerald-100/80 text-emerald-800 border-emerald-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            AI Decision Support Active
+            {isHindi ? "एआई निर्णय प्रणाली सक्रिय" : "AI Decision Support Active"}
           </Badge>
         </div>
       </div>
@@ -123,14 +128,14 @@ export default function AssessPage() {
             <div className="py-3.5 px-5 border-b border-slate-200/80 bg-slate-50/80">
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-teal-100 text-teal-800 text-xs font-bold">1</span>
-                Patient Demographics
+                {isHindi ? "मरीज जनसांख्यिकी" : "Patient Demographics"}
               </h2>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="age" className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-slate-400" /> Age (Years)
+                    <User className="w-3.5 h-3.5 text-slate-400" /> {isHindi ? "आयु (वर्ष)" : "Age (Years)"}
                   </Label>
                   <Input 
                     id="age" 
@@ -144,16 +149,16 @@ export default function AssessPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                    <UserCircle className="w-3.5 h-3.5 text-slate-400" /> Gender
+                    <UserCircle className="w-3.5 h-3.5 text-slate-400" /> {isHindi ? "लिंग" : "Gender"}
                   </Label>
                   <Select value={gender} onValueChange={(val) => val && setGender(val)}>
                     <SelectTrigger className="h-10 rounded-xl border-slate-200 focus:ring-teal-500">
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder={isHindi ? "लिंग चुनें" : "Select gender"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="Male">{isHindi ? "पुरुष (Male)" : "Male"}</SelectItem>
+                      <SelectItem value="Female">{isHindi ? "महिला (Female)" : "Female"}</SelectItem>
+                      <SelectItem value="Other">{isHindi ? "अन्य (Other)" : "Other"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -166,7 +171,7 @@ export default function AssessPage() {
             <div className="py-3.5 px-5 border-b border-slate-200/80 bg-slate-50/80">
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-blue-100 text-blue-800 text-xs font-bold">2</span>
-                Vital Signs Telemetry
+                {isHindi ? "महत्वपूर्ण संकेत टेलीमेट्री (Vitals)" : "Vital Signs Telemetry"}
               </h2>
             </div>
             <div className="p-5">
@@ -179,7 +184,7 @@ export default function AssessPage() {
             <div className="py-3.5 px-5 border-b border-slate-200/80 bg-slate-50/80">
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-100 text-amber-800 text-xs font-bold">3</span>
-                Reported Symptoms
+                {isHindi ? "रिपोर्ट किए गए लक्षण" : "Reported Symptoms"}
               </h2>
             </div>
             <div className="p-5">
@@ -192,39 +197,53 @@ export default function AssessPage() {
             <div className="py-3.5 px-5 border-b border-slate-200/80 bg-slate-50/80">
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-rose-100 text-rose-800 text-xs font-bold">4</span>
-                Pre-existing Comorbidities
+                {isHindi ? "पहले से मौजूद बीमारियाँ (Comorbidities)" : "Pre-existing Comorbidities"}
               </h2>
             </div>
             <div className="p-5">
               <div className="flex flex-wrap gap-2">
                 {(Object.keys(comorbidities) as Array<keyof Comorbidities>).map((key) => {
-                  const isSelected = comorbidities[key];
+                  const active = comorbidities[key];
+                  const labels: Record<string, { en: string; hi: string }> = {
+                    diabetes: { en: "Diabetes", hi: "मधुमेह (Diabetes)" },
+                    hypertension: { en: "Hypertension", hi: "उच्च रक्तचाप (Hypertension)" },
+                    heartDisease: { en: "Heart Disease", hi: "हृदय रोग (Heart Disease)" },
+                    pregnancy: { en: "Pregnancy", hi: "गर्भावस्था (Pregnancy)" },
+                    asthma: { en: "Asthma / COPD", hi: "अस्थमा / सांस की बीमारी" },
+                    kidney: { en: "Kidney Disease", hi: "गुर्दे की बीमारी (Kidney Disease)" },
+                  };
                   return (
                     <button
                       key={key}
+                      type="button"
                       onClick={() => handleComorbidityChange(key)}
-                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all border ${
-                        isSelected 
-                          ? 'bg-teal-700 border-teal-800 text-white shadow-xs' 
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        active
+                          ? "bg-rose-50 border-rose-300 text-rose-800 shadow-2xs"
+                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                       }`}
                     >
-                      {key.replace(/([A-Z])/g, " $1").trim()}
+                      {active ? "✓ " : "+ "}
+                      {isHindi ? labels[key]?.hi || key : labels[key]?.en || key}
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
           </div>
 
-          <button 
+          <button
             type="button"
-            className="btn-3d-primary w-full h-12 text-xs font-black rounded-2xl gap-2" 
             onClick={handleAssess}
             disabled={isLoading}
+            className="btn-3d-primary w-full h-12 text-sm font-black rounded-2xl flex items-center justify-center gap-2"
           >
-            <Activity className={`w-4 h-4 mr-1 inline ${isLoading ? 'animate-pulse' : ''}`} />
-            <span>{isLoading ? "Running AI Clinical Engine..." : "Run AI Triage Assessment"}</span>
+            <Activity className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            <span>
+              {isLoading
+                ? (isHindi ? "विश्लेषण कर रहे हैं..." : "Analyzing Clinical Metrics...")
+                : (isHindi ? "ट्रायज जोखिम स्कोर की गणना करें" : "Calculate Triage Risk Score")}
+            </span>
           </button>
         </div>
 
@@ -236,9 +255,13 @@ export default function AssessPage() {
                 <div className="w-16 h-16 rounded-2xl bg-white shadow-xs flex items-center justify-center mb-4 text-slate-400 border border-slate-100">
                   <Stethoscope className="w-8 h-8 text-teal-600" />
                 </div>
-                <h3 className="font-black text-slate-900 text-base mb-1">Ready for Assessment</h3>
+                <h3 className="font-black text-slate-900 text-base mb-1">
+                  {isHindi ? "मूल्यांकन के लिए तैयार" : "Ready for Assessment"}
+                </h3>
                 <p className="text-xs text-slate-500 max-w-xs leading-relaxed font-semibold">
-                  Enter patient demographics, vitals telemetry, and reported symptoms, then click &quot;Run AI Triage Assessment&quot;.
+                  {isHindi
+                    ? "मरीज की जनसांख्यिकी, महत्वपूर्ण लक्षण (Vitals), और लक्षण दर्ज करें, फिर जोखिम मूल्यांकन चलाएं।"
+                    : "Enter patient demographics, vitals telemetry, and reported symptoms, then click calculate risk score."}
                 </p>
               </div>
             </div>

@@ -19,24 +19,26 @@ const initialAmbulances: Ambulance[] = [
 ];
 
 export default function AmbulancePage() {
-  const { role } = useStore();
+  const { role, language } = useStore();
+  const isHindi = language === "hi";
+
   const [ambulances, setAmbulances] = useState<Ambulance[]>(initialAmbulances);
 
   const handleDispatch = (id: string) => {
     setAmbulances(prev => prev.map(amb => 
       amb.id === id ? { ...amb, status: AmbulanceStatus.DISPATCHED } : amb
     ));
-    toast.success("Ambulance Dispatched successfully.");
+    toast.success(isHindi ? "एम्बुलेंस सफलतापूर्वक रवाना की गई।" : "Ambulance Dispatched successfully.");
   };
 
   const getStatusBadge = (status: AmbulanceStatus) => {
     switch (status) {
       case AmbulanceStatus.AVAILABLE:
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600 border-none">Available</Badge>;
+        return <Badge className="bg-emerald-500 hover:bg-emerald-600 border-none">{isHindi ? "उपलब्ध" : "Available"}</Badge>;
       case AmbulanceStatus.DISPATCHED:
-        return <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none">Dispatched</Badge>;
+        return <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none">{isHindi ? "रवाना" : "Dispatched"}</Badge>;
       case AmbulanceStatus.EN_ROUTE:
-        return <Badge className="bg-red-500 hover:bg-red-600 border-none">En Route</Badge>;
+        return <Badge className="bg-red-500 hover:bg-red-600 border-none">{isHindi ? "रास्ते में" : "En Route"}</Badge>;
     }
   };
 
@@ -58,9 +60,13 @@ export default function AmbulancePage() {
             <Siren className="h-7 w-7 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Emergency Ambulance Dispatch</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              {isHindi ? "आपातकालीन एम्बुलेंस प्रेषण" : "Emergency Ambulance Dispatch"}
+            </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">
-              National 108 Emergency Response network &amp; live GPS fleet telemetry.
+              {isHindi
+                ? "राष्ट्रीय 108 आपातकालीन प्रतिक्रिया नेटवर्क एवं लाइव जीपीएस बेड़ा ट्रैकिंग।"
+                : "National 108 Emergency Response network & live GPS fleet telemetry."}
             </p>
           </div>
         </div>
@@ -68,7 +74,7 @@ export default function AmbulancePage() {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-red-100/80 text-red-800 border-red-300 font-extrabold px-3 py-1 text-xs gap-1.5 shadow-2xs">
             <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-            108 Response Unit Active
+            {isHindi ? "108 प्रतिक्रिया यूनिट सक्रिय" : "108 Response Unit Active"}
           </Badge>
         </div>
       </div>
@@ -80,23 +86,29 @@ export default function AmbulancePage() {
             <div className="bg-slate-50/80 pb-3.5 pt-4 px-5 border-b border-slate-200/80">
               <h2 className="flex items-center gap-2 text-sm font-black text-slate-900">
                 <Activity className="h-4 w-4 text-teal-600" />
-                Request Emergency Unit
+                {isHindi ? "आपातकालीन यूनिट का अनुरोध करें" : "Request Emergency Unit"}
               </h2>
             </div>
             <div className="p-5 space-y-3.5">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">Pickup Location</Label>
+                <Label className="text-xs font-bold text-slate-800">{isHindi ? "पिकअप स्थान" : "Pickup Location"}</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <Input placeholder="Enter patient address / landmark..." className="pl-9 h-10 rounded-xl border-slate-200 bg-white font-medium text-xs" />
+                  <Input
+                    placeholder={isHindi ? "मरीज का पता / लैंडमार्क दर्ज करें..." : "Enter patient address / landmark..."}
+                    className="pl-9 h-10 rounded-xl border-slate-200 bg-white font-medium text-xs"
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">Emergency Type</Label>
-                <Input placeholder="e.g. Cardiac Arrest, Trauma, Maternal..." className="h-10 rounded-xl border-slate-200 bg-white font-medium text-xs" />
+                <Label className="text-xs font-bold text-slate-800">{isHindi ? "आपातकाल का प्रकार" : "Emergency Type"}</Label>
+                <Input
+                  placeholder={isHindi ? "जैसे: दिल का दौरा, दुर्घटना, प्रसव..." : "e.g. Cardiac Arrest, Trauma, Maternal..."}
+                  className="h-10 rounded-xl border-slate-200 bg-white font-medium text-xs"
+                />
               </div>
               <button type="button" className="btn-3d-emergency w-full h-11 text-xs font-black rounded-xl">
-                Locate Nearest 108 Ambulance
+                {isHindi ? "निकटतम 108 एम्बुलेंस खोजें" : "Locate Nearest 108 Ambulance"}
               </button>
             </div>
           </div>
@@ -105,14 +117,14 @@ export default function AmbulancePage() {
             <div className="py-3.5 px-5 border-b border-slate-200/80 bg-slate-50/80">
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <Navigation className="h-4 w-4 text-slate-500" />
-                Live Dispatch Log
+                {isHindi ? "लाइव प्रेषण लॉग" : "Live Dispatch Log"}
               </h2>
             </div>
             <div className="p-4">
               <div className="max-h-[220px] overflow-y-auto pr-1">
                 {ambulances.length === 0 ? (
                   <div className="text-center py-6 text-slate-400 text-xs font-medium">
-                    No active dispatches.
+                    {isHindi ? "कोई सक्रिय प्रेषण नहीं।" : "No active dispatches."}
                   </div>
                 ) : (
                   <div className="space-y-2.5 relative before:absolute before:inset-0 before:left-3 before:h-full before:w-0.5 before:bg-slate-200">
@@ -143,7 +155,13 @@ export default function AmbulancePage() {
                 <div className="p-4 bg-slate-50/80 border-b border-slate-200/80">
                   <div className="flex justify-between items-center mb-2">
                     <Badge variant="outline" className="text-[10px] font-extrabold text-teal-800 bg-teal-50 border-teal-200">
-                      {amb.vehicleNo.includes("ALS") ? "Advanced Life Support (ALS)" : "Basic Life Support (BLS)"}
+                      {amb.vehicleNo.includes("ALS")
+                        ? isHindi
+                          ? "एडवांस्ड लाइफ सपोर्ट (ALS)"
+                          : "Advanced Life Support (ALS)"
+                        : isHindi
+                        ? "बेसिक लाइफ सपोर्ट (BLS)"
+                        : "Basic Life Support (BLS)"}
                     </Badge>
                     {getStatusBadge(amb.status)}
                   </div>
@@ -163,7 +181,7 @@ export default function AmbulancePage() {
                       className="btn-3d-primary w-full h-9 text-xs font-black rounded-xl" 
                       onClick={() => handleDispatch(amb.id)}
                     >
-                      Dispatch Now
+                      {isHindi ? "अभी रवाना करें" : "Dispatch Now"}
                     </button>
                   )}
                 </div>
@@ -172,7 +190,7 @@ export default function AmbulancePage() {
             {ambulances.length === 0 && (
               <div className="col-span-2 text-center py-12 glass-panel rounded-[24px] text-slate-500 bg-white/90 font-bold text-xs">
                 <Siren className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                No ambulances registered in the fleet yet.
+                {isHindi ? "बेड़े में अभी कोई एम्बुलेंस पंजीकृत नहीं है।" : "No ambulances registered in the fleet yet."}
               </div>
             )}
           </div>
@@ -181,9 +199,11 @@ export default function AmbulancePage() {
             <div className="bg-slate-50/80 border-b border-slate-200/80 p-4 sm:p-5">
               <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-teal-600" />
-                Live Fleet Tracking
+                {isHindi ? "लाइव बेड़ा ट्रैकिंग" : "Live Fleet Tracking"}
               </h3>
-              <p className="text-xs text-slate-500 font-semibold mt-0.5">Real-time GPS telemetry of active response units</p>
+              <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                {isHindi ? "सक्रिय प्रतिक्रिया यूनिटों की वास्तविक समय जीपीएस टेलीमेट्री" : "Real-time GPS telemetry of active response units"}
+              </p>
             </div>
             <div className="p-0 h-[400px]">
               <AmbulanceMapWrapper ambulances={ambulances} />

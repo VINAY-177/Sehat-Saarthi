@@ -17,7 +17,8 @@ import { ClinicalReferralSlipModal } from '@/components/clinical-referral-slip';
 import { toast } from 'sonner';
 
 export default function ReferralsPage() {
-  const { referrals, updateReferralStatus, patients, facilities, role, addReferral } = useStore();
+  const { referrals, updateReferralStatus, patients, facilities, role, addReferral, language } = useStore();
+  const isHindi = language === "hi";
   const isStaff = role === Role.HOSPITAL_STAFF;
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -37,13 +38,13 @@ export default function ReferralsPage() {
   const getStatusBadge = (status: ReferralStatus) => {
     switch (status) {
       case ReferralStatus.PENDING: 
-        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-3 py-1 font-medium"><Clock className="w-3 h-3 mr-1"/> Pending</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-3 py-1 font-medium"><Clock className="w-3 h-3 mr-1"/> {isHindi ? "लंबित" : "Pending"}</Badge>;
       case ReferralStatus.ACCEPTED: 
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-3 py-1 font-medium"><CheckCircle2 className="w-3 h-3 mr-1"/> Accepted</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-3 py-1 font-medium"><CheckCircle2 className="w-3 h-3 mr-1"/> {isHindi ? "स्वीकृत" : "Accepted"}</Badge>;
       case ReferralStatus.EN_ROUTE: 
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-3 py-1 font-medium"><Ambulance className="w-3 h-3 mr-1"/> En Route</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-3 py-1 font-medium"><Ambulance className="w-3 h-3 mr-1"/> {isHindi ? "रास्ते में" : "En Route"}</Badge>;
       case ReferralStatus.ARRIVED: 
-        return <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200 border-none px-3 py-1 font-medium"><Building2 className="w-3 h-3 mr-1"/> Arrived</Badge>;
+        return <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200 border-none px-3 py-1 font-medium"><Building2 className="w-3 h-3 mr-1"/> {isHindi ? "पहुंच चुके" : "Arrived"}</Badge>;
       default: 
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -51,7 +52,7 @@ export default function ReferralsPage() {
 
   const handleCreateReferral = async () => {
     if (!selectedPatientId || !selectedFacilityId || !reason.trim()) {
-      toast.error('Please select patient, destination facility, and state referral reason.');
+      toast.error(isHindi ? 'कृपया मरीज, गंतव्य अस्पताल और रेफरल का कारण चुनें।' : 'Please select patient, destination facility, and state referral reason.');
       return;
     }
 
@@ -70,7 +71,7 @@ export default function ReferralsPage() {
       reason,
     });
 
-    toast.success('Referral created successfully.');
+    toast.success(isHindi ? 'रेफरल सफलतापूर्वक बनाया गया।' : 'Referral created successfully.');
     setCreateDialogOpen(false);
     setSelectedPatientId('');
     setSelectedFacilityId('');
@@ -88,21 +89,21 @@ export default function ReferralsPage() {
     if (currentStatus === ReferralStatus.PENDING) {
       return (
         <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm" onClick={() => updateReferralStatus(referralId, ReferralStatus.ACCEPTED)}>
-          Accept Referral
+          {isHindi ? "रेफरल स्वीकार करें" : "Accept Referral"}
         </Button>
       );
     }
     if (currentStatus === ReferralStatus.ACCEPTED) {
       return (
         <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={() => updateReferralStatus(referralId, ReferralStatus.EN_ROUTE)}>
-          Mark En Route
+          {isHindi ? "रास्ते में चिह्नित करें" : "Mark En Route"}
         </Button>
       );
     }
     if (currentStatus === ReferralStatus.EN_ROUTE) {
       return (
         <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm" onClick={() => updateReferralStatus(referralId, ReferralStatus.ARRIVED)}>
-          Mark Arrived
+          {isHindi ? "आगमन की पुष्टि करें" : "Mark Arrived"}
         </Button>
       );
     }

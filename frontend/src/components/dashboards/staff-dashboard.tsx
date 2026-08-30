@@ -237,11 +237,11 @@ export function StaffDashboard() {
 
   // Greeting
   const currentHour = new Date().getHours();
-  let greeting = "Good evening";
-  if (currentHour >= 5 && currentHour < 12) greeting = "Good morning";
-  else if (currentHour >= 12 && currentHour < 17) greeting = "Good afternoon";
-  else if (currentHour >= 17 && currentHour < 22) greeting = "Good evening";
-  else greeting = "Good night";
+  let greeting = language === "hi" ? "शुभ संध्या" : "Good evening";
+  if (currentHour >= 5 && currentHour < 12) greeting = language === "hi" ? "शुभ प्रभात" : "Good morning";
+  else if (currentHour >= 12 && currentHour < 17) greeting = language === "hi" ? "शुभ दोपहर" : "Good afternoon";
+  else if (currentHour >= 17 && currentHour < 22) greeting = language === "hi" ? "शुभ संध्या" : "Good evening";
+  else greeting = language === "hi" ? "शुभ रात्रि" : "Good night";
 
   const firstName = currentUser?.name?.split(" ")[0] || "Staff";
 
@@ -346,10 +346,10 @@ export function StaffDashboard() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full flex overflow-x-auto bg-white border border-slate-200/80 rounded-xl p-1 shadow-xs gap-0.5">
             <TabsTrigger value="overview" className="flex-1 text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-800">
-              <Activity className="w-3.5 h-3.5" /> Overview
+              <Activity className="w-3.5 h-3.5" /> {language === "hi" ? "अवलोकन" : "Overview"}
             </TabsTrigger>
             <TabsTrigger value="appointments" className="flex-1 text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-teal-50 data-[state=active]:text-teal-800">
-              <CalendarCheck className="w-3.5 h-3.5" /> Appointments
+              <CalendarCheck className="w-3.5 h-3.5" /> {language === "hi" ? "अपॉइंटमेंट" : "Appointments"}
               {pendingRequests.length > 0 && (
                 <span className="ml-1 bg-amber-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
                   {pendingRequests.length}
@@ -357,16 +357,16 @@ export function StaffDashboard() {
               )}
             </TabsTrigger>
             <TabsTrigger value="beds" className="flex-1 text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-800">
-              <Bed className="w-3.5 h-3.5" /> Beds
+              <Bed className="w-3.5 h-3.5" /> {language === "hi" ? "बेड क्षमता" : "Beds"}
             </TabsTrigger>
             <TabsTrigger value="equipment" className="flex-1 text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-sky-50 data-[state=active]:text-sky-800">
-              <Wrench className="w-3.5 h-3.5" /> Equipment
+              <Wrench className="w-3.5 h-3.5" /> {language === "hi" ? "उपकरण" : "Equipment"}
             </TabsTrigger>
             <TabsTrigger value="ambulance" className="flex-1 text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-rose-50 data-[state=active]:text-rose-800">
-              <Truck className="w-3.5 h-3.5" /> Ambulance
+              <Truck className="w-3.5 h-3.5" /> {language === "hi" ? "एम्बुलेंस" : "Ambulance"}
             </TabsTrigger>
             <TabsTrigger value="bloodbank" className="flex-1 text-xs font-bold gap-1.5 rounded-lg data-[state=active]:bg-red-50 data-[state=active]:text-red-800">
-              <Heart className="w-3.5 h-3.5" /> Blood Bank
+              <Heart className="w-3.5 h-3.5" /> {language === "hi" ? "ब्लड बैंक" : "Blood Bank"}
               {bloodAlertCount > 0 && (
                 <span className="ml-1 bg-red-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
                   {bloodAlertCount}

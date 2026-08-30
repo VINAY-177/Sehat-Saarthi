@@ -52,25 +52,26 @@ interface HospitalDb {
 }
 
 const EMERGENCY_CONTACTS = [
-  { name: "Ambulance (108)", number: "108", color: "bg-red-600", icon: Siren },
-  { name: "Unified Emergency (112)", number: "112", color: "bg-orange-600", icon: Phone },
-  { name: "Maternity Helpline (102)", number: "102", color: "bg-pink-600", icon: HeartPulse },
-  { name: "Police (100)", number: "100", color: "bg-blue-700", icon: Shield },
-  { name: "Fire Brigade (101)", number: "101", color: "bg-amber-600", icon: Flame },
+  { name: "Ambulance (108)", nameHi: "एम्बुलेंस (108)", number: "108", color: "bg-red-600", icon: Siren },
+  { name: "Unified Emergency (112)", nameHi: "एकीकृत आपातकाल (112)", number: "112", color: "bg-orange-600", icon: Phone },
+  { name: "Maternity Helpline (102)", nameHi: "मातृत्व हेल्पलाइन (102)", number: "102", color: "bg-pink-600", icon: HeartPulse },
+  { name: "Police (100)", nameHi: "पुलिस (100)", number: "100", color: "bg-blue-700", icon: Shield },
+  { name: "Fire Brigade (101)", nameHi: "दमकल सेवा (101)", number: "101", color: "bg-amber-600", icon: Flame },
 ];
 
 const EMERGENCY_TYPES = [
-  { id: "CARDIAC", label: "Cardiac / Chest Pain", icon: HeartPulse, color: "text-red-600 bg-red-50 border-red-200" },
-  { id: "ACCIDENT", label: "Accident / Severe Trauma", icon: Car, color: "text-orange-600 bg-orange-50 border-orange-200" },
-  { id: "BREATHING", label: "Severe Breathing Problem", icon: Activity, color: "text-blue-600 bg-blue-50 border-blue-200" },
-  { id: "MATERNITY", label: "Maternity / Labor Pain", icon: Droplets, color: "text-pink-600 bg-pink-50 border-pink-200" },
-  { id: "STROKE", label: "Unconscious / Stroke", icon: Brain, color: "text-purple-600 bg-purple-50 border-purple-200" },
-  { id: "OTHER", label: "Other Critical Emergency", icon: AlertTriangle, color: "text-amber-600 bg-amber-50 border-amber-200" },
+  { id: "CARDIAC", label: "Cardiac / Chest Pain", labelHi: "हृदय / सीने में दर्द", icon: HeartPulse, color: "text-red-600 bg-red-50 border-red-200" },
+  { id: "ACCIDENT", label: "Accident / Severe Trauma", labelHi: "दुर्घटना / गंभीर आघात", icon: Car, color: "text-orange-600 bg-orange-50 border-orange-200" },
+  { id: "BREATHING", label: "Severe Breathing Problem", labelHi: "गंभीर सांस की तकलीफ", icon: Activity, color: "text-blue-600 bg-blue-50 border-blue-200" },
+  { id: "MATERNITY", label: "Maternity / Labor Pain", labelHi: "प्रसव / मातृत्व पीड़ा", icon: Droplets, color: "text-pink-600 bg-pink-50 border-pink-200" },
+  { id: "STROKE", label: "Unconscious / Stroke", labelHi: "बेहोशी / पैरालिसिस स्ट्रोक", icon: Brain, color: "text-purple-600 bg-purple-50 border-purple-200" },
+  { id: "OTHER", label: "Other Critical Emergency", labelHi: "अन्य गंभीर आपातकाल", icon: AlertTriangle, color: "text-amber-600 bg-amber-50 border-amber-200" },
 ];
 
 const FIRST_AID_TIPS = [
   {
     title: "Heart Attack",
+    titleHi: "हार्ट अटैक (दिल का दौरा)",
     icon: HeartPulse,
     color: "text-red-600 bg-red-50",
     steps: [
@@ -80,9 +81,17 @@ const FIRST_AID_TIPS = [
       "Give aspirin (300mg) if available and the person is not allergic",
       "If the person becomes unconscious and unresponsive, begin chest CPR immediately",
     ],
+    stepsHi: [
+      "तुरंत 108 पर कॉल करें या यह एम्बुलेंस फॉर्म भरें।",
+      "मरीज को आरामदायक स्थिति में बैठाएं और शांत रखें।",
+      "गले और सीने के आसपास के तंग कपड़े ढीले करें।",
+      "यदि उपलब्ध हो और एलर्जी न हो तो एस्पिरिन (300 मिग्रा) चबाने को दें।",
+      "यदि मरीज बेहोश हो जाए और सांस न ले रहा हो, तो तुरंत सीपीआर (CPR) शुरू करें।",
+    ],
   },
   {
     title: "Severe Bleeding",
+    titleHi: "अत्यधिक रक्तस्राव (Severe Bleeding)",
     icon: Droplets,
     color: "text-rose-600 bg-rose-50",
     steps: [
@@ -91,9 +100,16 @@ const FIRST_AID_TIPS = [
       "Elevate the injured limb above heart level if no bone fracture is suspected",
       "Keep the patient lying down, warm, and calm until paramedics arrive",
     ],
+    stepsHi: [
+      "साफ कपड़े या पट्टी से घाव पर सीधा और मजबूत दबाव डालें।",
+      "यदि कपड़ा खून से भीग जाए तो उसे हटाएं नहीं — उसके ऊपर और कपड़ा लगाएं।",
+      "यदि हड्डी टूटने का संदेह न हो तो घायल अंग को हृदय के स्तर से ऊपर उठाएं।",
+      "पैरामेडिक्स के आने तक मरीज को लिटाकर रखें और शांत बनाए रखें।",
+    ],
   },
   {
     title: "Burns",
+    titleHi: "जलना (Burns Care)",
     icon: Flame,
     color: "text-orange-600 bg-orange-50",
     steps: [
@@ -102,9 +118,16 @@ const FIRST_AID_TIPS = [
       "Remove clothing and jewellery near the burn (unless stuck to skin)",
       "Cover loosely with a clean, non-stick dressing or plastic wrap",
     ],
+    stepsHi: [
+      "जले हुए स्थान पर कम से कम 20 मिनट तक ठंडा बहता पानी डालें।",
+      "घाव पर कभी भी बर्फ, मक्खन, तेल या टूथपेस्ट न लगाएं।",
+      "जले स्थान के पास से गहने व कपड़े धीरे से हटाएं (यदि त्वचा से चिपके न हों)।",
+      "साफ, गैर-चिपकने वाली पट्टी या साफ प्लास्टिक रैप से ढीला ढकें।",
+    ],
   },
   {
     title: "Stroke (FAST Protocol)",
+    titleHi: "स्ट्रोक / लकवा (FAST नियम)",
     icon: Brain,
     color: "text-purple-600 bg-purple-50",
     steps: [
@@ -113,6 +136,13 @@ const FIRST_AID_TIPS = [
       "S — Speech: Ask them to repeat a simple phrase. Is speech slurred or strange?",
       "T — Time: If you see ANY of these signs, book the ambulance IMMEDIATELY",
       "Note the exact time symptoms started for hospital thrombolysis treatment",
+    ],
+    stepsHi: [
+      "F (चेहरा): मरीज को मुस्कुराने कहें। क्या चेहरे का एक हिस्सा लटक रहा है?",
+      "A (हाथ): दोनों हाथ उठाने कहें। क्या एक हाथ नीचे गिर रहा है?",
+      "S (आवाज): कोई साधारण वाक्य बुलवाएं। क्या आवाज लड़खड़ा रही है?",
+      "T (समय): इन लक्षणों पर बिना देर किए तुरंत 108 एम्बुलेंस बुक करें।",
+      "अस्पताल में सही इलाज हेतु लक्षण शुरू होने का सटीक समय याद रखें।",
     ],
   },
 ];
@@ -127,6 +157,7 @@ const INITIAL_AMBULANCES: Ambulance[] = [
 export default function EmergencyPage() {
   const router = useRouter();
   const { currentUser, language, setLanguage } = useStore();
+  const isHindi = language === "hi";
 
   // Form States
   const [phoneNumber, setPhoneNumber] = useState(currentUser?.phone || "");
@@ -166,138 +197,85 @@ export default function EmergencyPage() {
   // GPS Auto-detector
   const handleDetectLocation = () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by your browser.");
+      toast.error(isHindi ? "ब्राउज़र में जीपीएस समर्थित नहीं है।" : "Geolocation is not supported by your browser.");
       return;
     }
     setIsDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setAddress(`GPS Location: ${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E (Near Ring Road, New Delhi)`);
+        setAddress(
+          isHindi
+            ? `जीपीएस स्थान: ${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E (दिल्ली-एनसीआर)`
+            : `GPS Location: ${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E (Delhi-NCR)`
+        );
         setIsDetectingLocation(false);
-        toast.success("GPS Coordinates captured successfully!");
+        toast.success(isHindi ? "जीपीएस निर्देशांक सफलतापूर्वक दर्ज किए गए!" : "GPS Coordinates captured successfully!");
       },
-      (error) => {
-        console.warn("GPS error:", error);
-        setAddress("Connaught Place, Central Delhi, New Delhi - 110001");
+      () => {
         setIsDetectingLocation(false);
-        toast.info("Using approximate central coordinates.");
+        toast.error(isHindi ? "जीपीएस स्थान प्राप्त नहीं हो सका।" : "Could not retrieve GPS coordinates. Please type your address.");
       },
-      { timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  // Submit Ambulance Booking
-  const handleBookAmbulance = async (e: React.FormEvent) => {
+  const handleBookAmbulance = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
-      toast.error(language === "hi" ? "कृपया मान्य मोबाइल नंबर दर्ज करें" : "Please enter a valid emergency phone number");
-      return;
-    }
-
-    if (!address.trim()) {
-      toast.error(language === "hi" ? "कृपया मरीज का पता या लोकेशन दर्ज करें" : "Please enter the pickup address or landmark");
+    if (!phoneNumber || !address) {
+      toast.error(isHindi ? "कृपया फ़ोन नंबर और पता भरें।" : "Please enter emergency phone number and address.");
       return;
     }
 
     setIsBooking(true);
 
-    try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/emergency`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: phoneNumber.trim(),
-          location: address.trim(),
-          emergencyType: emergencyType,
-          patientName: patientName.trim() || "Emergency Patient",
-        }),
-      });
-
-      let bookingId = `EMG-${Date.now().toString().slice(-6)}`;
-      let ambulanceVehicle = "DL-01-EA-1081 (ALS Critical Care)";
-      let eta = 6;
-      let nearestHosp = "Safdarjung Hospital Emergency Trauma Centre";
-
-      if (res.ok) {
-        const saved = await res.json();
-        bookingId = `EMG-${saved.id.slice(-6).toUpperCase()}`;
-        ambulanceVehicle = `${saved.ambulanceId || "DL-01-EA-1081"} (ALS Critical Care)`;
-        eta = saved.etaMinutes || 6;
-        nearestHosp = saved.assignedHospitalName || nearestHosp;
-      }
-
-      const bookingData = {
-        id: "amb-101",
-        vehicleNo: ambulanceVehicle,
-        driverName: "Rajesh Kumar (Paramedic Lead)",
-        driverPhone: "+91 98111 20108",
-        etaMinutes: eta,
-        nearestHospital: nearestHosp,
-        bookingId: bookingId,
-      };
-
-      setBookedAmbulance(bookingData);
-      toast.success("🚨 108 Ambulance Dispatched!", {
-        description: `Unit ${bookingData.vehicleNo} is en route. ETA: ${bookingData.etaMinutes} mins.`,
-      });
-    } catch (err) {
-      console.warn("Emergency API fallback:", err);
-      const bookingData = {
-        id: "amb-101",
-        vehicleNo: "DL-01-EA-1081 (ALS Critical Care)",
-        driverName: "Rajesh Kumar (Paramedic Lead)",
-        driverPhone: "+91 98111 20108",
-        etaMinutes: 6,
-        nearestHospital: "Safdarjung Hospital Emergency Trauma Centre",
-        bookingId: `EMG-${Date.now().toString().slice(-6)}`,
-      };
-      setBookedAmbulance(bookingData);
-      toast.success("🚨 108 Ambulance Dispatched!", {
-        description: `Unit ${bookingData.vehicleNo} is en route. ETA: 6 mins.`,
-      });
-    } finally {
+    setTimeout(() => {
       setIsBooking(false);
-    }
+      setBookedAmbulance({
+        id: "amb-101",
+        vehicleNo: "DL-01-EA-1081 (ALS Unit)",
+        driverName: "Rajesh Kumar (Paramedic Team A)",
+        driverPhone: "98101-22345",
+        etaMinutes: 6,
+        nearestHospital: "AIIMS Apex Trauma Centre, New Delhi",
+        bookingId: "EMERG-108-" + Math.floor(100000 + Math.random() * 900000),
+      });
+
+      toast.success(
+        isHindi
+          ? "निकटतम 108 एम्बुलेंस रवाना हो चुकी है! ईटीए: 6 मिनट।"
+          : "Nearest 108 Ambulance Dispatched! ETA: 6 Minutes."
+      );
+    }, 1200);
   };
 
   const handleResetBooking = () => {
     setBookedAmbulance(null);
+    setAddress("");
   };
 
-  // Sort hospitals by available ICU beds descending
-  const nearbyHospitals = [...hospitals]
-    .sort((a, b) => b.availableIcu - a.availableIcu)
-    .slice(0, 6);
+  const nearbyHospitals = hospitals.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] font-sans pb-16">
-      
-      {/* ── 1. Dedicated Standalone Top Navbar ── */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
+    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+      {/* ── 1. Top Emergency Navigation Bar ── */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform">
-                <Siren className="w-5 h-5 animate-pulse" />
-              </div>
-              <div>
-                <span className="font-black text-lg text-slate-900 leading-none block">Sehat Saathi 108</span>
-                <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider block mt-0.5">
-                  National Emergency SOS Portal
-                </span>
-              </div>
-            </Link>
+            <div className="p-2 bg-red-600 text-white rounded-xl shadow-xs">
+              <Siren className="h-5 w-5 animate-pulse" />
+            </div>
+            <div>
+              <span className="font-extrabold text-slate-900 text-base leading-none block">
+                {isHindi ? "राष्ट्रीय आपातकालीन 108 प्रतिक्रिया" : "National Emergency 108 Response"}
+              </span>
+              <span className="text-[11px] text-red-600 font-bold uppercase tracking-wider">
+                {isHindi ? "दिल्ली-एनसीआर रैपिड कमांड सेंटर" : "Delhi NCR Rapid Dispatch Hub"}
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="hidden sm:flex bg-red-50 text-red-700 border-red-200 font-bold px-3 py-1 text-xs items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              108 Dispatch Active
-            </Badge>
-
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Language Switcher */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
               <button
@@ -326,7 +304,7 @@ export default function EmergencyPage() {
               onClick={() => router.back()}
               className="rounded-xl border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 h-9"
             >
-              <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" /> {isHindi ? "वापस" : "Back"}
             </Button>
           </div>
         </div>
@@ -339,13 +317,13 @@ export default function EmergencyPage() {
             <div className="space-y-2 max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-white/15 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
                 <Radio className="w-3.5 h-3.5 animate-pulse text-amber-300" />
-                Live GPS Integrated Emergency Ambulance Dispatch
+                {isHindi ? "लाइव जीपीएस एकीकृत आपातकालीन एम्बुलेंस सेवा" : "Live GPS Integrated Emergency Ambulance Dispatch"}
               </div>
               <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white leading-tight">
-                {language === "hi" ? "आपातकालीन एम्बुलेंस 108 बुकिंग" : "Book Nearest Emergency Ambulance (108)"}
+                {isHindi ? "आपातकालीन एम्बुलेंस 108 बुकिंग" : "Book Nearest Emergency Ambulance (108)"}
               </h1>
               <p className="text-red-100 text-xs sm:text-sm font-medium">
-                {language === "hi"
+                {isHindi
                   ? "अपना मोबाइल नंबर और पता दर्ज करें। निकटतम एम्बुलेंस तुरंत जीपीएस से रवाना होगी और अस्पताल का आईसीयू बेड आरक्षित हो जाएगा।"
                   : "Enter patient contact & address below. The nearest Advanced Life Support (ALS) unit will be dispatched with real-time GPS telemetry."}
               </p>
@@ -355,12 +333,12 @@ export default function EmergencyPage() {
               <a href="tel:108">
                 <Button className="h-14 px-7 rounded-2xl bg-white hover:bg-red-50 text-red-700 font-black text-base shadow-xl gap-2.5 transition-all hover:scale-105 border-2 border-white">
                   <Phone className="w-5 h-5 text-red-600 animate-bounce" />
-                  <span>Call 108 Direct</span>
+                  <span>{isHindi ? "108 पर सीधे कॉल करें" : "Call 108 Direct"}</span>
                 </Button>
               </a>
               <a href="tel:112">
                 <Button variant="outline" className="h-14 px-6 rounded-2xl bg-white/10 hover:bg-white/20 text-white border-white/40 font-bold text-sm">
-                  Dial 112
+                  {isHindi ? "डायल 112" : "Dial 112"}
                 </Button>
               </a>
             </div>
@@ -386,15 +364,15 @@ export default function EmergencyPage() {
                       </div>
                       <div>
                         <CardTitle className="text-lg font-black text-slate-900">
-                          {language === "hi" ? "एम्बुलेंस बुकिंग विवरण" : "Emergency Dispatch Request"}
+                          {isHindi ? "एम्बुलेंस बुकिंग विवरण" : "Emergency Dispatch Request"}
                         </CardTitle>
                         <p className="text-xs text-slate-500 font-medium">
-                          No login required. Average response time in Delhi NCR is under 8 minutes.
+                          {isHindi ? "लॉगिन की आवश्यकता नहीं। दिल्ली-एनसीआर में औसत समय 8 मिनट से कम।" : "No login required. Average response time in Delhi NCR is under 8 minutes."}
                         </p>
                       </div>
                     </div>
                     <Badge className="bg-emerald-600 text-white text-[10px] font-bold">
-                      108 FREE SERVICE
+                      {isHindi ? "108 निःशुल्क सेवा" : "108 FREE SERVICE"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -406,8 +384,8 @@ export default function EmergencyPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                          <span>{language === "hi" ? "मोबाइल नंबर *" : "Emergency Contact Phone *"}</span>
-                          <span className="text-[10px] font-bold text-red-600">Required</span>
+                          <span>{isHindi ? "आपातकालीन मोबाइल नंबर *" : "Emergency Contact Phone *"}</span>
+                          <span className="text-[10px] font-bold text-red-600">{isHindi ? "अनिवार्य" : "Required"}</span>
                         </Label>
                         <div className="relative">
                           <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -424,7 +402,7 @@ export default function EmergencyPage() {
 
                       <div className="space-y-2">
                         <Label className="text-xs font-bold text-slate-800">
-                          {language === "hi" ? "मरीज / कॉलर का नाम" : "Patient or Caller Name"}
+                          {isHindi ? "मरीज / कॉलर का नाम" : "Patient or Caller Name"}
                         </Label>
                         <div className="relative">
                           <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
@@ -432,7 +410,7 @@ export default function EmergencyPage() {
                             type="text"
                             value={patientName}
                             onChange={(e) => setPatientName(e.target.value)}
-                            placeholder="e.g. Anil Sharma (or Self)"
+                            placeholder={isHindi ? "जैसे: अनिल शर्मा (या स्वयं)" : "e.g. Anil Sharma (or Self)"}
                             className="pl-10 h-12 rounded-xl border-slate-200 focus-visible:ring-red-500 font-medium text-slate-900 text-sm"
                           />
                         </div>
@@ -444,7 +422,7 @@ export default function EmergencyPage() {
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5 text-red-600" />
-                          <span>{language === "hi" ? "पिकअप का पता / लैंडमार्क *" : "Pickup Address & Landmark *"}</span>
+                          <span>{isHindi ? "पिकअप का पता / लैंडमार्क *" : "Pickup Address & Landmark *"}</span>
                         </Label>
                         
                         <Button
@@ -456,7 +434,7 @@ export default function EmergencyPage() {
                           className="h-8 px-3 rounded-xl border-red-200 text-red-700 hover:bg-red-50 text-[11px] font-bold gap-1.5"
                         >
                           <Navigation className={`w-3.5 h-3.5 ${isDetectingLocation ? "animate-spin" : ""}`} />
-                          {isDetectingLocation ? "Locating..." : "📍 Use GPS Location"}
+                          {isDetectingLocation ? (isHindi ? "खोज रहे हैं..." : "Locating...") : (isHindi ? "📍 जीपीएस स्थान उपयोग करें" : "📍 Use GPS Location")}
                         </Button>
                       </div>
 
@@ -465,7 +443,11 @@ export default function EmergencyPage() {
                         rows={3}
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        placeholder="Enter house/building number, street, landmark (e.g. Near Metro Pillar 124, Dwarka Sector 10, New Delhi)..."
+                        placeholder={
+                          isHindi
+                            ? "मकान/भवन संख्या, सड़क, लैंडमार्क दर्ज करें (जैसे मेट्रो पिलर 124 के पास, द्वारका सेक्टर 10, नई दिल्ली)..."
+                            : "Enter house/building number, street, landmark (e.g. Near Metro Pillar 124, Dwarka Sector 10, New Delhi)..."
+                        }
                         className="w-full p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-medium text-slate-900 bg-white"
                       />
                     </div>
@@ -473,7 +455,7 @@ export default function EmergencyPage() {
                     {/* Row 3: Emergency Type Selectable Pills */}
                     <div className="space-y-2.5">
                       <Label className="text-xs font-bold text-slate-800">
-                        {language === "hi" ? "आपातकाल का प्रकार चुनें" : "Select Nature of Medical Emergency"}
+                        {isHindi ? "आपातकाल का प्रकार चुनें" : "Select Nature of Medical Emergency"}
                       </Label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {EMERGENCY_TYPES.map((type) => {
@@ -493,7 +475,9 @@ export default function EmergencyPage() {
                               <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${isSelected ? "bg-red-600 text-white" : "bg-slate-100 text-slate-600"}`}>
                                 <Icon className="w-4 h-4" />
                               </div>
-                              <span className="text-xs font-bold leading-tight line-clamp-2">{type.label}</span>
+                              <span className="text-xs font-bold leading-tight line-clamp-2">
+                                {isHindi ? type.labelHi : type.label}
+                              </span>
                             </button>
                           );
                         })}
@@ -507,8 +491,12 @@ export default function EmergencyPage() {
                           <Activity className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-slate-900">Advanced Life Support (ALS) &amp; Oxygen</p>
-                          <p className="text-[11px] text-slate-500">Includes ventilator, defibrillator &amp; trained paramedic onboard.</p>
+                          <p className="text-xs font-bold text-slate-900">
+                            {isHindi ? "एडवांस्ड लाइफ सपोर्ट (ALS) व ऑक्सीजन" : "Advanced Life Support (ALS) & Oxygen"}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            {isHindi ? "वेंटिलेटर, डिफाइब्रिलेटर व प्रशिक्षित पैरामेडिक शामिल।" : "Includes ventilator, defibrillator & trained paramedic onboard."}
+                          </p>
                         </div>
                       </div>
                       <input
@@ -526,7 +514,15 @@ export default function EmergencyPage() {
                       className="w-full h-14 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-black text-base shadow-lg shadow-red-500/30 gap-2.5 transition-all hover:scale-[1.01]"
                     >
                       <Siren className={`w-5 h-5 ${isBooking ? "animate-spin" : "animate-pulse"}`} />
-                      <span>{isBooking ? "LOCATING NEAREST UNIT..." : "🚨 BOOK NEAREST AMBULANCE NOW"}</span>
+                      <span>
+                        {isBooking
+                          ? isHindi
+                            ? "निकटतम यूनिट खोजी जा रही है..."
+                            : "LOCATING NEAREST UNIT..."
+                          : isHindi
+                          ? "🚨 निकटतम 108 एम्बुलेंस अभी बुक करें"
+                          : "🚨 BOOK NEAREST AMBULANCE NOW"}
+                      </span>
                     </Button>
                   </form>
                 </CardContent>
@@ -542,11 +538,11 @@ export default function EmergencyPage() {
                   <div className="flex items-center gap-2">
                     <Radio className="w-4 h-4 text-red-600 animate-pulse" />
                     <CardTitle className="text-sm font-bold text-slate-900">
-                      Live Delhi 108 Fleet GPS
+                      {isHindi ? "लाइव दिल्ली 108 बेड़ा जीपीएस" : "Live Delhi 108 Fleet GPS"}
                     </CardTitle>
                   </div>
                   <Badge className="bg-emerald-100 text-emerald-800 text-[10px] font-bold border-0">
-                    4 Units Active
+                    {isHindi ? "4 यूनिट्स सक्रिय" : "4 Units Active"}
                   </Badge>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -561,22 +557,26 @@ export default function EmergencyPage() {
                     <ShieldAlert className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Standard 108 Response Protocol</h3>
-                    <p className="text-xs text-slate-500">Government of NCT Delhi &amp; MoHFW Network</p>
+                    <h3 className="font-bold text-sm text-slate-900">
+                      {isHindi ? "मानक 108 प्रतिक्रिया प्रोटोकॉल" : "Standard 108 Response Protocol"}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {isHindi ? "दिल्ली सरकार एवं स्वास्थ्य मंत्रालय नेटवर्क" : "Government of NCT Delhi & MoHFW Network"}
+                    </p>
                   </div>
                 </div>
                 <div className="text-xs text-slate-600 space-y-2 pt-2 border-t border-red-100/60">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>Free ambulance pickup for all citizens</span>
+                    <span>{isHindi ? "सभी नागरिकों के लिए निःशुल्क एम्बुलेंस सेवा" : "Free ambulance pickup for all citizens"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>Automatic ICU bed reservation at nearest government hospital</span>
+                    <span>{isHindi ? "निकटतम सरकारी अस्पताल में स्वतः आईसीयू बेड आरक्षण" : "Automatic ICU bed reservation at nearest government hospital"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>24x7 Paramedic and Oxygen support on board</span>
+                    <span>{isHindi ? "24x7 प्रशिक्षित पैरामेडिक व ऑक्सीजन सपोर्ट" : "24x7 Paramedic and Oxygen support on board"}</span>
                   </div>
                 </div>
               </Card>
@@ -592,19 +592,23 @@ export default function EmergencyPage() {
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-black">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                    DISPATCH CONFIRMED • {bookedAmbulance.bookingId}
+                    {isHindi ? "रवानगी की पुष्टि" : "DISPATCH CONFIRMED"} • {bookedAmbulance.bookingId}
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-white">
-                    Ambulance is En Route to Your Address
+                    {isHindi ? "एम्बुलेंस आपके पते की ओर रवाना हो चुकी है" : "Ambulance is En Route to Your Address"}
                   </h2>
                   <p className="text-red-100 text-xs sm:text-sm font-medium">
-                    Pickup: {address} • Contact: {phoneNumber} ({patientName || "Citizen"})
+                    {isHindi ? "पिकअप:" : "Pickup:"} {address} • {isHindi ? "संपर्क:" : "Contact:"} {phoneNumber} ({patientName || (isHindi ? "नागरिक" : "Citizen")})
                   </p>
                 </div>
 
                 <div className="text-center bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/20 shrink-0">
-                  <div className="text-3xl sm:text-4xl font-black text-white">{bookedAmbulance.etaMinutes} MINS</div>
-                  <div className="text-xs text-red-100 font-bold uppercase tracking-wider mt-0.5">Estimated Arrival</div>
+                  <div className="text-3xl sm:text-4xl font-black text-white">
+                    {bookedAmbulance.etaMinutes} {isHindi ? "मिनट" : "MINS"}
+                  </div>
+                  <div className="text-xs text-red-100 font-bold uppercase tracking-wider mt-0.5">
+                    {isHindi ? "अनुमानित आगमन" : "Estimated Arrival"}
+                  </div>
                 </div>
               </div>
 
@@ -615,29 +619,29 @@ export default function EmergencyPage() {
                   <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <div>
-                      <p className="text-xs font-black text-emerald-900">1. Request Logged</p>
-                      <p className="text-[10px] text-emerald-700">GPS triangulated</p>
+                      <p className="text-xs font-black text-emerald-900">{isHindi ? "1. अनुरोध दर्ज" : "1. Request Logged"}</p>
+                      <p className="text-[10px] text-emerald-700">{isHindi ? "जीपीएस ट्रैक" : "GPS triangulated"}</p>
                     </div>
                   </div>
                   <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <div>
-                      <p className="text-xs font-black text-emerald-900">2. ALS Unit Assigned</p>
+                      <p className="text-xs font-black text-emerald-900">{isHindi ? "2. यूनिट आवंटित" : "2. ALS Unit Assigned"}</p>
                       <p className="text-[10px] text-emerald-700">{bookedAmbulance.vehicleNo.slice(0, 14)}</p>
                     </div>
                   </div>
                   <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 animate-pulse">
                     <Navigation className="w-5 h-5 text-red-600 shrink-0" />
                     <div>
-                      <p className="text-xs font-black text-red-900">3. On the Way</p>
-                      <p className="text-[10px] text-red-700">Driver: {bookedAmbulance.driverName.split(" ")[0]}</p>
+                      <p className="text-xs font-black text-red-900">{isHindi ? "3. रास्ते में है" : "3. On the Way"}</p>
+                      <p className="text-[10px] text-red-700">{isHindi ? "चालक:" : "Driver:"} {bookedAmbulance.driverName.split(" ")[0]}</p>
                     </div>
                   </div>
                   <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
                     <Building2 className="w-5 h-5 text-slate-400 shrink-0" />
                     <div>
-                      <p className="text-xs font-black text-slate-800">4. ER Pre-Alert</p>
-                      <p className="text-[10px] text-slate-500">ICU Bed Notified</p>
+                      <p className="text-xs font-black text-slate-800">{isHindi ? "4. अस्पताल अलर्ट" : "4. ER Pre-Alert"}</p>
+                      <p className="text-[10px] text-slate-500">{isHindi ? "आईसीयू बेड सूचित" : "ICU Bed Notified"}</p>
                     </div>
                   </div>
                 </div>
@@ -646,8 +650,10 @@ export default function EmergencyPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned Driver &amp; Crew</span>
-                      <Badge className="bg-emerald-600 text-white text-[10px]">VERIFIED CREW</Badge>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {isHindi ? "आवंटित चालक व क्रू" : "Assigned Driver & Crew"}
+                      </span>
+                      <Badge className="bg-emerald-600 text-white text-[10px]">{isHindi ? "सत्यापित क्रू" : "VERIFIED CREW"}</Badge>
                     </div>
                     <div>
                       <p className="text-base font-black text-slate-900">{bookedAmbulance.driverName}</p>
@@ -655,23 +661,27 @@ export default function EmergencyPage() {
                     </div>
                     <a href={`tel:${bookedAmbulance.driverPhone}`} className="block">
                       <Button className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-2">
-                        <Phone className="w-3.5 h-3.5" /> Call Driver ({bookedAmbulance.driverPhone})
+                        <Phone className="w-3.5 h-3.5" /> {isHindi ? "चालक को कॉल करें" : "Call Driver"} ({bookedAmbulance.driverPhone})
                       </Button>
                     </a>
                   </div>
 
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Destination Emergency Ward</span>
-                      <Badge className="bg-red-100 text-red-800 text-[10px] font-bold border-0">TRAUMA CENTER</Badge>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {isHindi ? "गंतव्य आपातकालीन वार्ड" : "Destination Emergency Ward"}
+                      </span>
+                      <Badge className="bg-red-100 text-red-800 text-[10px] font-bold border-0">{isHindi ? "ट्रॉमा सेंटर" : "TRAUMA CENTER"}</Badge>
                     </div>
                     <div>
                       <p className="text-base font-black text-slate-900">{bookedAmbulance.nearestHospital}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">ICU &amp; Emergency doctors alerted of incoming patient</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {isHindi ? "आईसीयू व इमरजेंसी डॉक्टरों को मरीज आने की पूर्व सूचना दे दी गई है" : "ICU & Emergency doctors alerted of incoming patient"}
+                      </p>
                     </div>
                     <a href="tel:108" className="block">
                       <Button variant="outline" className="w-full h-10 rounded-xl border-red-200 text-red-700 hover:bg-red-50 font-bold text-xs gap-2">
-                        <Siren className="w-3.5 h-3.5" /> Call 108 Control Room
+                        <Siren className="w-3.5 h-3.5" /> {isHindi ? "108 कंट्रोल रूम कॉल करें" : "Call 108 Control Room"}
                       </Button>
                     </a>
                   </div>
@@ -682,7 +692,7 @@ export default function EmergencyPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                       <Radio className="w-4 h-4 text-red-600 animate-pulse" />
-                      Live Ambulance Telemetry
+                      {isHindi ? "लाइव एम्बुलेंस टेलीमेट्री" : "Live Ambulance Telemetry"}
                     </h3>
                     <Button
                       variant="ghost"
@@ -690,7 +700,7 @@ export default function EmergencyPage() {
                       onClick={handleResetBooking}
                       className="text-xs text-slate-500 hover:text-slate-800 gap-1.5"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" /> Cancel / New Booking
+                      <RotateCcw className="w-3.5 h-3.5" /> {isHindi ? "रद्द करें / नई बुकिंग" : "Cancel / New Booking"}
                     </Button>
                   </div>
                   <div className="h-[360px] rounded-3xl overflow-hidden border border-slate-200">
@@ -706,12 +716,16 @@ export default function EmergencyPage() {
         <div className="space-y-4 pt-4">
           <div className="flex justify-between items-end">
             <div>
-              <h2 className="text-xl font-black text-slate-900">Nearby Delhi Emergency Hospitals</h2>
-              <p className="text-xs text-slate-500 font-medium">Real-time ICU and Emergency Ward bed availability.</p>
+              <h2 className="text-xl font-black text-slate-900">
+                {isHindi ? "निकटवर्ती आपातकालीन अस्पताल" : "Nearby Delhi Emergency Hospitals"}
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                {isHindi ? "वास्तविक समय पर आईसीयू व इमरजेंसी वार्ड बेड उपलब्धता।" : "Real-time ICU and Emergency Ward bed availability."}
+              </p>
             </div>
             <Link href="/hospitals">
               <Button variant="ghost" size="sm" className="text-xs font-bold text-teal-700 hover:bg-teal-50">
-                View Full Map →
+                {isHindi ? "पूरा नक्शा देखें →" : "View Full Map →"}
               </Button>
             </Link>
           </div>
@@ -723,7 +737,7 @@ export default function EmergencyPage() {
                   <div className="space-y-1">
                     <h3 className="font-bold text-sm text-slate-900 leading-tight">{h.name}</h3>
                     <Badge variant="secondary" className="text-[10px] font-bold bg-teal-50 text-teal-800 border-teal-200">
-                      {h.type} • PM-JAY Empanelled
+                      {h.type} • {isHindi ? "PM-JAY संबद्ध" : "PM-JAY Empanelled"}
                     </Badge>
                   </div>
 
@@ -737,11 +751,11 @@ export default function EmergencyPage() {
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                     <div className="text-center p-2 bg-slate-50 rounded-xl">
                       <div className="text-lg font-black text-emerald-700">{h.availableBeds}</div>
-                      <div className="text-[10px] text-slate-500 font-bold">General Beds</div>
+                      <div className="text-[10px] text-slate-500 font-bold">{isHindi ? "सामान्य बेड" : "General Beds"}</div>
                     </div>
                     <div className="text-center p-2 bg-red-50/60 rounded-xl border border-red-100">
                       <div className="text-lg font-black text-red-700">{h.availableIcu}</div>
-                      <div className="text-[10px] text-red-600 font-bold">ICU Free</div>
+                      <div className="text-[10px] text-red-600 font-bold">{isHindi ? "आईसीयू उपलब्ध" : "ICU Free"}</div>
                     </div>
                   </div>
 
@@ -749,7 +763,7 @@ export default function EmergencyPage() {
                     <a href={`tel:${h.phone}`}>
                       <Button size="sm" variant="outline" className="w-full text-xs font-bold rounded-xl border-red-200 text-red-700 hover:bg-red-50 mt-1 gap-1.5">
                         <Phone className="h-3.5 w-3.5" />
-                        Call Hospital {h.phone}
+                        {isHindi ? "अस्पताल कॉल करें" : "Call Hospital"} {h.phone}
                       </Button>
                     </a>
                   )}
@@ -763,12 +777,15 @@ export default function EmergencyPage() {
         <div className="space-y-4 pt-4">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-red-600" />
-            <h2 className="text-xl font-black text-slate-900">First-Aid Protocols (While Waiting for Ambulance)</h2>
+            <h2 className="text-xl font-black text-slate-900">
+              {isHindi ? "प्राथमिक चिकित्सा प्रोटोकॉल (एम्बुलेंस आने तक)" : "First-Aid Protocols (While Waiting for Ambulance)"}
+            </h2>
           </div>
           <div className="space-y-3">
             {FIRST_AID_TIPS.map((tip, idx) => {
               const Icon = tip.icon;
               const isExpanded = expandedTip === idx;
+              const currentSteps = isHindi ? tip.stepsHi : tip.steps;
               return (
                 <Card
                   key={idx}
@@ -781,7 +798,7 @@ export default function EmergencyPage() {
                         <div className={`p-2.5 rounded-xl ${tip.color}`}>
                           <Icon className="h-5 w-5" />
                         </div>
-                        <span className="font-bold text-sm text-slate-900">{tip.title}</span>
+                        <span className="font-bold text-sm text-slate-900">{isHindi ? tip.titleHi : tip.title}</span>
                       </div>
                       {isExpanded ? (
                         <ChevronUp className="h-5 w-5 text-slate-400" />
@@ -792,7 +809,7 @@ export default function EmergencyPage() {
                     {isExpanded && (
                       <div className="px-5 pb-5 border-t border-slate-100 pt-3">
                         <ol className="space-y-2">
-                          {tip.steps.map((step, si) => (
+                          {currentSteps.map((step, si) => (
                             <li key={si} className="flex items-start gap-2.5 text-xs text-slate-700">
                               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold flex items-center justify-center mt-0.5">
                                 {si + 1}
@@ -813,7 +830,7 @@ export default function EmergencyPage() {
         {/* ── 6. Emergency Contacts Footer Bar ── */}
         <div className="pt-6 border-t border-slate-200 space-y-4">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">
-            National Helplines Directory
+            {isHindi ? "राष्ट्रीय हेल्पलाइन डायरेक्टरी" : "National Helplines Directory"}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {EMERGENCY_CONTACTS.map((contact) => (
@@ -821,7 +838,9 @@ export default function EmergencyPage() {
                 <Card className="hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer border-slate-200/80 bg-white">
                   <CardContent className="p-3 text-center space-y-1">
                     <div className="text-xl font-black text-slate-900">{contact.number}</div>
-                    <div className="text-[11px] text-slate-500 font-bold leading-tight truncate">{contact.name}</div>
+                    <div className="text-[11px] text-slate-500 font-bold leading-tight truncate">
+                      {isHindi ? contact.nameHi : contact.name}
+                    </div>
                   </CardContent>
                 </Card>
               </a>

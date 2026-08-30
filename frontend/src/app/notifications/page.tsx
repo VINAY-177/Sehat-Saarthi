@@ -19,7 +19,9 @@ import {
 } from "lucide-react";
 
 export default function NotificationsPage() {
-  const { role, currentUser } = useStore();
+  const { role, currentUser, language } = useStore();
+  const isHindi = language === "hi";
+
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,15 +94,19 @@ export default function NotificationsPage() {
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Notification Center</h1>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                {isHindi ? "सूचना केंद्र" : "Notification Center"}
+              </h1>
               {unreadCount > 0 && (
                 <Badge className="bg-rose-500 text-white font-extrabold px-2.5 py-0.5 text-xs shadow-xs">
-                  {unreadCount} Unread
+                  {unreadCount} {isHindi ? "अपठित" : "Unread"}
                 </Badge>
               )}
             </div>
             <p className="text-slate-500 mt-1 font-semibold text-xs sm:text-sm">
-              Clinical alerts, schedule updates, diagnostic lab releases, and emergency telemetry.
+              {isHindi
+                ? "क्लिनिकल अलर्ट, अपॉइंटमेंट अपडेट, लैब जांच रिपोर्ट एवं आपातकालीन टेलीमेट्री।"
+                : "Clinical alerts, schedule updates, diagnostic lab releases, and emergency telemetry."}
             </p>
           </div>
         </div>
@@ -113,7 +119,7 @@ export default function NotificationsPage() {
               className="btn-3d-glass h-11 px-4 text-xs font-extrabold text-slate-800 border-slate-200 gap-2 rounded-2xl"
             >
               <CheckCheck className="w-4 h-4 text-teal-600" />
-              <span>Mark All as Read</span>
+              <span>{isHindi ? "सभी को पढ़ा हुआ चिह्नित करें" : "Mark All as Read"}</span>
             </button>
           )}
         </div>
@@ -122,13 +128,13 @@ export default function NotificationsPage() {
       {/* Category Filter Tabs */}
       <div className="glass-panel p-2 rounded-[22px] border border-white/80 bg-white/90 shadow-md flex items-center gap-1.5 overflow-x-auto text-xs font-bold scrollbar-hide">
         {[
-          { key: "ALL", label: "All Alerts" },
-          { key: "UNREAD", label: `Unread (${unreadCount})` },
-          { key: "EMERGENCY", label: "Emergency & Triage" },
-          { key: "APPOINTMENT", label: "Appointments" },
-          { key: "LAB", label: "Lab Diagnostic Reports" },
-          { key: "REFERRAL", label: "Hospital Referrals" },
-          { key: "SYSTEM", label: "Schemes & ABHA" },
+          { key: "ALL", label: "All Alerts", labelHi: "सभी सूचनाएं" },
+          { key: "UNREAD", label: `Unread (${unreadCount})`, labelHi: `अपठित (${unreadCount})` },
+          { key: "EMERGENCY", label: "Emergency & Triage", labelHi: "आपातकाल व ट्रायज" },
+          { key: "APPOINTMENT", label: "Appointments", labelHi: "अपॉइंटमेंट" },
+          { key: "LAB", label: "Lab Diagnostic Reports", labelHi: "लैब जांच रिपोर्ट" },
+          { key: "REFERRAL", label: "Hospital Referrals", labelHi: "अस्पताल रेफरल" },
+          { key: "SYSTEM", label: "Schemes & ABHA", labelHi: "योजनाएं व आभा" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -139,7 +145,7 @@ export default function NotificationsPage() {
                 : "bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900 border border-slate-200/60"
             }`}
           >
-            {tab.label}
+            {isHindi ? tab.labelHi : tab.label}
           </button>
         ))}
       </div>
@@ -147,15 +153,21 @@ export default function NotificationsPage() {
       {/* Notification Stream */}
       {isLoading ? (
         <div className="glass-panel border border-white/80 shadow-xl bg-white/90 rounded-[28px] py-20 text-center">
-          <h3 className="font-extrabold text-slate-800 text-base animate-pulse">Loading notifications...</h3>
+          <h3 className="font-extrabold text-slate-800 text-base animate-pulse">
+            {isHindi ? "सूचनाएं लोड हो रही हैं..." : "Loading notifications..."}
+          </h3>
         </div>
       ) : filteredNotifications.length === 0 ? (
         <div className="glass-panel border-dashed border-2 border-white/80 shadow-xl bg-white/90 rounded-[28px] py-20 text-center">
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-xs mb-3 border border-slate-100">
             <Bell className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="font-extrabold text-slate-800 text-lg">No notifications in this category</h3>
-          <p className="text-xs text-slate-500 mt-1 font-medium">You are all caught up!</p>
+          <h3 className="font-extrabold text-slate-800 text-lg">
+            {isHindi ? "इस श्रेणी में कोई सूचना नहीं है" : "No notifications in this category"}
+          </h3>
+          <p className="text-xs text-slate-500 mt-1 font-medium">
+            {isHindi ? "आपकी सभी सूचनाएं अद्यतित हैं!" : "You are all caught up!"}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -242,7 +254,7 @@ export default function NotificationsPage() {
                         type="button"
                         className="btn-3d-primary h-9 px-4 text-xs font-extrabold rounded-xl gap-1.5"
                       >
-                        <span>Review</span>
+                        <span>{isHindi ? "समीक्षा करें" : "Review"}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </Link>
@@ -253,7 +265,7 @@ export default function NotificationsPage() {
                       type="button"
                       onClick={() => markAsRead(notif.id)}
                       className="btn-3d-glass h-9 w-9 rounded-xl p-0 flex items-center justify-center text-slate-600 hover:text-teal-700"
-                      title="Mark as read"
+                      title={isHindi ? "पढ़ा हुआ चिह्नित करें" : "Mark as read"}
                     >
                       <CheckCheck className="w-4 h-4" />
                     </button>
@@ -263,7 +275,7 @@ export default function NotificationsPage() {
                     type="button"
                     onClick={() => deleteNotification(notif.id)}
                     className="btn-3d-glass h-9 w-9 rounded-xl p-0 flex items-center justify-center text-slate-400 hover:text-rose-600"
-                    title="Delete"
+                    title={isHindi ? "हटाएं" : "Delete"}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

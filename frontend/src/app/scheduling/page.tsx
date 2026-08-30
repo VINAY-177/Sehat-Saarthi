@@ -49,7 +49,8 @@ const STATUS_CONFIG: Record<
 
 
 export default function SchedulingPage() {
-  const { refreshAppointments, currentUser, facilities } = useStore();
+  const { refreshAppointments, currentUser, facilities, language } = useStore();
+  const isHindi = language === "hi";
 
   const networkFacilities = useMemo(() => {
     return facilities && facilities.length >= DEFAULT_DELHI_HOSPITALS.length
@@ -299,14 +300,16 @@ export default function SchedulingPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                Scheduling & Consultation Queue
+                {isHindi ? "शेड्यूलिंग एवं परामर्श कतार" : "Scheduling & Consultation Queue"}
               </h1>
-              <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-extrabold px-2.5 py-0.5">
-                Real-Time Roster
+              <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-extrabold text-[11px] px-2.5 py-0.5">
+                {isHindi ? "लाइव रोस्टर" : "Real-Time Roster"}
               </Badge>
             </div>
             <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">
-              Manage clinical appointments, facility check-ins, and consultation lifecycles.
+              {isHindi
+                ? "क्लिनिकल अपॉइंटमेंट, अस्पताल चेक-इन और परामर्श जीवनचक्र का प्रबंधन करें।"
+                : "Manage clinical appointments, facility check-ins, and consultation lifecycles."}
             </p>
           </div>
         </div>
@@ -318,7 +321,7 @@ export default function SchedulingPage() {
             className="btn-3d-glass h-11 px-4 text-xs font-extrabold text-slate-800 border-slate-200 gap-2 rounded-2xl"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Refresh</span>
+            <span className="hidden sm:inline">{isHindi ? "रिफ्रेश" : "Refresh"}</span>
           </button>
 
           <button
@@ -328,7 +331,7 @@ export default function SchedulingPage() {
             className="btn-3d-primary h-11 px-5 text-xs font-black gap-2 rounded-2xl"
           >
             <Plus className="h-4 w-4" />
-            <span>Book Appointment</span>
+            <span>{isHindi ? "अपॉइंटमेंट बुक करें" : "Book Appointment"}</span>
           </button>
         </div>
       </div>
@@ -340,13 +343,15 @@ export default function SchedulingPage() {
             <LogIn className="w-5 h-5 text-amber-700" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-amber-900 text-sm">Authentication Required</h3>
+            <h3 className="font-bold text-amber-900 text-sm">{isHindi ? "प्रमाणीकरण आवश्यक है" : "Authentication Required"}</h3>
             <p className="text-amber-700 text-xs mt-1">
-              You need to log in to view patients and book appointments. The patient registry requires a valid session token.
+              {isHindi
+                ? "मरीजों को देखने और अपॉइंटमेंट बुक करने के लिए आपको लॉगिन करना होगा।"
+                : "You need to log in to view patients and book appointments. The patient registry requires a valid session token."}
             </p>
             <Link href="/login">
               <button type="button" className="btn-3d-primary mt-3 h-9 text-xs px-4 gap-2">
-                <LogIn className="w-3.5 h-3.5" /> Log In to Continue
+                <LogIn className="w-3.5 h-3.5" /> {isHindi ? "जारी रखने के लिए लॉगिन करें" : "Log In to Continue"}
               </button>
             </Link>
           </div>
@@ -360,14 +365,14 @@ export default function SchedulingPage() {
             <AlertTriangle className="w-5 h-5 text-rose-700" />
           </div>
           <div className="flex-1">
-            <h3 className="font-bold text-rose-900 text-sm">Unable to load booking data</h3>
+            <h3 className="font-bold text-rose-900 text-sm">{isHindi ? "बुकिंग डेटा लोड करने में असमर्थ" : "Unable to load booking data"}</h3>
             <p className="text-rose-700 text-xs mt-1 break-words">{fetchError}</p>
             <button
               type="button"
               onClick={fetchData}
               className="btn-3d-glass mt-3 h-9 text-xs font-bold px-4 gap-2"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Retry
+              <RefreshCw className="w-3.5 h-3.5" /> {isHindi ? "पुनः प्रयास करें" : "Retry"}
             </button>
           </div>
         </div>
@@ -383,7 +388,9 @@ export default function SchedulingPage() {
               : "bg-white/90 text-slate-700 border-white/80"
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider block opacity-70">Total Roster</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider block opacity-70">
+            {isHindi ? "कुल रोस्टर" : "Total Roster"}
+          </span>
           <span className="text-2xl font-black mt-1 block">{appointments.length}</span>
         </div>
 
@@ -395,7 +402,9 @@ export default function SchedulingPage() {
               : "bg-white/90 text-slate-700 border-white/80 hover:bg-blue-50/50"
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-500">Requested</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider block text-blue-500">
+            {isHindi ? "अनुरोधित" : "Requested"}
+          </span>
           <span className="text-2xl font-black mt-1 block text-blue-700">{requestedCount}</span>
         </div>
 
@@ -407,7 +416,9 @@ export default function SchedulingPage() {
               : "bg-white/90 text-slate-700 border-white/80 hover:bg-purple-50/50"
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider block text-purple-500">Confirmed</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider block text-purple-500">
+            {isHindi ? "पुष्टिकृत" : "Confirmed"}
+          </span>
           <span className="text-2xl font-black mt-1 block text-purple-700">{confirmedCount}</span>
         </div>
 
@@ -419,7 +430,9 @@ export default function SchedulingPage() {
               : "bg-white/90 text-slate-700 border-white/80 hover:bg-amber-50/50"
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider block text-amber-600">Checked-In</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider block text-amber-600">
+            {isHindi ? "चेक-इन" : "Checked-In"}
+          </span>
           <span className="text-2xl font-black mt-1 block text-amber-700">{checkedInCount}</span>
         </div>
 
@@ -431,7 +444,9 @@ export default function SchedulingPage() {
               : "bg-white/90 text-slate-700 border-white/80 hover:bg-teal-50/50"
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider block text-teal-600">In Consult</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider block text-teal-600">
+            {isHindi ? "परामर्श जारी" : "In Consult"}
+          </span>
           <span className="text-2xl font-black mt-1 block text-teal-700">{inConsultCount}</span>
         </div>
 
@@ -443,7 +458,9 @@ export default function SchedulingPage() {
               : "bg-white/90 text-slate-700 border-white/80 hover:bg-emerald-50/50"
           }`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">Completed</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider block text-emerald-600">
+            {isHindi ? "पूर्ण" : "Completed"}
+          </span>
           <span className="text-2xl font-black mt-1 block text-emerald-700">{completedCount}</span>
         </div>
       </div>
@@ -455,7 +472,7 @@ export default function SchedulingPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               type="search"
-              placeholder="Search by patient, doctor or reason..."
+              placeholder={isHindi ? "मरीज, डॉक्टर या कारण से खोजें..." : "Search by patient, doctor or reason..."}
               className="pl-10 h-11 rounded-xl border-slate-200 bg-white/80 text-sm focus:bg-white font-semibold"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -467,7 +484,7 @@ export default function SchedulingPage() {
             onChange={(e) => setSelectedDoctor(e.target.value)}
             className="h-11 px-3 rounded-xl border border-slate-200 bg-white/80 text-xs font-bold text-slate-700 w-full sm:w-auto"
           >
-            <option value="ALL">All Attending Clinicians</option>
+            <option value="ALL">{isHindi ? "सभी उपस्थित डॉक्टर" : "All Attending Clinicians"}</option>
             {doctors.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name} ({d.specialty})
@@ -484,7 +501,7 @@ export default function SchedulingPage() {
                 viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              Queue List
+              {isHindi ? "कतार सूची" : "Queue List"}
             </button>
             <button
               onClick={() => setViewMode("roster")}
@@ -492,7 +509,7 @@ export default function SchedulingPage() {
                 viewMode === "roster" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              Doctor Roster
+              {isHindi ? "डॉक्टर रोस्टर" : "Doctor Roster"}
             </button>
           </div>
         </div>

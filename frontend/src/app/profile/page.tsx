@@ -254,7 +254,12 @@ export default function ProfilePage() {
   const patientScreenings = screenings.filter((s) => s.patientId === currentUser.id || (patient && s.patientId === patient.id));
   const patientReferrals = referrals.filter((r) => r.patientId === currentUser.id || (patient && r.patientId === patient.id));
 
-  const roleLabel = isDoctor ? "Doctor" : isStaff ? "Hospital Staff" : "Patient";
+  const roleLabel = isDoctor 
+    ? (language === "hi" ? "डॉक्टर" : "Doctor")
+    : isStaff 
+    ? (language === "hi" ? "अस्पताल स्टाफ" : "Hospital Staff")
+    : (language === "hi" ? "मरीज" : "Patient");
+
   const roleBannerGradient = isDoctor 
     ? "from-blue-600 via-teal-600 to-emerald-600" 
     : isStaff 
@@ -276,9 +281,11 @@ export default function ProfilePage() {
             <Sparkles className="h-6 w-6 text-yellow-200" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-bold">Complete Your Profile</h2>
+            <h2 className="text-xl font-bold">{language === "hi" ? "अपनी प्रोफ़ाइल पूरी करें" : "Complete Your Profile"}</h2>
             <p className="text-teal-50 text-sm">
-              Let&apos;s complete your healthcare profile so Sehat Saathi can provide a seamless clinical and referral experience.
+              {language === "hi"
+                ? "अपनी स्वास्थ्य प्रोफ़ाइल पूरी करें ताकि सेहत साथी एक सहज क्लिनिकल और रेफरल अनुभव प्रदान कर सके।"
+                : "Let's complete your healthcare profile so Sehat Saathi can provide a seamless clinical and referral experience."}
             </p>
           </div>
         </div>
@@ -288,10 +295,14 @@ export default function ProfilePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            {isEditing ? "Edit Profile" : "My Profile"}
+            {isEditing 
+              ? (language === "hi" ? "प्रोफ़ाइल संपादित करें" : "Edit Profile")
+              : (language === "hi" ? "मेरी प्रोफ़ाइल" : "My Profile")}
           </h1>
           <p className="text-slate-500 text-sm mt-1 font-medium">
-            Manage your personal, contact, and {isDoctor ? "clinical" : isStaff ? "operations" : "healthcare"} information.
+            {language === "hi"
+              ? `अपनी व्यक्तिगत, संपर्क और ${isDoctor ? "क्लिनिकल" : isStaff ? "संचालन" : "स्वास्थ्य"} जानकारी का प्रबंधन करें।`
+              : `Manage your personal, contact, and ${isDoctor ? "clinical" : isStaff ? "operations" : "healthcare"} information.`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -301,7 +312,7 @@ export default function ProfilePage() {
               className="bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-10 px-4 font-semibold shadow-xs gap-2"
             >
               <Edit3 className="h-4 w-4" />
-              Edit Profile
+              {language === "hi" ? "प्रोफ़ाइल संपादित करें" : "Edit Profile"}
             </Button>
           ) : (
             <Button 
@@ -310,7 +321,7 @@ export default function ProfilePage() {
               className="border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl h-10 px-4 font-semibold gap-1.5"
             >
               <X className="h-4 w-4" />
-              Cancel
+              {language === "hi" ? "रद्द करें" : "Cancel"}
             </Button>
           )}
           <Button 
@@ -319,7 +330,7 @@ export default function ProfilePage() {
             className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 transition-colors rounded-xl h-10 px-4 font-semibold gap-2"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {language === "hi" ? "लॉग आउट" : "Logout"}
           </Button>
         </div>
       </div>
