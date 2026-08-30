@@ -448,22 +448,24 @@ export function PatientDashboard() {
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-                  <span className="text-slate-400 font-bold block text-[10px] uppercase">Age / Gender</span>
-                  <span className="font-extrabold text-slate-800 text-xs">{currentUser?.age || '28'} Yrs • {currentUser?.gender || 'Male'}</span>
+                  <span className="text-slate-400 font-bold block text-[10px] uppercase">{language === "hi" ? "उम्र / लिंग" : "Age / Gender"}</span>
+                  <span className="font-extrabold text-slate-800 text-xs">
+                    {currentUser?.age || '28'} {language === "hi" ? "वर्ष" : "Yrs"} • {currentUser?.gender === "Female" ? (language === "hi" ? "महिला" : "Female") : (language === "hi" ? "पुरुष" : "Male")}
+                  </span>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-                  <span className="text-slate-400 font-bold block text-[10px] uppercase">Blood Group</span>
+                  <span className="text-slate-400 font-bold block text-[10px] uppercase">{language === "hi" ? "रक्त समूह" : "Blood Group"}</span>
                   <span className="font-extrabold text-teal-700 text-xs">{currentUser?.bloodGroup || 'O+ Positive'}</span>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-slate-200/80 col-span-2 shadow-2xs">
-                  <span className="text-slate-400 font-bold block text-[10px] uppercase">Active Condition</span>
-                  <span className="font-extrabold text-slate-800 text-xs">{currentUser?.conditions?.join(', ') || 'Mild Hypertension (Under Observation)'}</span>
+                  <span className="text-slate-400 font-bold block text-[10px] uppercase">{language === "hi" ? "वर्तमान स्वास्थ्य स्थिति" : "Active Condition"}</span>
+                  <span className="font-extrabold text-slate-800 text-xs">{currentUser?.conditions?.join(', ') || (language === "hi" ? "माइल्ड हाइपरटेंशन (निगरानी में)" : "Mild Hypertension (Under Observation)")}</span>
                 </div>
 
                 <div className="p-3 bg-white rounded-xl border border-slate-200/80 col-span-2 shadow-2xs">
-                  <span className="text-slate-400 font-bold block text-[10px] uppercase">Primary Hospital</span>
+                  <span className="text-slate-400 font-bold block text-[10px] uppercase">{language === "hi" ? "प्राथमिक अस्पताल" : "Primary Hospital"}</span>
                   <span className="font-extrabold text-slate-800 text-xs">{currentUser?.facilityName || 'Government General Hospital — Delhi'}</span>
                 </div>
               </div>
@@ -587,11 +589,11 @@ export function PatientDashboard() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
                             <Badge variant="outline" className="text-[9px] font-bold bg-slate-50 text-slate-600 border-slate-200">
-                              {hosp.type || "Hospital"}
+                              {hosp.type === "Government" ? (language === "hi" ? "सरकारी अस्पताल" : "Government") : hosp.type}
                             </Badge>
                             {hosp.emergencyAvailable !== false && (
                               <Badge className="bg-red-50 text-red-700 border-red-200 text-[9px] font-bold px-1.5 py-0">
-                                🚨 24/7 ER
+                                🚨 24/7 {language === "hi" ? "आपातकालीन" : "ER"}
                               </Badge>
                             )}
                           </div>
@@ -615,9 +617,9 @@ export function PatientDashboard() {
                         {/* General Beds */}
                         <div className="space-y-1">
                           <div className="flex justify-between text-[10px] font-semibold text-slate-600">
-                            <span>General Beds</span>
+                            <span>{language === "hi" ? "जनरल वार्ड बेड" : "General Beds"}</span>
                             <span className={`font-bold ${genAvail <= 10 ? "text-amber-600" : "text-emerald-700"}`}>
-                              {genAvail} / {genTotal} free
+                              {genAvail} / {genTotal} {language === "hi" ? "खाली" : "free"}
                             </span>
                           </div>
                           <Progress value={100 - genPct} className="h-1.5" />
@@ -626,9 +628,9 @@ export function PatientDashboard() {
                         {/* ICU Beds */}
                         <div className="space-y-1">
                           <div className="flex justify-between text-[10px] font-semibold text-slate-600">
-                            <span>ICU Beds</span>
+                            <span>{language === "hi" ? "आईसीयू बेड" : "ICU Beds"}</span>
                             <span className={`font-bold ${icuAvail <= 3 ? "text-red-600" : "text-emerald-700"}`}>
-                              {icuAvail} / {icuTotal} free
+                              {icuAvail} / {icuTotal} {language === "hi" ? "खाली" : "free"}
                             </span>
                           </div>
                           <Progress value={100 - icuPct} className="h-1.5" />
@@ -645,7 +647,7 @@ export function PatientDashboard() {
                           ))}
                           {specList.length > 3 && (
                             <span className="text-[9px] font-medium text-slate-400 px-1 py-0.5">
-                              +{specList.length - 3} more
+                              +{specList.length - 3} {language === "hi" ? "अन्य" : "more"}
                             </span>
                           )}
                         </div>
@@ -660,12 +662,12 @@ export function PatientDashboard() {
                         )}
                         {hosp.freeSurgeryEmpanelled && (
                           <span className="text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded-md">
-                            Free Surgery
+                            {language === "hi" ? "मुफ़्त सर्जरी" : "Free Surgery"}
                           </span>
                         )}
                         {hosp.freeDiagnosticsAvailable && (
                           <span className="text-[9px] font-bold bg-sky-50 text-sky-800 border border-sky-200 px-1.5 py-0.5 rounded-md">
-                            Free Tests
+                            {language === "hi" ? "मुफ़्त जांच" : "Free Tests"}
                           </span>
                         )}
                         {hosp.pmjayEmpanelled && (
@@ -681,7 +683,7 @@ export function PatientDashboard() {
                     <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                       {hosp.phone && (
                         <a href={`tel:${hosp.phone}`}>
-                          <button type="button" className="btn-3d-glass h-8 w-8 rounded-lg p-0 flex items-center justify-center text-slate-500 hover:text-teal-700" title="Call Hospital">
+                          <button type="button" className="btn-3d-glass h-8 w-8 rounded-lg p-0 flex items-center justify-center text-slate-500 hover:text-teal-700" title={language === "hi" ? "अस्पताल को कॉल करें" : "Call Hospital"}>
                             <Phone className="w-3.5 h-3.5" />
                           </button>
                         </a>
@@ -690,13 +692,13 @@ export function PatientDashboard() {
                       <div className="flex items-center gap-1.5 flex-1 justify-end">
                         <Link href={`/facilities/${hosp.id}`}>
                           <button type="button" className="btn-3d-glass h-7 px-2.5 text-[10px] font-bold rounded-lg text-slate-700">
-                            Details
+                            {language === "hi" ? "विवरण" : "Details"}
                           </button>
                         </Link>
 
                         <Link href={`/scheduling?facilityId=${hosp.id}`}>
                           <button type="button" className="btn-3d-primary h-7 px-3 text-[10px] font-bold rounded-lg">
-                            Book OPD
+                            {language === "hi" ? "ओपीडी बुक करें" : "Book OPD"}
                           </button>
                         </Link>
                       </div>

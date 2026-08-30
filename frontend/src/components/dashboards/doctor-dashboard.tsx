@@ -285,7 +285,7 @@ export function DoctorDashboard() {
               <div className="glass-panel p-6 space-y-4 card-hover border border-teal-200/90 bg-white/92 shadow-2xl rounded-[28px]">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                    High Attention
+                    {language === "hi" ? "विशेष ध्यान" : "High Attention"}
                   </span>
                   <UrgencyBadge urgency={triagePatient.riskLevel === "EMERGENCY" ? Urgency.EMERGENCY : Urgency.HIGH} />
                 </div>
@@ -293,28 +293,30 @@ export function DoctorDashboard() {
                 <div>
                   <h3 className="font-black text-slate-900 text-lg">{triagePatient.name}</h3>
                   <p className="text-xs text-slate-500 font-semibold mt-0.5">
-                    MRN: {triagePatient.mrn || "MRN-2026-0001"} • {triagePatient.age || 28} Yrs • {triagePatient.gender || "Male"}
+                    MRN: {triagePatient.mrn || "MRN-2026-0001"} • {triagePatient.age || 28} {language === "hi" ? "वर्ष" : "Yrs"} • {triagePatient.gender === "Female" ? (language === "hi" ? "महिला" : "Female") : (language === "hi" ? "पुरुष" : "Male")}
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1 text-xs">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Clinical Summary</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">{language === "hi" ? "क्लिनिकल सारांश" : "Clinical Summary"}</span>
                   <p className="text-slate-700 font-semibold leading-relaxed">
-                    Patient presenting with acute chest discomfort and elevated BP readings. Continuous telemetry recommended.
+                    {language === "hi" 
+                      ? "तीव्र सीने में दर्द और उच्च रक्तचाप। निरंतर ईसीजी व टेलीमेट्री निगरानी अनुशंसित।" 
+                      : "Patient presenting with acute chest discomfort and elevated BP readings. Continuous telemetry recommended."}
                   </p>
                 </div>
 
                 <div className="pt-1 flex items-center gap-2.5">
                   <Link href={`/patients/${triagePatient.id}`} className="flex-1">
                     <button type="button" className="btn-3d-glass w-full h-10 text-xs font-extrabold text-slate-800 rounded-xl">
-                      Open 360°
+                      {language === "hi" ? "पूर्ण ईएचआर" : "Open 360°"}
                     </button>
                   </Link>
 
                   <Link href={`/patients/${triagePatient.id}/encounter`} className="flex-1">
                     <button type="button" className="btn-3d-primary w-full h-10 text-xs font-black gap-1.5 rounded-xl">
                       <FileCheck className="w-4 h-4" />
-                      <span>Encounter</span>
+                      <span>{language === "hi" ? "परामर्श दर्ज करें" : "Encounter"}</span>
                     </button>
                   </Link>
                 </div>
@@ -323,19 +325,19 @@ export function DoctorDashboard() {
 
             {/* Quick Operational Telemetry Summary */}
             <div className="glass-panel p-5 space-y-3.5 border border-white/85 bg-white/92 rounded-[28px] shadow-xl">
-              <h4 className="text-xs font-black text-slate-900 uppercase">Emergency Ward Status</h4>
+              <h4 className="text-xs font-black text-slate-900 uppercase">{language === "hi" ? "आपातकालीन वार्ड स्थिति" : "Emergency Ward Status"}</h4>
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between items-center text-slate-600 font-bold">
-                  <span>General Ward Capacity</span>
-                  <span className="text-teal-800 font-black">88% Occupied</span>
+                  <span>{language === "hi" ? "जनरल वार्ड क्षमता" : "General Ward Capacity"}</span>
+                  <span className="text-teal-800 font-black">88% {language === "hi" ? "भरा हुआ" : "Occupied"}</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-teal-600 rounded-full" style={{ width: "88%" }} />
                 </div>
 
                 <div className="flex justify-between items-center text-slate-600 font-bold pt-1">
-                  <span>ICU Bed Availability</span>
-                  <span className="text-emerald-700 font-black">4 Beds Available</span>
+                  <span>{language === "hi" ? "आईसीयू बेड उपलब्धता" : "ICU Bed Availability"}</span>
+                  <span className="text-emerald-700 font-black">4 {language === "hi" ? "बेड उपलब्ध" : "Beds Available"}</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: "20%" }} />

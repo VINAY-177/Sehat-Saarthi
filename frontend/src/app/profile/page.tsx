@@ -399,9 +399,9 @@ export default function ProfilePage() {
               <div className="w-full bg-slate-50 border border-slate-100 p-3 rounded-2xl flex items-center justify-between text-xs font-semibold text-slate-600 mt-2">
                 <span className="flex items-center gap-1.5 text-emerald-700">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  Account Verified
+                  {language === "hi" ? "खाता सत्यापित" : "Account Verified"}
                 </span>
-                <span className="text-slate-400 font-normal">256-bit Encrypted</span>
+                <span className="text-slate-400 font-normal">{language === "hi" ? "256-बिट एन्क्रिप्टेड" : "256-bit Encrypted"}</span>
               </div>
             </CardContent>
           </Card>
@@ -414,10 +414,12 @@ export default function ProfilePage() {
               <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-4 px-6">
                 <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800">
                   <User className="h-4 w-4 text-teal-600" />
-                  Personal &amp; Contact Details
+                  {language === "hi" ? "व्यक्तिगत एवं संपर्क विवरण" : "Personal & Contact Details"}
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500">
-                  {isEditing ? "Update your personal and communication credentials." : "Your verified identity and contact information."}
+                  {isEditing 
+                    ? (language === "hi" ? "अपनी व्यक्तिगत और संचार जानकारी अपडेट करें।" : "Update your personal and communication credentials.")
+                    : (language === "hi" ? "आपकी सत्यापित पहचान और संपर्क जानकारी।" : "Your verified identity and contact information.")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
@@ -425,7 +427,7 @@ export default function ProfilePage() {
                   
                   {/* Full Name */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">Full Name *</Label>
+                    <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "पूरा नाम *" : "Full Name *"}</Label>
                     {isEditing ? (
                       <Input 
                         value={formData.name} 
@@ -436,14 +438,14 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                        {formData.name || "Not provided"}
+                        {formData.name || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                       </p>
                     )}
                   </div>
 
                   {/* Phone */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-slate-700">Mobile Phone *</Label>
+                    <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "मोबाइल फोन *" : "Mobile Phone *"}</Label>
                     {isEditing ? (
                       <Input 
                         value={formData.phone} 
@@ -455,14 +457,14 @@ export default function ProfilePage() {
                     ) : (
                       <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
                         <Phone className="h-3.5 w-3.5 text-teal-600" />
-                        {formData.phone || "Not provided"}
+                        {formData.phone || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                       </p>
                     )}
                   </div>
 
                   {/* Email */}
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label className="text-xs font-bold text-slate-700">Email Address</Label>
+                    <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "ईमेल पता" : "Email Address"}</Label>
                     {isEditing ? (
                       <Input 
                         type="email"
@@ -474,7 +476,7 @@ export default function ProfilePage() {
                     ) : (
                       <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
                         <Mail className="h-3.5 w-3.5 text-teal-600" />
-                        {formData.email || "Not provided"}
+                        {formData.email || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                       </p>
                     )}
                   </div>
@@ -490,10 +492,12 @@ export default function ProfilePage() {
                 <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-4 px-6">
                   <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800">
                     <Droplets className="h-4 w-4 text-rose-500" />
-                    Healthcare &amp; Emergency Profile
+                    {language === "hi" ? "स्वास्थ्य एवं आपातकालीन प्रोफ़ाइल" : "Healthcare & Emergency Profile"}
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500">
-                    Blood group, emergency contacts, known allergies, and address.
+                    {language === "hi" 
+                      ? "रक्त समूह, आपातकालीन संपर्क, ज्ञात एलर्जी एवं आवासीय पता।" 
+                      : "Blood group, emergency contacts, known allergies, and address."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
@@ -501,7 +505,7 @@ export default function ProfilePage() {
                     
                     {/* Blood Group */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Blood Group</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "रक्त समूह" : "Blood Group"}</Label>
                       {isEditing ? (
                         <Select 
                           value={formData.bloodGroup} 
@@ -518,14 +522,14 @@ export default function ProfilePage() {
                         </Select>
                       ) : (
                         <p className="font-bold text-sm text-rose-700 bg-rose-50/60 p-2.5 rounded-xl border border-rose-100">
-                          {formData.bloodGroup || "Not provided"}
+                          {formData.bloodGroup || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                         </p>
                       )}
                     </div>
 
                     {/* Gender */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Gender</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "लिंग" : "Gender"}</Label>
                       {isEditing ? (
                         <Select 
                           value={formData.gender} 
@@ -535,21 +539,21 @@ export default function ProfilePage() {
                             <SelectValue placeholder="Select" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Male">{language === "hi" ? "पुरुष" : "Male"}</SelectItem>
+                            <SelectItem value="Female">{language === "hi" ? "महिला" : "Female"}</SelectItem>
+                            <SelectItem value="Other">{language === "hi" ? "अन्य" : "Other"}</SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          {formData.gender || "Not provided"}
+                          {formData.gender === "Female" ? (language === "hi" ? "महिला" : "Female") : (language === "hi" ? "पुरुष" : "Male")}
                         </p>
                       )}
                     </div>
 
                     {/* Age */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Age (Years)</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "आयु (वर्ष)" : "Age (Years)"}</Label>
                       {isEditing ? (
                         <Input 
                           type="number"
@@ -562,7 +566,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          {formData.age ? `${formData.age} yrs` : "Not provided"}
+                          {formData.age ? `${formData.age} ${language === "hi" ? "वर्ष" : "yrs"}` : (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                         </p>
                       )}
                     </div>
@@ -572,7 +576,7 @@ export default function ProfilePage() {
                   {/* Address & District */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Address / Area</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "पता / क्षेत्र" : "Address / Area"}</Label>
                       {isEditing ? (
                         <Input 
                           value={formData.address} 
@@ -583,13 +587,13 @@ export default function ProfilePage() {
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
                           <MapPin className="h-3.5 w-3.5 text-teal-600" />
-                          {formData.address || "Not provided"}
+                          {formData.address || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">City / District</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "शहर / जिला" : "City / District"}</Label>
                       {isEditing ? (
                         <Input 
                           value={formData.district} 
@@ -608,7 +612,7 @@ export default function ProfilePage() {
                   {/* Emergency Contact */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Emergency Contact Name</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "आपातकालीन संपर्क नाम" : "Emergency Contact Name"}</Label>
                       {isEditing ? (
                         <Input 
                           value={formData.emergencyContactName} 
@@ -618,13 +622,13 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          {formData.emergencyContactName || "Not provided"}
+                          {formData.emergencyContactName || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Emergency Contact Phone</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "आपातकालीन संपर्क फोन" : "Emergency Contact Phone"}</Label>
                       {isEditing ? (
                         <Input 
                           value={formData.emergencyContactPhone} 
@@ -635,7 +639,7 @@ export default function ProfilePage() {
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
                           <Phone className="h-3.5 w-3.5 text-rose-500" />
-                          {formData.emergencyContactPhone || "Not provided"}
+                          {formData.emergencyContactPhone || (language === "hi" ? "प्रदान नहीं किया गया" : "Not provided")}
                         </p>
                       )}
                     </div>
@@ -644,7 +648,7 @@ export default function ProfilePage() {
                   {/* Allergies & Conditions */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Known Allergies</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "ज्ञात एलर्जी" : "Known Allergies"}</Label>
                       {isEditing ? (
                         <Input 
                           value={formData.allergies} 
@@ -654,13 +658,13 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          {formData.allergies || "None reported"}
+                          {formData.allergies || (language === "hi" ? "कोई एलर्जी नहीं" : "None reported")}
                         </p>
                       )}
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700">Existing Medical Conditions</Label>
+                      <Label className="text-xs font-bold text-slate-700">{language === "hi" ? "वर्तमान स्वास्थ्य स्थितियां" : "Existing Medical Conditions"}</Label>
                       {isEditing ? (
                         <Input 
                           value={formData.conditions} 
@@ -670,7 +674,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                          {formData.conditions || "None reported"}
+                          {formData.conditions || (language === "hi" ? "कोई पुरानी बीमारी नहीं" : "None reported")}
                         </p>
                       )}
                     </div>

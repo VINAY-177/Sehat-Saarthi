@@ -62,7 +62,8 @@ export default function ClinicalEncounterPage() {
   const rawId = params.id as string;
   const id = rawId ? decodeURIComponent(rawId) : "";
 
-  const { patients: storePatients, getPatient, refreshAppointments } = useStore();
+  const { patients: storePatients, getPatient, refreshAppointments, language } = useStore();
+  const isHindi = language === "hi";
   const [patient, setPatient] = useState<Patient | null>(() => {
     return getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id) || null;
   });
@@ -118,85 +119,65 @@ export default function ClinicalEncounterPage() {
         ]);
         if (pData && pData.id) {
           setPatient(pData);
-        } else {
-          const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
-          if (fallback) setPatient(fallback);
         }
-        if (Array.isArray(dData) && dData.length > 0) {
+        if (dData && dData.length > 0) {
           setDoctors(dData);
           setSelectedDoctorId(dData[0].id);
         }
       } catch (err) {
         console.error("Error loading encounter initial data:", err);
-        const fallback = getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id);
-        if (fallback) setPatient(fallback);
       } finally {
         setLoading(false);
       }
     }
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, storePatients]);
+  }, [id]);
 
-  // Derive comorbidities from patient conditions
-  const comorbidities: Comorbidities = useMemo(() => {
-    if (!patient?.conditions) {
-      return {
-        diabetes: false,
-        hypertension: false,
-        heartDisease: false,
-        pregnancy: false,
-        asthma: false,
-        kidney: false,
-      };
-    }
-    const condNames = patient.conditions.map((c) => c.name.toLowerCase());
-    return {
-      diabetes: condNames.some((c) => c.includes("diabet")),
-      hypertension: condNames.some((c) => c.includes("hypertens") || c.includes("bp")),
-      heartDisease: condNames.some((c) => c.includes("coronary") || c.includes("heart") || c.includes("cardiac")),
-      pregnancy: condNames.some((c) => c.includes("pregnan")),
-      asthma: condNames.some((c) => c.includes("asthma") || c.includes("copd")),
-      kidney: condNames.some((c) => c.includes("kidney") || c.includes("renal") || c.includes("ckd")),
-    };
-  }, [patient]);
-
-  // LIVE AI Risk Engine Calculation
+  // AI Rule Engine calculation
   const aiRiskAssessment = useMemo(() => {
-    return calculateRiskScore({
-      symptoms: selectedSymptoms,
-      vitals,
-      age: patient?.age || 35,
-      gender: patient?.gender || "Male",
-      comorbidities,
-    });
-  }, [selectedSymptoms, vitals, patient, comorbidities]);
-
-  const toggleSymptom = (sym: string) => {
-    if (selectedSymptoms.includes(sym)) {
-      setSelectedSymptoms(selectedSymptoms.filter((s) => s !== sym));
-    } else {
-      setSelectedSymptoms([...selectedSymptoms, sym]);
+    if (!patient) {
+      return { score: 10, urgency: Urgency.LOW, factors: [], summary: "Normal baseline review." };
     }
+
+    const cm: Comorbidities = {
+      diabetes: patient.conditions?.some((c) => c.name.toLowerCase().includes("diabetes")) || false,
+      hypertension: patient.conditions?.some((c) => c.name.toLowerCase().includes("hyper")) || false,
+      heartDisease: patient.conditions?.some((c) => c.name.toLowerCase().includes("coronary") || c.name.toLowerCase().includes("heart")) || false,
+      pregnancy: Boolean(patient.gender === "Female" && patient.age >= 18 && patient.age <= 45 && patient.conditions?.some((c) => c.name.toLowerCase().includes("pregnan"))),
+      asthma: patient.conditions?.some((c) => c.name.toLowerCase().includes("asthma") || c.name.toLowerCase().includes("copd")) || false,
+      kidney: patient.conditions?.some((c) => c.name.toLowerCase().includes("renal") || c.name.toLowerCase().includes("kidney")) || false,
+    };
+
+    return calculateRiskScore({
+      age: patient.age,
+      gender: patient.gender,
+      vitals,
+      symptoms: selectedSymptoms,
+      comorbidities: cm,
+    });
+  }, [patient, vitals, selectedSymptoms]);
+
+  const toggleSymptom = (symptom: string) => {
+    setSelectedSymptoms((prev) =>
+      prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom]
+    );
   };
 
   const toggleLab = (lab: string) => {
-    if (selectedLabs.includes(lab)) {
-      setSelectedLabs(selectedLabs.filter((l) => l !== lab));
-    } else {
-      setSelectedLabs([...selectedLabs, lab]);
-    }
+    setSelectedLabs((prev) =>
+      prev.includes(lab) ? prev.filter((l) => l !== lab) : [...prev, lab]
+    );
   };
 
   const addRxItem = () => {
-    setRxItems([
-      ...rxItems,
-      { medicationName: "", dosage: "", frequency: "Once daily", duration: "7 days", instructions: "After meals" },
+    setRxItems((prev) => [
+      ...prev,
+      { medicationName: "", dosage: "", frequency: "Twice daily", duration: "7 days", instructions: "After meals" },
     ]);
   };
 
-  const removeRxItem = (idx: number) => {
-    setRxItems(rxItems.filter((_, i) => i !== idx));
+  const removeRxItem = (index: number) => {
+    setRxItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateRxItem = (index: number, field: keyof RxItem, value: string) => {
@@ -209,7 +190,7 @@ export default function ClinicalEncounterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!diagnosis.trim()) {
-      alert("Please specify a diagnosis or provisional assessment.");
+      alert(isHindi ? "कृपया कोई निदान (डायग्नोसिस) दर्ज करें।" : "Please specify a diagnosis or provisional assessment.");
       return;
     }
 
@@ -251,7 +232,7 @@ export default function ClinicalEncounterPage() {
       router.push(`/patients/${id}`);
     } catch (err) {
       console.error("Error saving encounter:", err);
-      alert("Encounter saved or updated.");
+      alert(isHindi ? "परामर्श रिकॉर्ड सहेज लिया गया।" : "Encounter saved or updated.");
       await refreshAppointments();
       router.push(`/patients/${id}`);
     } finally {
@@ -263,7 +244,9 @@ export default function ClinicalEncounterPage() {
     return (
       <div className="py-32 flex flex-col items-center justify-center space-y-3">
         <RefreshCw className="h-8 w-8 text-teal-600 animate-spin" />
-        <p className="text-slate-500 font-medium">Initializing Clinical Encounter Workspace...</p>
+        <p className="text-slate-500 font-medium">
+          {isHindi ? "क्लिनिकल परामर्श कार्यक्षेत्र प्रारंभ हो रहा है..." : "Initializing Clinical Encounter Workspace..."}
+        </p>
       </div>
     );
   }
@@ -271,9 +254,9 @@ export default function ClinicalEncounterPage() {
   if (!patient) {
     return (
       <div className="py-20 text-center">
-        <p className="text-slate-500">Patient not found.</p>
+        <p className="text-slate-500">{isHindi ? "मरीज नहीं मिला।" : "Patient not found."}</p>
         <Link href="/patients">
-          <Button className="mt-4">Back to Registry</Button>
+          <Button className="mt-4">{isHindi ? "रजिस्टर पर वापस जाएं" : "Back to Registry"}</Button>
         </Link>
       </div>
     );
@@ -288,12 +271,12 @@ export default function ClinicalEncounterPage() {
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Exit Consultation & Return to 360° Profile</span>
+          <span>{isHindi ? "परामर्श समाप्त करें एवं 360° प्रोफाइल पर लौटें" : "Exit Consultation & Return to 360° Profile"}</span>
         </Link>
 
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="bg-teal-50 text-teal-800 border-teal-200 font-bold px-3 py-1 text-xs">
-            Active Clinical Encounter
+            {isHindi ? "सक्रिय क्लिनिकल परामर्श" : "Active Clinical Encounter"}
           </Badge>
         </div>
       </div>
@@ -310,7 +293,7 @@ export default function ClinicalEncounterPage() {
               <span className="font-mono text-xs font-bold text-slate-400">({patient.mrn})</span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              {patient.age} yrs • {patient.gender} • Blood: <span className="text-rose-600 font-bold">{patient.bloodGroup || "—"}</span> • {patient.district}
+              {patient.age} {isHindi ? "वर्ष" : "yrs"} • {patient.gender === "Female" ? (isHindi ? "महिला" : "Female") : (isHindi ? "पुरुष" : "Male")} • {isHindi ? "रक्त समूह:" : "Blood:"} <span className="text-rose-600 font-bold">{patient.bloodGroup || "—"}</span> • {patient.district}
             </p>
           </div>
         </div>
@@ -318,7 +301,7 @@ export default function ClinicalEncounterPage() {
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="flex-1 md:flex-initial">
             <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              Attending Clinician
+              {isHindi ? "उपस्थित डॉक्टर" : "Attending Clinician"}
             </Label>
             <select
               value={selectedDoctorId}
@@ -344,14 +327,16 @@ export default function ClinicalEncounterPage() {
             <CardHeader className="bg-slate-50/80 border-b border-slate-100 p-6">
               <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-bold">1</span>
-                History of Present Illness (HPI)
+                {isHindi ? "वर्तमान बीमारी का इतिहास (HPI)" : "History of Present Illness (HPI)"}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div>
-                <Label className="text-xs font-bold text-slate-700 block mb-1.5">Chief Complaint / Reason for Visit</Label>
+                <Label className="text-xs font-bold text-slate-700 block mb-1.5">
+                  {isHindi ? "प्रमुख शिकायत / परामर्श का कारण" : "Chief Complaint / Reason for Visit"}
+                </Label>
                 <Input
-                  placeholder="e.g. Severe retrosternal chest pain with shortness of breath..."
+                  placeholder={isHindi ? "उदा. सीने में तेज दर्द, सांस लेने में तकलीफ..." : "e.g. Severe retrosternal chest pain with shortness of breath..."}
                   value={chiefComplaint}
                   onChange={(e) => setChiefComplaint(e.target.value)}
                   className="rounded-xl h-11 text-sm bg-slate-50/40"
@@ -360,7 +345,7 @@ export default function ClinicalEncounterPage() {
 
               <div>
                 <Label className="text-xs font-bold text-slate-700 block mb-2">
-                  Reported Symptom Checklist (Feeds AI Triage Engine)
+                  {isHindi ? "लक्षण चेकलिस्ट (एआई ट्रायज हेतु)" : "Reported Symptom Checklist (Feeds AI Triage Engine)"}
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {SYMPTOM_LIST.map((sym) => {
@@ -385,34 +370,34 @@ export default function ClinicalEncounterPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-xs font-bold text-slate-700 block mb-1">Onset</Label>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">{isHindi ? "प्रारंभ" : "Onset"}</Label>
                   <select
                     value={onset}
                     onChange={(e) => setOnset(e.target.value)}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium"
                   >
-                    <option value="Sudden">Sudden (&lt; 24 hrs)</option>
-                    <option value="Gradual">Gradual / Insidious</option>
+                    <option value="Sudden">{isHindi ? "अचानक (< 24 घंटे)" : "Sudden (< 24 hrs)"}</option>
+                    <option value="Gradual">{isHindi ? "धीमी गति से" : "Gradual / Insidious"}</option>
                   </select>
                 </div>
                 <div>
-                  <Label className="text-xs font-bold text-slate-700 block mb-1">Severity</Label>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">{isHindi ? "तीव्रता" : "Severity"}</Label>
                   <select
                     value={severity}
                     onChange={(e) => setSeverity(e.target.value)}
                     className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium"
                   >
-                    <option value="Mild">Mild</option>
-                    <option value="Moderate">Moderate</option>
-                    <option value="Severe">Severe / Incapacitating</option>
+                    <option value="Mild">{isHindi ? "हल्की" : "Mild"}</option>
+                    <option value="Moderate">{isHindi ? "मध्यम" : "Moderate"}</option>
+                    <option value="Severe">{isHindi ? "गंभीर" : "Severe / Incapacitating"}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-slate-700 block mb-1.5">HPI Narrative Description</Label>
+                <Label className="text-xs font-bold text-slate-700 block mb-1.5">{isHindi ? "विस्तृत विवरण व नोट्स" : "HPI Narrative Description"}</Label>
                 <Textarea
-                  placeholder="Detailed patient history, radiation of pain, aggravating/relieving factors..."
+                  placeholder={isHindi ? "विस्तृत इतिहास, दर्द का फैलाव, राहत देने वाले कारक..." : "Detailed patient history, radiation of pain, aggravating/relieving factors..."}
                   value={hpiNotes}
                   onChange={(e) => setHpiNotes(e.target.value)}
                   className="rounded-xl min-h-[80px] bg-slate-50/40 text-sm"
@@ -421,24 +406,24 @@ export default function ClinicalEncounterPage() {
             </CardContent>
           </Card>
 
-          {/* Section 2: Vitals Entry (Real-time trigger) */}
+          {/* Section 2: Vitals Entry */}
           <Card className="border border-slate-200/80 shadow-sm rounded-3xl overflow-hidden">
             <CardHeader className="bg-slate-50/80 border-b border-slate-100 p-6 flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-bold">2</span>
-                Clinical Vitals & Biometrics
+                {isHindi ? "क्लिनिकल वाइटल्स एवं संकेत" : "Clinical Vitals & Biometrics"}
               </CardTitle>
               <span className="text-xs font-bold text-teal-700 flex items-center gap-1">
                 <Activity className="w-3.5 h-3.5" />
-                Live Scoring Active
+                {isHindi ? "लाइव स्कोरिंग सक्रिय" : "Live Scoring Active"}
               </span>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">BP Systolic</Label>
-                    {vitals.bpSystolic > 140 && <Badge className="bg-rose-500 text-[10px] py-0">High</Badge>}
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "सिस्टोलिक बीपी" : "BP Systolic"}</Label>
+                    {vitals.bpSystolic > 140 && <Badge className="bg-rose-500 text-[10px] py-0">{isHindi ? "उच्च" : "High"}</Badge>}
                   </div>
                   <Input
                     type="number"
@@ -450,8 +435,8 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">BP Diastolic</Label>
-                    {vitals.bpDiastolic > 90 && <Badge className="bg-rose-500 text-[10px] py-0">High</Badge>}
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "डायस्टोलिक बीपी" : "BP Diastolic"}</Label>
+                    {vitals.bpDiastolic > 90 && <Badge className="bg-rose-500 text-[10px] py-0">{isHindi ? "उच्च" : "High"}</Badge>}
                   </div>
                   <Input
                     type="number"
@@ -463,8 +448,8 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">Heart Rate (BPM)</Label>
-                    {vitals.pulse > 100 && <Badge className="bg-rose-500 text-[10px] py-0">Tachycardia</Badge>}
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "हृदय गति (BPM)" : "Heart Rate (BPM)"}</Label>
+                    {vitals.pulse > 100 && <Badge className="bg-rose-500 text-[10px] py-0">{isHindi ? "तेज" : "Tachycardia"}</Badge>}
                   </div>
                   <Input
                     type="number"
@@ -476,8 +461,8 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">SpO₂ Oxygen (%)</Label>
-                    {vitals.spO2 < 94 && <Badge className="bg-rose-600 text-[10px] py-0 animate-pulse">Critical</Badge>}
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "ऑक्सीजन SpO₂ (%)" : "SpO₂ Oxygen (%)"}</Label>
+                    {vitals.spO2 < 94 && <Badge className="bg-rose-600 text-[10px] py-0 animate-pulse">{isHindi ? "गंभीर" : "Critical"}</Badge>}
                   </div>
                   <Input
                     type="number"
@@ -489,8 +474,8 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">Temperature (°C)</Label>
-                    {vitals.temperature > 38.5 && <Badge className="bg-amber-500 text-[10px] py-0">Fever</Badge>}
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "तापमान (°C)" : "Temperature (°C)"}</Label>
+                    {vitals.temperature > 38.5 && <Badge className="bg-amber-500 text-[10px] py-0">{isHindi ? "बुखार" : "Fever"}</Badge>}
                   </div>
                   <Input
                     type="number"
@@ -503,7 +488,7 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">Resp Rate (/min)</Label>
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "श्वसन दर (/min)" : "Resp Rate (/min)"}</Label>
                   </div>
                   <Input
                     type="number"
@@ -515,7 +500,7 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">Height (cm)</Label>
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "ऊंचाई (cm)" : "Height (cm)"}</Label>
                   </div>
                   <Input
                     type="number"
@@ -527,7 +512,7 @@ export default function ClinicalEncounterPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <Label className="text-xs font-bold text-slate-700">Weight (kg)</Label>
+                    <Label className="text-xs font-bold text-slate-700">{isHindi ? "वजन (kg)" : "Weight (kg)"}</Label>
                   </div>
                   <Input
                     type="number"
@@ -545,15 +530,17 @@ export default function ClinicalEncounterPage() {
             <CardHeader className="bg-slate-50/80 border-b border-slate-100 p-6">
               <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-bold">3</span>
-                Assessment & ICD-10 Diagnosis
+                {isHindi ? "मूल्यांकन एवं आईसीडी-10 निदान" : "Assessment & ICD-10 Diagnosis"}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
-                  <Label className="text-xs font-bold text-slate-700 block mb-1">Primary Clinical Diagnosis *</Label>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">
+                    {isHindi ? "प्राथमिक क्लिनिकल निदान *" : "Primary Clinical Diagnosis *"}
+                  </Label>
                   <Input
-                    placeholder="e.g. Acute Coronary Syndrome, Stable Angina, Pneumonia"
+                    placeholder={isHindi ? "उदा. एक्यूट कोरोनरी सिंड्रोम, स्टेबल एनजाइना..." : "e.g. Acute Coronary Syndrome, Stable Angina, Pneumonia"}
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
                     className="rounded-xl h-11 bg-slate-50/40 font-bold text-slate-900"
@@ -561,7 +548,7 @@ export default function ClinicalEncounterPage() {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs font-bold text-slate-700 block mb-1">ICD-10 Code</Label>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">{isHindi ? "आईसीडी-10 कोड" : "ICD-10 Code"}</Label>
                   <Input
                     placeholder="e.g. I20.0"
                     value={diagnosisIcdCode}
@@ -572,9 +559,9 @@ export default function ClinicalEncounterPage() {
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-slate-700 block mb-1.5">SOAP Clinical Notes / Findings</Label>
+                <Label className="text-xs font-bold text-slate-700 block mb-1.5">{isHindi ? "क्लिनिकल नोट्स व निष्कर्ष" : "SOAP Clinical Notes / Findings"}</Label>
                 <Textarea
-                  placeholder="Subjective, Objective, Assessment, Plan notes..."
+                  placeholder={isHindi ? "Subjective, Objective, Assessment, Plan नोट्स..." : "Subjective, Objective, Assessment, Plan notes..."}
                   value={clinicalNotes}
                   onChange={(e) => setClinicalNotes(e.target.value)}
                   className="rounded-xl min-h-[90px] bg-slate-50/40 font-mono text-xs"
@@ -588,7 +575,7 @@ export default function ClinicalEncounterPage() {
             <CardHeader className="bg-slate-50/80 border-b border-slate-100 p-6 flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-bold">4</span>
-                Treatment Plan & Electronic Prescription
+                {isHindi ? "उपचार योजना एवं डिजिटल प्रिस्क्रिप्शन" : "Treatment Plan & Electronic Prescription"}
               </CardTitle>
               <Button
                 type="button"
@@ -597,19 +584,19 @@ export default function ClinicalEncounterPage() {
                 onClick={addRxItem}
                 className="rounded-xl border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-100 font-bold gap-1"
               >
-                <Plus className="w-3.5 h-3.5" /> Add Drug
+                <Plus className="w-3.5 h-3.5" /> {isHindi ? "दवा जोड़ें" : "Add Drug"}
               </Button>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               {/* Prescription Items */}
               <div className="space-y-3">
                 <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                  Medication Regimen (Rx)
+                  {isHindi ? "दवा सूची (Rx)" : "Medication Regimen (Rx)"}
                 </Label>
                 {rxItems.map((item, idx) => (
                   <div key={idx} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
                     <div className="sm:col-span-2">
-                      <Label className="text-[10px] font-bold text-slate-500 block mb-1">Medication Name</Label>
+                      <Label className="text-[10px] font-bold text-slate-500 block mb-1">{isHindi ? "दवा का नाम" : "Medication Name"}</Label>
                       <Input
                         placeholder="e.g. Metoprolol"
                         value={item.medicationName}
@@ -618,7 +605,7 @@ export default function ClinicalEncounterPage() {
                       />
                     </div>
                     <div>
-                      <Label className="text-[10px] font-bold text-slate-500 block mb-1">Dosage</Label>
+                      <Label className="text-[10px] font-bold text-slate-500 block mb-1">{isHindi ? "खुराक" : "Dosage"}</Label>
                       <Input
                         placeholder="e.g. 50mg"
                         value={item.dosage}
@@ -627,9 +614,9 @@ export default function ClinicalEncounterPage() {
                       />
                     </div>
                     <div>
-                      <Label className="text-[10px] font-bold text-slate-500 block mb-1">Frequency</Label>
+                      <Label className="text-[10px] font-bold text-slate-500 block mb-1">{isHindi ? "आवृत्ति" : "Frequency"}</Label>
                       <Input
-                        placeholder="e.g. BD (Twice daily)"
+                        placeholder="e.g. BD (दिन में दो बार)"
                         value={item.frequency}
                         onChange={(e) => updateRxItem(idx, "frequency", e.target.value)}
                         className="bg-white rounded-xl h-10 text-sm"
@@ -637,7 +624,7 @@ export default function ClinicalEncounterPage() {
                     </div>
                     <div className="flex gap-2">
                       <div className="flex-1">
-                        <Label className="text-[10px] font-bold text-slate-500 block mb-1">Duration</Label>
+                        <Label className="text-[10px] font-bold text-slate-500 block mb-1">{isHindi ? "अवधि" : "Duration"}</Label>
                         <Input
                           placeholder="30 days"
                           value={item.duration}
@@ -664,7 +651,7 @@ export default function ClinicalEncounterPage() {
               {/* Lab Orders */}
               <div>
                 <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                  Order Diagnostic Investigations
+                  {isHindi ? "आवश्यक लैब जांच आदेश" : "Order Diagnostic Investigations"}
                 </Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {COMMON_LABS.map((lab) => {
@@ -691,16 +678,16 @@ export default function ClinicalEncounterPage() {
               {/* Treatment & Follow-up */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-xs font-bold text-slate-700 block mb-1">General Management Advice</Label>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">{isHindi ? "सामान्य सलाह व जीवनशैली निर्देश" : "General Management Advice"}</Label>
                   <Textarea
-                    placeholder="Dietary precautions, lifestyle counseling, warning signs..."
+                    placeholder={isHindi ? "आहार निर्देश, सावधानियां, चेतावनी संकेत..." : "Dietary precautions, lifestyle counseling, warning signs..."}
                     value={treatmentPlan}
                     onChange={(e) => setTreatmentPlan(e.target.value)}
                     className="rounded-xl min-h-[70px] text-xs bg-slate-50/40"
                   />
                 </div>
                 <div>
-                  <Label className="text-xs font-bold text-slate-700 block mb-1">Scheduled Follow-up Date</Label>
+                  <Label className="text-xs font-bold text-slate-700 block mb-1">{isHindi ? "फॉलो-अप परामर्श दिनांक" : "Scheduled Follow-up Date"}</Label>
                   <Input
                     type="date"
                     value={followUpDate}
@@ -722,7 +709,7 @@ export default function ClinicalEncounterPage() {
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-teal-200 animate-pulse" />
                   <CardTitle className="text-base font-black tracking-wide">
-                    AI Clinical Decision Support
+                    {isHindi ? "एआई क्लिनिकल निर्णय समर्थन" : "AI Clinical Decision Support"}
                   </CardTitle>
                 </div>
                 <UrgencyBadge urgency={aiRiskAssessment.urgency} size="sm" />
@@ -733,7 +720,7 @@ export default function ClinicalEncounterPage() {
               {/* Score Gauge */}
               <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm text-center">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-                  Stratified Clinical Risk Score
+                  {isHindi ? "क्लिनिकल जोखिम स्कोर" : "Stratified Clinical Risk Score"}
                 </span>
                 <div className="text-5xl font-black text-slate-900 tracking-tight my-1">
                   {aiRiskAssessment.score}
@@ -748,7 +735,7 @@ export default function ClinicalEncounterPage() {
               {/* Contributing Risk Factors */}
               <div className="space-y-2">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                  Identified Contributing Factors ({aiRiskAssessment.factors.length})
+                  {isHindi ? "पहचाने गए जोखिम कारक" : "Identified Contributing Factors"} ({aiRiskAssessment.factors.length})
                 </span>
                 {aiRiskAssessment.factors.length > 0 ? (
                   <div className="space-y-1.5">
@@ -760,21 +747,23 @@ export default function ClinicalEncounterPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">No acute risk triggers detected.</p>
+                  <p className="text-xs text-slate-400 italic">
+                    {isHindi ? "कोई तीव्र जोखिम कारक नहीं मिला।" : "No acute risk triggers detected."}
+                  </p>
                 )}
               </div>
 
               {/* Triage Recommendation */}
               <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200/60 text-xs space-y-1.5">
                 <span className="font-bold text-teal-950 uppercase tracking-wider text-[10px] block">
-                  System Recommendation
+                  {isHindi ? "सिस्टम अनुशंसा" : "System Recommendation"}
                 </span>
                 <p className="text-teal-900 font-medium leading-relaxed">
                   {aiRiskAssessment.urgency === Urgency.EMERGENCY
-                    ? "Immediate stabilization required. Arrange urgent transfer to ICU / Tertiary Center."
+                    ? (isHindi ? "तत्काल स्थिरीकरण आवश्यक। तत्काल आईसीयू / तृतीयक केंद्र ट्रांसफर की व्यवस्था करें।" : "Immediate stabilization required. Arrange urgent transfer to ICU / Tertiary Center.")
                     : aiRiskAssessment.urgency === Urgency.HIGH
-                    ? "Urgent specialist review required. Monitor telemetry closely."
-                    : "Standard clinical outpatient protocol and scheduled follow-up."}
+                    ? (isHindi ? "तत्काल विशेषज्ञ समीक्षा आवश्यक। टेलीमेट्री की निगरानी रखें।" : "Urgent specialist review required. Monitor telemetry closely.")
+                    : (isHindi ? "मानक बाह्य रोगी (ओपीडी) प्रोटोकॉल एवं निर्धारित फॉलो-अप।" : "Standard clinical outpatient protocol and scheduled follow-up.")}
                 </p>
               </div>
 
@@ -786,11 +775,13 @@ export default function ClinicalEncounterPage() {
                   className="w-full h-14 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-teal-600/25 gap-2"
                 >
                   <Stethoscope className="w-5 h-5" />
-                  {submitting ? "Committing Record..." : "Save & Complete Encounter"}
+                  {submitting ? (isHindi ? "रिकॉर्ड सहेजा जा रहा है..." : "Committing Record...") : (isHindi ? "परामर्श पूर्ण करें एवं सहेजें" : "Save & Complete Encounter")}
                 </Button>
 
                 <p className="text-[10px] text-slate-400 text-center leading-normal">
-                  Protected under Ayushman Bharat ABDM standards. Artificial Intelligence decision support is auxiliary; final clinical diagnosis is rendered by the physician.
+                  {isHindi
+                    ? "आयुष्मान भारत डिजिटल मिशन (ABDM) मानकों के तहत संरक्षित। एआई निर्णय समर्थन सहायक है, अंतिम निर्णय चिकित्सक का है।"
+                    : "Protected under Ayushman Bharat ABDM standards. Artificial Intelligence decision support is auxiliary; final clinical diagnosis is rendered by the physician."}
                 </p>
               </div>
             </CardContent>

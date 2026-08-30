@@ -39,7 +39,8 @@ export default function PatientDetailPage() {
   const rawId = params.id as string;
   const id = rawId ? decodeURIComponent(rawId) : "";
 
-  const { patients: storePatients, getPatient } = useStore();
+  const { patients: storePatients, getPatient, language } = useStore();
+  const isHindi = language === "hi";
   const [patient, setPatient] = useState<Patient | null>(() => {
     return getPatient(id) || storePatients.find((p) => p.id === id || p.mrn === id) || null;
   });
@@ -74,7 +75,9 @@ export default function PatientDetailPage() {
     return (
       <div className="py-32 flex flex-col items-center justify-center space-y-3">
         <RefreshCw className="h-8 w-8 text-teal-600 animate-spin" />
-        <p className="text-slate-500 font-medium">Assembling Patient 360° Profile...</p>
+        <p className="text-slate-500 font-medium">
+          {isHindi ? "मरीज का 360° प्रोफाइल लोड हो रहा है..." : "Assembling Patient 360° Profile..."}
+        </p>
       </div>
     );
   }
@@ -85,13 +88,17 @@ export default function PatientDetailPage() {
         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
           <User className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900">Patient Profile Not Found</h2>
+        <h2 className="text-2xl font-bold text-slate-900">
+          {isHindi ? "मरीज का प्रोफाइल नहीं मिला" : "Patient Profile Not Found"}
+        </h2>
         <p className="text-slate-500 text-sm">
-          The requested medical record could not be loaded or may have been archived.
+          {isHindi
+            ? "अनुरोधित मेडिकल रिकॉर्ड नहीं मिल सका।"
+            : "The requested medical record could not be loaded or may have been archived."}
         </p>
         <Link href="/patients">
           <Button className="bg-teal-600 hover:bg-teal-700 font-bold rounded-xl mt-2">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Return to Patient Registry
+            <ArrowLeft className="mr-2 h-4 w-4" /> {isHindi ? "रोगी रजिस्टर पर लौटें" : "Return to Patient Registry"}
           </Button>
         </Link>
       </div>
@@ -107,14 +114,14 @@ export default function PatientDetailPage() {
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Patient Registry</span>
+          <span>{isHindi ? "रोगी रजिस्टर पर वापस जाएं" : "Back to Patient Registry"}</span>
         </Link>
 
         <div className="flex items-center gap-2">
           <Link href={`/patients/${patient.id}/encounter`}>
             <Button className="bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl h-11 px-5 shadow-sm gap-2">
               <Stethoscope className="w-4 h-4" />
-              <span>Start Clinical Encounter</span>
+              <span>{isHindi ? "क्लिनिकल परामर्श शुरू करें" : "Start Clinical Encounter"}</span>
             </Button>
           </Link>
         </div>
@@ -142,9 +149,9 @@ export default function PatientDetailPage() {
                 </div>
 
                 <p className="text-slate-300 text-sm flex flex-wrap items-center gap-2">
-                  <span>{patient.age} yrs</span> •
-                  <span className="capitalize">{patient.gender}</span> •
-                  <span className="text-rose-300 font-semibold">Blood: {patient.bloodGroup || "Unknown"}</span> •
+                  <span>{patient.age} {isHindi ? "वर्ष" : "yrs"}</span> •
+                  <span className="capitalize">{patient.gender === "Female" ? (isHindi ? "महिला" : "Female") : (isHindi ? "पुरुष" : "Male")}</span> •
+                  <span className="text-rose-300 font-semibold">{isHindi ? "रक्त समूह:" : "Blood:"} {patient.bloodGroup || (isHindi ? "अज्ञात" : "Unknown")}</span> •
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-teal-400" />
                     {patient.district}, {patient.state}
@@ -165,9 +172,9 @@ export default function PatientDetailPage() {
               <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/10 flex items-center gap-3">
                 <Fingerprint className="w-5 h-5 text-teal-400" />
                 <div>
-                  <span className="text-[10px] text-slate-400 font-mono block">ABHA HEALTH ID</span>
+                  <span className="text-[10px] text-slate-400 font-mono block">{isHindi ? "आभा हेल्थ आईडी" : "ABHA HEALTH ID"}</span>
                   <span className="text-xs font-mono font-bold text-white">
-                    {patient.abhaId || "Not Linked"}
+                    {patient.abhaId || (isHindi ? "लिंक नहीं" : "Not Linked")}
                   </span>
                 </div>
                 <Badge
@@ -175,12 +182,12 @@ export default function PatientDetailPage() {
                     patient.abhaLinked ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-300"
                   }`}
                 >
-                  {patient.abhaLinked ? "VERIFIED" : "UNLINKED"}
+                  {patient.abhaLinked ? (isHindi ? "सत्यापित" : "VERIFIED") : (isHindi ? "अनलिंक्ड" : "UNLINKED")}
                 </Badge>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400 font-medium">Income Tier:</span>
+                <span className="text-xs text-slate-400 font-medium">{isHindi ? "आय वर्ग:" : "Income Tier:"}</span>
                 <Badge variant="outline" className="bg-white/5 border-white/20 text-teal-200 text-xs">
                   {patient.incomeCategory || "General (APL)"}
                 </Badge>
@@ -198,55 +205,61 @@ export default function PatientDetailPage() {
               value="overview"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              360° Overview
+              {isHindi ? "360° अवलोकन" : "360° Overview"}
             </TabsTrigger>
             <TabsTrigger
               value="encounters"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Consultations ({patient.encounters?.length || 0})
+              {isHindi ? "परामर्श" : "Consultations"} ({patient.encounters?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="prescriptions"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Prescriptions ({patient.prescriptions?.length || 0})
+              {isHindi ? "दवा पर्ची" : "Prescriptions"} ({patient.prescriptions?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="lab-reports"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Lab Tests ({patient.labReports?.length || 0})
+              {isHindi ? "लैब जांच" : "Lab Tests"} ({patient.labReports?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="vitals"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Vitals ({patient.vitals?.length || 0})
+              {isHindi ? "वाइटल्स" : "Vitals"} ({patient.vitals?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="conditions"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Conditions ({patient.conditions?.length || 0})
+              {isHindi ? "स्थितियां" : "Conditions"} ({patient.conditions?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="allergies"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Allergies ({patient.allergies?.length || 0})
+              {isHindi ? "एलर्जी" : "Allergies"} ({patient.allergies?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="appointments"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Appointments ({patient.appointments?.length || 0})
+              {isHindi ? "अपॉइंटमेंट" : "Appointments"} ({patient.appointments?.length || 0})
             </TabsTrigger>
             <TabsTrigger
               value="demographics"
               className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
             >
-              Demographics
+              {isHindi ? "जनसांख्यिकी" : "Demographics"}
+            </TabsTrigger>
+            <TabsTrigger
+              value="insurance"
+              className="rounded-xl px-4 py-2.5 text-xs font-bold data-[state=active]:bg-teal-600 data-[state=active]:text-white transition-all"
+            >
+              {isHindi ? "स्वास्थ्य बीमा" : "Health Insurance"}
             </TabsTrigger>
           </TabsList>
         </div>

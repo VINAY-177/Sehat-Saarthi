@@ -36,15 +36,15 @@ import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; bg: string; text: string; border: string; step: number }
+  { label: string; labelHi: string; bg: string; text: string; border: string; step: number }
 > = {
-  REQUESTED: { label: "Requested", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", step: 1 },
-  CONFIRMED: { label: "Confirmed", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", step: 2 },
-  CHECKED_IN: { label: "Checked-In", bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200", step: 3 },
-  IN_CONSULTATION: { label: "In Consultation", bg: "bg-teal-50", text: "text-teal-800", border: "border-teal-300", step: 4 },
-  COMPLETED: { label: "Completed", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", step: 5 },
-  DECLINED: { label: "Declined", bg: "bg-slate-100", text: "text-slate-600", border: "border-slate-200", step: 0 },
-  CANCELLED: { label: "Cancelled", bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", step: 0 },
+  REQUESTED: { label: "Requested", labelHi: "अनुरोधित", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", step: 1 },
+  CONFIRMED: { label: "Confirmed", labelHi: "पुष्टिकृत", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", step: 2 },
+  CHECKED_IN: { label: "Checked-In", labelHi: "चेक-इन", bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200", step: 3 },
+  IN_CONSULTATION: { label: "In Consultation", labelHi: "परामर्श जारी", bg: "bg-teal-50", text: "text-teal-800", border: "border-teal-300", step: 4 },
+  COMPLETED: { label: "Completed", labelHi: "पूर्ण", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", step: 5 },
+  DECLINED: { label: "Declined", labelHi: "अस्वीकृत", bg: "bg-slate-100", text: "text-slate-600", border: "border-slate-200", step: 0 },
+  CANCELLED: { label: "Cancelled", labelHi: "रद्द", bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", step: 0 },
 };
 
 
@@ -519,7 +519,9 @@ export default function SchedulingPage() {
       {loading ? (
         <div className="py-24 flex flex-col items-center justify-center space-y-3">
           <RefreshCw className="h-8 w-8 text-teal-600 animate-spin" />
-          <p className="text-white font-bold drop-shadow-md">Assembling Appointment Queue...</p>
+          <p className="text-white font-bold drop-shadow-md">
+            {isHindi ? "अपॉइंटमेंट कतार लोड हो रही है..." : "Assembling Appointment Queue..."}
+          </p>
         </div>
       ) : filteredAppointments.length === 0 ? (
         <Card className="glass-panel border-dashed border-2 border-white/80 shadow-xl bg-white/90 rounded-[28px]">
@@ -527,12 +529,16 @@ export default function SchedulingPage() {
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
               <CalendarIcon className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2">No appointments scheduled</h3>
+            <h3 className="text-xl font-black text-slate-800 mb-2">
+              {isHindi ? "कोई अपॉइंटमेंट निर्धारित नहीं है" : "No appointments scheduled"}
+            </h3>
             <p className="text-slate-500 max-w-sm mb-6 text-xs font-medium">
-              No clinical visits match your filter parameters. Book an intake to populate the roster.
+              {isHindi
+                ? "आपके खोज मानदंडों से मेल खाने वाला कोई परामर्श नहीं है।"
+                : "No clinical visits match your filter parameters. Book an intake to populate the roster."}
             </p>
             <button type="button" onClick={handleOpenBookingModal} className="btn-3d-primary h-11 px-6 text-xs font-extrabold rounded-xl">
-              Book First Appointment
+              {isHindi ? "पहला अपॉइंटमेंट बुक करें" : "Book First Appointment"}
             </button>
           </CardContent>
         </Card>
@@ -543,12 +549,12 @@ export default function SchedulingPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/90 border-b border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                  <th className="py-4 px-5">Date & Time</th>
-                  <th className="py-4 px-4">Patient Details</th>
-                  <th className="py-4 px-4">Doctor & Department</th>
-                  <th className="py-4 px-4">Visit Type & Reason</th>
-                  <th className="py-4 px-4">Lifecycle State</th>
-                  <th className="py-4 px-5 text-right">Quick Transition</th>
+                  <th className="py-4 px-5">{isHindi ? "दिनांक व समय" : "Date & Time"}</th>
+                  <th className="py-4 px-4">{isHindi ? "मरीज का विवरण" : "Patient Details"}</th>
+                  <th className="py-4 px-4">{isHindi ? "डॉक्टर एवं विभाग" : "Doctor & Department"}</th>
+                  <th className="py-4 px-4">{isHindi ? "विज़िट का प्रकार व कारण" : "Visit Type & Reason"}</th>
+                  <th className="py-4 px-4">{isHindi ? "स्थिति" : "Lifecycle State"}</th>
+                  <th className="py-4 px-5 text-right">{isHindi ? "कार्य" : "Quick Transition"}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -584,7 +590,7 @@ export default function SchedulingPage() {
                             {appt.patient?.name || "Patient"}
                           </span>
                           <span className="text-xs text-slate-400">
-                            {appt.patient?.age} yrs • {appt.patient?.gender} • {appt.patient?.mrn || "No MRN"}
+                            {appt.patient?.age} {isHindi ? "वर्ष" : "yrs"} • {appt.patient?.gender === "Female" ? (isHindi ? "महिला" : "Female") : (isHindi ? "पुरुष" : "Male")} • {appt.patient?.mrn || "No MRN"}
                           </span>
                         </div>
                       </td>
@@ -610,9 +616,9 @@ export default function SchedulingPage() {
                                 : "bg-slate-100 text-slate-700"
                             }`}
                           >
-                            {appt.visitType}
+                            {appt.visitType === "EMERGENCY" ? (isHindi ? "आपातकालीन" : "EMERGENCY") : appt.visitType === "FOLLOW_UP" ? (isHindi ? "फॉलो-अप" : "FOLLOW_UP") : (isHindi ? "नया परामर्श" : "NEW")}
                           </Badge>
-                          <span className="text-xs text-slate-600 truncate">{appt.reason || "Consultation"}</span>
+                          <span className="text-xs text-slate-600 truncate">{appt.reason || (isHindi ? "सामान्य परामर्श" : "Consultation")}</span>
                         </div>
                       </td>
 
@@ -622,7 +628,7 @@ export default function SchedulingPage() {
                           variant="outline"
                           className={`font-bold text-xs ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}
                         >
-                          {statusCfg.label}
+                          {isHindi ? statusCfg.labelHi : statusCfg.label}
                         </Badge>
                       </td>
 
@@ -635,7 +641,7 @@ export default function SchedulingPage() {
                               onClick={() => handleUpdateStatus(appt.id, "CONFIRMED")}
                               className="h-8 px-3 text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl"
                             >
-                              <Check className="w-3.5 h-3.5 mr-1" /> Confirm
+                              <Check className="w-3.5 h-3.5 mr-1" /> {isHindi ? "स्वीकार करें" : "Confirm"}
                             </Button>
                           )}
 
@@ -645,7 +651,7 @@ export default function SchedulingPage() {
                               onClick={() => handleUpdateStatus(appt.id, "CHECKED_IN")}
                               className="h-8 px-3 text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl"
                             >
-                              Check-In
+                              {isHindi ? "चेक-इन" : "Check-In"}
                             </Button>
                           )}
 
@@ -655,7 +661,7 @@ export default function SchedulingPage() {
                                 size="sm"
                                 className="h-8 px-3 text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl gap-1 shadow-sm"
                               >
-                                <Play className="w-3 h-3 fill-current" /> Start Consult
+                                <Play className="w-3 h-3 fill-current" /> {isHindi ? "परामर्श शुरू करें" : "Start Consult"}
                               </Button>
                             </Link>
                           )}
@@ -666,7 +672,7 @@ export default function SchedulingPage() {
                                 size="sm"
                                 className="h-8 px-3 text-xs bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl gap-1"
                               >
-                                Resume
+                                {isHindi ? "जारी रखें" : "Resume"}
                               </Button>
                             </Link>
                           )}
@@ -678,7 +684,7 @@ export default function SchedulingPage() {
                                 variant="outline"
                                 className="h-8 px-3 text-xs font-bold rounded-xl text-slate-600 border-slate-200 hover:bg-slate-50"
                               >
-                                View 360°
+                                {isHindi ? "प्रोफाइल देखें" : "View 360°"}
                               </Button>
                             </Link>
                           )}

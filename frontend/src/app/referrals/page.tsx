@@ -161,7 +161,9 @@ export default function ReferralsPage() {
                     </div>
 
                     <div className="text-xs text-slate-700 bg-white/90 border border-slate-200/80 p-3.5 rounded-xl font-medium">
-                      <span className="font-extrabold text-slate-900 mb-1 block text-[11px] uppercase tracking-wider">Clinical Reason</span>
+                      <span className="font-extrabold text-slate-900 mb-1 block text-[11px] uppercase tracking-wider">
+                        {isHindi ? "क्लिनिकल कारण" : "Clinical Reason"}
+                      </span>
                       {ref.reason}
                     </div>
                   </div>
@@ -173,7 +175,7 @@ export default function ReferralsPage() {
                       onClick={() => setSelectedReferralForSlip(ref)}
                     >
                       <FileText className="h-4 w-4 mr-1.5 text-teal-600 inline" />
-                      View Slip
+                      {isHindi ? "पर्ची देखें" : "View Slip"}
                     </button>
                     <div className="w-full">
                       {renderActionButtons(ref.id, ref.status)}
@@ -203,8 +205,12 @@ export default function ReferralsPage() {
             <Ambulance size={32} strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">Referral Management</h1>
-            <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">Coordinate inter-facility transfers and triage</p>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              {isHindi ? "रेफरल प्रबंधन" : "Referral Management"}
+            </h1>
+            <p className="text-slate-500 mt-1 text-xs sm:text-sm font-semibold">
+              {isHindi ? "अस्पताल-दर-अस्पताल ट्रांसफर व आपातकालीन रेफरल का समन्वय करें।" : "Coordinate inter-facility transfers and triage"}
+            </p>
           </div>
         </div>
         <button 
@@ -212,7 +218,7 @@ export default function ReferralsPage() {
           onClick={() => setCreateDialogOpen(true)} 
           className="btn-3d-primary h-11 px-5 rounded-2xl text-xs font-black gap-2"
         >
-          <Plus className="h-4 w-4" /> <span>New Referral</span>
+          <Plus className="h-4 w-4" /> <span>{isHindi ? "नया रेफरल" : "New Referral"}</span>
         </button>
       </div>
 
@@ -221,22 +227,28 @@ export default function ReferralsPage() {
           <div className="flex items-center justify-between mb-4">
             <TabsList className="glass-panel p-1 rounded-2xl border border-white/80 bg-white/90 shadow-md h-auto">
               <TabsTrigger value="active" className="rounded-xl px-5 py-2 text-xs font-bold data-[state=active]:bg-teal-700 data-[state=active]:text-white transition-all">
-                Active Referrals
+                {isHindi ? "सक्रिय रेफरल" : "Active Referrals"}
                 <Badge variant="secondary" className="ml-2 bg-white/90 text-teal-800 font-extrabold">{activeReferrals.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="completed" className="rounded-xl px-5 py-2 text-xs font-bold data-[state=active]:bg-teal-700 data-[state=active]:text-white transition-all">
-                Completed
+                {isHindi ? "पूर्ण रेफरल" : "Completed"}
                 <Badge variant="secondary" className="ml-2 bg-white/90 text-teal-800 font-extrabold">{completedReferrals.length}</Badge>
               </TabsTrigger>
             </TabsList>
           </div>
           
           <TabsContent value="active" className="m-0 focus-visible:outline-none focus-visible:ring-0">
-            <ReferralList items={activeReferrals} emptyMsg="No active referrals currently in progress." />
+            <ReferralList 
+              items={activeReferrals} 
+              emptyMsg={isHindi ? "वर्तमान में कोई सक्रिय रेफरल नहीं है।" : "No active referrals currently in progress."} 
+            />
           </TabsContent>
           
           <TabsContent value="completed" className="m-0 focus-visible:outline-none focus-visible:ring-0">
-            <ReferralList items={completedReferrals} emptyMsg="No completed referrals recorded yet." />
+            <ReferralList 
+              items={completedReferrals} 
+              emptyMsg={isHindi ? "कोई पूर्ण रेफरल दर्ज नहीं है।" : "No completed referrals recorded yet."} 
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -248,20 +260,20 @@ export default function ReferralsPage() {
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
                 <Plus className="h-6 w-6 opacity-80" />
-                Initiate Referral
+                {isHindi ? "नया रेफरल शुरू करें" : "Initiate Referral"}
               </DialogTitle>
               <DialogDescription className="text-teal-50">
-                Create a new inter-facility patient transfer request.
+                {isHindi ? "अस्पताल ट्रांसफर का नया अनुरोध दर्ज करें।" : "Create a new inter-facility patient transfer request."}
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="p-6 space-y-5 bg-slate-50">
             <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Select Patient</Label>
+              <Label className="text-slate-700 font-semibold">{isHindi ? "मरीज चुनें" : "Select Patient"}</Label>
               <Select value={selectedPatientId} onValueChange={(val) => val && setSelectedPatientId(val)}>
                 <SelectTrigger className="bg-white border-slate-200 shadow-sm h-11">
-                  <SelectValue placeholder="Choose a registered patient" />
+                  <SelectValue placeholder={isHindi ? "पंजीकृत मरीज का चयन करें" : "Choose a registered patient"} />
                 </SelectTrigger>
                 <SelectContent>
                   {patients.map(p => (
@@ -274,10 +286,10 @@ export default function ReferralsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Destination Facility</Label>
+              <Label className="text-slate-700 font-semibold">{isHindi ? "गंतव्य अस्पताल / स्वास्थ्य केंद्र" : "Destination Facility"}</Label>
               <Select value={selectedFacilityId} onValueChange={(val) => val && setSelectedFacilityId(val)}>
                 <SelectTrigger className="bg-white border-slate-200 shadow-sm h-11">
-                  <SelectValue placeholder="Choose hospital or CHC" />
+                  <SelectValue placeholder={isHindi ? "अस्पताल चुनें" : "Choose hospital or CHC"} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
                   {facilities.map(f => {
@@ -288,7 +300,7 @@ export default function ReferralsPage() {
                         <div className="flex flex-col text-left py-0.5">
                           <span className="font-semibold text-slate-900 leading-snug">{f.name}</span>
                           <span className="text-[11px] text-slate-500 font-medium">
-                            {f.district} • ICU: {icuFree} beds free • Gen: {genFree} beds free
+                            {f.district} • {isHindi ? "आईसीयू खाली:" : "ICU:"} {icuFree} • {isHindi ? "जनरल खाली:" : "Gen:"} {genFree}
                           </span>
                         </div>
                       </SelectItem>
@@ -299,24 +311,24 @@ export default function ReferralsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Triage Urgency</Label>
+              <Label className="text-slate-700 font-semibold">{isHindi ? "ट्रायज प्राथमिकता" : "Triage Urgency"}</Label>
               <Select value={urgency} onValueChange={(val) => setUrgency(val as Urgency)}>
                 <SelectTrigger className="bg-white border-slate-200 shadow-sm h-11">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={Urgency.EMERGENCY}>Emergency</SelectItem>
-                  <SelectItem value={Urgency.HIGH}>High Urgency</SelectItem>
-                  <SelectItem value={Urgency.MODERATE}>Moderate</SelectItem>
-                  <SelectItem value={Urgency.LOW}>Low</SelectItem>
+                  <SelectItem value={Urgency.EMERGENCY}>{isHindi ? "आपातकालीन (Emergency)" : "Emergency"}</SelectItem>
+                  <SelectItem value={Urgency.HIGH}>{isHindi ? "अति-आवश्यक (High)" : "High Urgency"}</SelectItem>
+                  <SelectItem value={Urgency.MODERATE}>{isHindi ? "मध्यम (Moderate)" : "Moderate"}</SelectItem>
+                  <SelectItem value={Urgency.LOW}>{isHindi ? "सामान्य (Low)" : "Low"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Clinical Transfer Reason</Label>
+              <Label className="text-slate-700 font-semibold">{isHindi ? "ट्रांसफर का क्लिनिकल कारण" : "Clinical Transfer Reason"}</Label>
               <Textarea 
-                placeholder="E.g. Acute chest pain, SpO2 88%, requiring immediate ICU admission and cardiology consult."
+                placeholder={isHindi ? "उदा. तीव्र सीने में दर्द, SpO2 88%, तत्काल आईसीयू व कार्डियोलॉजी परामर्श आवश्यक।" : "E.g. Acute chest pain, SpO2 88%, requiring immediate ICU admission and cardiology consult."}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={4}
@@ -327,10 +339,10 @@ export default function ReferralsPage() {
 
           <DialogFooter className="p-6 bg-white border-t border-slate-100">
             <Button variant="outline" onClick={() => setCreateDialogOpen(false)} className="border-slate-200 text-slate-600 hover:bg-slate-50">
-              Cancel
+              {isHindi ? "रद्द करें" : "Cancel"}
             </Button>
             <Button onClick={handleCreateReferral} className="bg-teal-600 hover:bg-teal-700 text-white shadow-md">
-              Confirm Referral
+              {isHindi ? "रेफरल की पुष्टि करें" : "Confirm Referral"}
             </Button>
           </DialogFooter>
         </DialogContent>

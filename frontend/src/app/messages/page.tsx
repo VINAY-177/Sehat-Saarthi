@@ -509,9 +509,15 @@ export default function MessagesPage() {
             <Input
               placeholder={
                 isDoctor
-                  ? "Type clinical guidance, dosage, or reply..."
+                  ? isHindi
+                    ? "क्लिनिकल निर्देश या उत्तर लिखें..."
+                    : "Type clinical guidance, dosage, or reply..."
                   : isStaff
-                  ? "Type bed allocation or dispatch message..."
+                  ? isHindi
+                    ? "बेड आवंटन या प्रेषण संदेश लिखें..."
+                    : "Type bed allocation or dispatch message..."
+                  : isHindi
+                  ? "डॉक्टर या हेल्पडेस्क के लिए अपना संदेश लिखें..."
                   : "Type your query for the doctor or helpdesk..."
               }
               className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs focus:bg-white flex-1"
@@ -520,7 +526,7 @@ export default function MessagesPage() {
             />
             <Button type="submit" className="h-11 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shrink-0 gap-1.5">
               <Send className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">Send</span>
+              <span className="hidden sm:inline text-xs">{isHindi ? "भेजें" : "Send"}</span>
             </Button>
           </form>
         </div>

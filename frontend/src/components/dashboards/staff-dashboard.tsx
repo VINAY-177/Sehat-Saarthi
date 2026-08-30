@@ -48,19 +48,21 @@ import type { Equipment, BloodStock } from "@/lib/types";
 
 // ---------- Status Badge Component ----------
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { bg: string; text: string; border: string; label: string }> = {
-    REQUESTED: { bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200", label: "Requested" },
-    CONFIRMED: { bg: "bg-emerald-50", text: "text-emerald-800", border: "border-emerald-200", label: "Confirmed" },
-    CHECKED_IN: { bg: "bg-sky-50", text: "text-sky-800", border: "border-sky-200", label: "Checked In" },
-    IN_CONSULTATION: { bg: "bg-indigo-50", text: "text-indigo-800", border: "border-indigo-200", label: "In Consultation" },
-    COMPLETED: { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200", label: "Completed" },
-    DECLINED: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", label: "Declined" },
-    CANCELLED: { bg: "bg-gray-50", text: "text-gray-600", border: "border-gray-200", label: "Cancelled" },
+  const { language } = useStore();
+  const isHindi = language === "hi";
+  const config: Record<string, { bg: string; text: string; border: string; label: string; labelHi: string }> = {
+    REQUESTED: { bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200", label: "Requested", labelHi: "अनुरोधित" },
+    CONFIRMED: { bg: "bg-emerald-50", text: "text-emerald-800", border: "border-emerald-200", label: "Confirmed", labelHi: "पुष्टिकृत" },
+    CHECKED_IN: { bg: "bg-sky-50", text: "text-sky-800", border: "border-sky-200", label: "Checked In", labelHi: "चेक-इन" },
+    IN_CONSULTATION: { bg: "bg-indigo-50", text: "text-indigo-800", border: "border-indigo-200", label: "In Consultation", labelHi: "परामर्श जारी" },
+    COMPLETED: { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200", label: "Completed", labelHi: "पूर्ण" },
+    DECLINED: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", label: "Declined", labelHi: "अस्वीकृत" },
+    CANCELLED: { bg: "bg-gray-50", text: "text-gray-600", border: "border-gray-200", label: "Cancelled", labelHi: "रद्द" },
   };
-  const c = config[status] || { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200", label: status };
+  const c = config[status] || { bg: "bg-slate-50", text: "text-slate-700", border: "border-slate-200", label: status, labelHi: status };
   return (
     <Badge variant="outline" className={`${c.bg} ${c.text} ${c.border} text-[10px] font-bold`}>
-      {c.label}
+      {isHindi ? c.labelHi : c.label}
     </Badge>
   );
 }
@@ -388,7 +390,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{todayAppointments.length}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">Today&apos;s Appointments</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "आज के अपॉइंटमेंट" : "Today's Appointments"}</p>
                 </div>
               </div>
 
@@ -398,7 +400,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{pendingRequests.length}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">Pending Requests</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "लंबित अनुरोध" : "Pending Requests"}</p>
                 </div>
               </div>
 
@@ -408,7 +410,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{icuAvail + generalAvail}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">Available Beds</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "उपलब्ध बेड" : "Available Beds"}</p>
                 </div>
               </div>
 
@@ -418,7 +420,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{ambulancesAvailable}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">Ambulances Ready</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "एम्बुलेंस तैयार" : "Ambulances Ready"}</p>
                 </div>
               </div>
             </div>
@@ -431,7 +433,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{inConsultToday.length}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">In Consultation</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "परामर्श जारी" : "In Consultation"}</p>
                 </div>
               </div>
 
@@ -441,7 +443,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{icuAvail}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">ICU Beds Free</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "आईसीयू बेड खाली" : "ICU Beds Free"}</p>
                 </div>
               </div>
 
@@ -451,7 +453,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{bloodAlertCount}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">Blood Alerts</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "ब्लड अलर्ट" : "Blood Alerts"}</p>
                 </div>
               </div>
 
@@ -461,7 +463,7 @@ export function StaffDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-black text-slate-900">{patients.length}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">Registered Patients</p>
+                  <p className="text-[11px] text-slate-500 font-bold">{language === "hi" ? "पंजीकृत मरीज" : "Registered Patients"}</p>
                 </div>
               </div>
             </div>
@@ -475,20 +477,20 @@ export function StaffDashboard() {
                     <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
                       <Bed className="h-4 w-4" />
                     </div>
-                    <CardTitle className="text-sm font-bold text-slate-900">ICU Beds</CardTitle>
+                    <CardTitle className="text-sm font-bold text-slate-900">{language === "hi" ? "आईसीयू बेड" : "ICU Beds"}</CardTitle>
                   </div>
                   <Badge variant="outline" className={`text-[10px] font-bold px-2 py-0.5 ${icuAvail <= 3 ? "bg-red-50 text-red-800 border-red-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"}`}>
-                    {icuAvail} / {icuTotal} Free
+                    {icuAvail} / {icuTotal} {language === "hi" ? "खाली" : "Free"}
                   </Badge>
                 </CardHeader>
                 <CardContent className="pt-1 pb-4 px-5">
                   <div className="space-y-2">
                     <div className="flex items-baseline justify-between">
                       <div className="text-2xl font-black text-slate-900">{icuAvail}</div>
-                      <span className="text-xs text-slate-500 font-medium">Available</span>
+                      <span className="text-xs text-slate-500 font-medium">{language === "hi" ? "उपलब्ध" : "Available"}</span>
                     </div>
                     <Progress value={icuTotal > 0 ? (icuUsed / icuTotal) * 100 : 0} className="h-2.5" />
-                    <p className="text-[11px] text-slate-400 font-medium">Occupancy: {icuTotal > 0 ? Math.round((icuUsed / icuTotal) * 100) : 0}%</p>
+                    <p className="text-[11px] text-slate-400 font-medium">{language === "hi" ? "अधिभोग:" : "Occupancy:"} {icuTotal > 0 ? Math.round((icuUsed / icuTotal) * 100) : 0}%</p>
                   </div>
                 </CardContent>
               </Card>
@@ -500,20 +502,20 @@ export function StaffDashboard() {
                     <div className="p-2 bg-sky-50 text-sky-700 rounded-xl border border-sky-100">
                       <Bed className="h-4 w-4" />
                     </div>
-                    <CardTitle className="text-sm font-bold text-slate-900">General Ward</CardTitle>
+                    <CardTitle className="text-sm font-bold text-slate-900">{language === "hi" ? "जनरल वार्ड" : "General Ward"}</CardTitle>
                   </div>
                   <Badge variant="outline" className="text-[10px] bg-sky-50 text-sky-800 border-sky-200 font-bold px-2 py-0.5">
-                    {generalAvail} / {generalTotal} Free
+                    {generalAvail} / {generalTotal} {language === "hi" ? "खाली" : "Free"}
                   </Badge>
                 </CardHeader>
                 <CardContent className="pt-1 pb-4 px-5">
                   <div className="space-y-2">
                     <div className="flex items-baseline justify-between">
                       <div className="text-2xl font-black text-slate-900">{generalAvail}</div>
-                      <span className="text-xs text-slate-500 font-medium">Available</span>
+                      <span className="text-xs text-slate-500 font-medium">{language === "hi" ? "उपलब्ध" : "Available"}</span>
                     </div>
                     <Progress value={generalTotal > 0 ? (generalUsed / generalTotal) * 100 : 0} className="h-2.5" />
-                    <p className="text-[11px] text-slate-400 font-medium">Occupancy: {generalTotal > 0 ? Math.round((generalUsed / generalTotal) * 100) : 0}%</p>
+                    <p className="text-[11px] text-slate-400 font-medium">{language === "hi" ? "अधिभोग:" : "Occupancy:"} {generalTotal > 0 ? Math.round((generalUsed / generalTotal) * 100) : 0}%</p>
                   </div>
                 </CardContent>
               </Card>
