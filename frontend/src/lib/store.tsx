@@ -280,6 +280,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
           department: u.doctor?.department || u.staff?.role || profileData.department,
           experience: u.doctor?.experience || profileData.experience,
           designation: u.staff?.role || profileData.designation,
+          insuranceProvider: profileData.insuranceProvider ?? currentUser?.insuranceProvider ?? "Ayushman Bharat PM-JAY",
+          insurancePolicyNumber: profileData.insurancePolicyNumber ?? currentUser?.insurancePolicyNumber ?? "AB-PMJAY-9182-4410",
+          insuranceType: profileData.insuranceType ?? currentUser?.insuranceType ?? "Government Scheme (PM-JAY)",
+          insuranceCoverageAmount: profileData.insuranceCoverageAmount ?? currentUser?.insuranceCoverageAmount ?? "₹5,00,000 / Year",
+          insuranceValidTill: profileData.insuranceValidTill ?? currentUser?.insuranceValidTill ?? "31-Mar-2027",
+          insuranceTpa: profileData.insuranceTpa ?? currentUser?.insuranceTpa ?? "National Health Authority (NHA)",
+          insuranceStatus: profileData.insuranceStatus ?? currentUser?.insuranceStatus ?? "ACTIVE",
         };
 
         setCurrentUser(updatedAuthUser);

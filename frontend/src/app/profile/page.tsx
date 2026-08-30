@@ -82,6 +82,13 @@ export default function ProfilePage() {
     designation: "Operations Coordinator",
     shift: "Morning (8 AM – 4 PM)",
     facilityName: "",
+    insuranceProvider: "Ayushman Bharat (PM-JAY)",
+    insurancePolicyNumber: "AB-PMJAY-9182-4410",
+    insuranceType: "Government Scheme (PM-JAY)",
+    insuranceCoverageAmount: "₹5,00,000 / Year",
+    insuranceValidTill: "31-Mar-2027",
+    insuranceTpa: "National Health Authority (NHA)",
+    insuranceStatus: "ACTIVE",
   });
 
   // Sync formData with currentUser when loaded
@@ -109,6 +116,13 @@ export default function ProfilePage() {
         designation: currentUser.designation || "Operations Coordinator",
         shift: currentUser.shift || "Morning (8 AM – 4 PM)",
         facilityName: currentUser.facilityName || (role === Role.DOCTOR ? "Government General Hospital — Delhi" : "Government General Hospital — Delhi"),
+        insuranceProvider: currentUser.insuranceProvider || "Ayushman Bharat (PM-JAY)",
+        insurancePolicyNumber: currentUser.insurancePolicyNumber || "AB-PMJAY-9182-4410",
+        insuranceType: currentUser.insuranceType || "Government Scheme (PM-JAY)",
+        insuranceCoverageAmount: currentUser.insuranceCoverageAmount || "₹5,00,000 / Year",
+        insuranceValidTill: currentUser.insuranceValidTill || "31-Mar-2027",
+        insuranceTpa: currentUser.insuranceTpa || "National Health Authority (NHA)",
+        insuranceStatus: currentUser.insuranceStatus || "ACTIVE",
       });
     }
   }, [currentUser, role]);
@@ -172,6 +186,13 @@ export default function ProfilePage() {
         payload.conditions = formData.conditions
           ? formData.conditions.split(",").map((s) => s.trim()).filter(Boolean)
           : [];
+        payload.insuranceProvider = formData.insuranceProvider.trim();
+        payload.insurancePolicyNumber = formData.insurancePolicyNumber.trim();
+        payload.insuranceType = formData.insuranceType.trim();
+        payload.insuranceCoverageAmount = formData.insuranceCoverageAmount.trim();
+        payload.insuranceValidTill = formData.insuranceValidTill.trim();
+        payload.insuranceTpa = formData.insuranceTpa.trim();
+        payload.insuranceStatus = formData.insuranceStatus.trim();
       } else if (isDoctor) {
         payload.specialty = formData.specialty.trim();
         payload.department = formData.department.trim();
@@ -186,7 +207,7 @@ export default function ProfilePage() {
       const success = await updateUserProfile(payload);
 
       if (success) {
-        toast.success(language === "hi" ? "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई!" : "Profile updated successfully!");
+        toast.success(language === "hi" ? "प्रोफ़ाइल व स्वास्थ्य बीमा विवरण अपडेट किए गए!" : "Profile and health insurance updated successfully!");
         setIsEditing(false);
       } else {
         toast.error("Failed to save changes. Please try again.");
@@ -223,6 +244,13 @@ export default function ProfilePage() {
         designation: currentUser.designation || "Operations Coordinator",
         shift: currentUser.shift || "Morning (8 AM – 4 PM)",
         facilityName: currentUser.facilityName || "Government General Hospital — Delhi",
+        insuranceProvider: currentUser.insuranceProvider || "Ayushman Bharat (PM-JAY)",
+        insurancePolicyNumber: currentUser.insurancePolicyNumber || "AB-PMJAY-9182-4410",
+        insuranceType: currentUser.insuranceType || "Government Scheme (PM-JAY)",
+        insuranceCoverageAmount: currentUser.insuranceCoverageAmount || "₹5,00,000 / Year",
+        insuranceValidTill: currentUser.insuranceValidTill || "31-Mar-2027",
+        insuranceTpa: currentUser.insuranceTpa || "National Health Authority (NHA)",
+        insuranceStatus: currentUser.insuranceStatus || "ACTIVE",
       });
     }
     setIsEditing(false);
@@ -457,7 +485,8 @@ export default function ProfilePage() {
 
             {/* Patient-Specific Medical & Emergency Details */}
             {isPatient && (
-              <Card className="shadow-xs rounded-3xl border-slate-200/80 overflow-hidden bg-white">
+              <>
+                <Card className="shadow-xs rounded-3xl border-slate-200/80 overflow-hidden bg-white">
                 <CardHeader className="bg-slate-50/70 border-b border-slate-100 py-4 px-6">
                   <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800">
                     <Droplets className="h-4 w-4 text-rose-500" />
@@ -649,6 +678,152 @@ export default function ProfilePage() {
 
                 </CardContent>
               </Card>
+
+              {/* Patient Health Insurance & Ayushman Coverage Card */}
+              <Card className="shadow-xs rounded-3xl border-slate-200/80 overflow-hidden bg-white mt-6">
+                <CardHeader className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-b border-emerald-100 py-4 px-6 flex flex-row items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
+                      <Shield className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-extrabold text-slate-900">
+                        {language === "hi" ? "स्वास्थ्य बीमा एवं सरकारी योजनाएं" : "Health Insurance & Government Coverage"}
+                      </CardTitle>
+                      <CardDescription className="text-xs text-slate-500 font-medium mt-0.5">
+                        {language === "hi"
+                          ? "आयुष्मान भारत (PM-JAY), सीजीएचएस, व निजी कैशलेस स्वास्थ्य बीमा"
+                          : "Ayushman Bharat (PM-JAY), CGHS, DAK & Private Cashless Health Insurance"}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-2.5 py-1 shadow-2xs gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{formData.insuranceStatus || "ACTIVE"}</span>
+                  </Badge>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Provider */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700">
+                        {language === "hi" ? "बीमा प्रदाता / योजना" : "Insurance Provider / Scheme"}
+                      </Label>
+                      {isEditing ? (
+                        <Select
+                          value={formData.insuranceProvider}
+                          onValueChange={(val) => val && setFormData({ ...formData, insuranceProvider: val })}
+                        >
+                          <SelectTrigger className="h-10 rounded-xl bg-slate-50/50 border-slate-200 text-xs font-bold">
+                            <SelectValue placeholder="Select Provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Ayushman Bharat (PM-JAY)">Ayushman Bharat (PM-JAY) — Govt.</SelectItem>
+                            <SelectItem value="Central Government Health Scheme (CGHS)">Central Govt Health Scheme (CGHS)</SelectItem>
+                            <SelectItem value="Delhi Arogya Kosh (DAK)">Delhi Arogya Kosh (DAK) — Delhi Govt.</SelectItem>
+                            <SelectItem value="Ex-Servicemen Health Scheme (ECHS)">Ex-Servicemen Health Scheme (ECHS)</SelectItem>
+                            <SelectItem value="Star Health Comprehensive">Star Health Comprehensive</SelectItem>
+                            <SelectItem value="Care Health Insurance">Care Health Insurance</SelectItem>
+                            <SelectItem value="HDFC ERGO Optima Secure">HDFC ERGO Optima Secure</SelectItem>
+                            <SelectItem value="ICICI Lombard Complete Health">ICICI Lombard Complete Health</SelectItem>
+                            <SelectItem value="Niva Bupa ReAssure">Niva Bupa ReAssure</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="font-extrabold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-emerald-600" />
+                          {formData.insuranceProvider || "Ayushman Bharat (PM-JAY)"}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Policy / Beneficiary Number */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700">
+                        {language === "hi" ? "पॉलिसी / लाभार्थी आईडी" : "Policy / Beneficiary ID"}
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.insurancePolicyNumber}
+                          onChange={(e) => setFormData({ ...formData, insurancePolicyNumber: e.target.value })}
+                          placeholder="e.g. AB-PMJAY-9182-4410"
+                          className="rounded-xl h-10 border-slate-200 bg-slate-50/50 text-xs font-mono"
+                        />
+                      ) : (
+                        <p className="font-mono font-bold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                          <span>{formData.insurancePolicyNumber || "AB-PMJAY-9182-4410"}</span>
+                          <span className="text-[10px] font-sans font-extrabold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                            {language === "hi" ? "सत्यापित" : "Verified"}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Coverage Amount */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700">
+                        {language === "hi" ? "वार्षिक कवरेज राशि" : "Sum Insured / Annual Coverage"}
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.insuranceCoverageAmount}
+                          onChange={(e) => setFormData({ ...formData, insuranceCoverageAmount: e.target.value })}
+                          placeholder="e.g. ₹5,00,000 / Year"
+                          className="rounded-xl h-10 border-slate-200 bg-slate-50/50 text-xs font-bold"
+                        />
+                      ) : (
+                        <p className="font-extrabold text-sm text-emerald-800 bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-200">
+                          {formData.insuranceCoverageAmount || "₹5,00,000 / Year"}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Valid Till */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700">
+                        {language === "hi" ? "वैधता अवधि" : "Coverage Valid Till"}
+                      </Label>
+                      {isEditing ? (
+                        <Input
+                          value={formData.insuranceValidTill}
+                          onChange={(e) => setFormData({ ...formData, insuranceValidTill: e.target.value })}
+                          placeholder="e.g. 31-Mar-2027"
+                          className="rounded-xl h-10 border-slate-200 bg-slate-50/50 text-xs"
+                        />
+                      ) : (
+                        <p className="font-semibold text-sm text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          {formData.insuranceValidTill || "31-Mar-2027"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Cashless Hospital Support Notice */}
+                  <div className="p-3.5 rounded-2xl bg-teal-50/80 border border-teal-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <Building2 className="w-5 h-5 text-teal-700 shrink-0" />
+                      <div>
+                        <span className="font-extrabold text-teal-950 block">
+                          {language === "hi" ? "118+ नेटवर्क अस्पतालों में 100% कैशलेस सुविधा" : "100% Cashless at 118+ Empanelled Hospitals"}
+                        </span>
+                        <span className="text-[11px] text-teal-800 font-medium">
+                          {language === "hi"
+                            ? "इस बीमा / योजना के तहत दिल्ली-एनसीआर के सरकारी एवं पैनलबद्ध अस्पतालों में सीधा कैशलेस उपचार उपलब्ध है।"
+                            : "Pre-authorized cashless admission available across all Delhi-NCR partner facilities."}
+                        </span>
+                      </div>
+                    </div>
+                    <Link href="/hospitals" className="shrink-0">
+                      <Button size="sm" variant="outline" className="h-8 text-xs font-bold border-teal-300 text-teal-800 hover:bg-teal-100 rounded-xl gap-1">
+                        <span>{language === "hi" ? "अस्पताल खोजें" : "Find Hospitals"}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
             )}
 
             {/* Doctor-Specific Professional Details */}

@@ -449,6 +449,14 @@ export interface AuthUser {
   experience?: string;
   designation?: string;
   shift?: string;
+  // Health Insurance details
+  insuranceProvider?: string;
+  insurancePolicyNumber?: string;
+  insuranceType?: string;
+  insuranceCoverageAmount?: string;
+  insuranceValidTill?: string;
+  insuranceTpa?: string;
+  insuranceStatus?: string;
   createdAt?: string;
 }
 
