@@ -79,9 +79,9 @@ export default function SignupPage() {
           email: email.trim() || undefined,
           password: password.trim(),
           role: selectedRole,
-          specialty: selectedRole === Role.DOCTOR ? (specialty.trim() || "General Medicine") : undefined,
-          licenseNumber: selectedRole === Role.DOCTOR ? (licenseNumber.trim() || "MCI-2026-0881") : undefined,
-          department: selectedRole === Role.HOSPITAL_STAFF ? (department.trim() || "Hospital Operations") : undefined,
+          specialty: selectedRole === Role.DOCTOR ? specialty.trim() : undefined,
+          licenseNumber: selectedRole === Role.DOCTOR ? licenseNumber.trim() : undefined,
+          department: selectedRole === Role.HOSPITAL_STAFF ? department.trim() : undefined,
         }),
       });
 

@@ -24,7 +24,6 @@ import {
   Activity,
   Bed,
   Sparkles,
-  HeartPulse,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,27 +35,26 @@ export default function LoginPage() {
   const isHindi = language === "hi";
 
   const [selectedRole, setSelectedRole] = useState<Role>(Role.PATIENT);
-  const [emailOrMobile, setEmailOrMobile] = useState("9876500001");
-  const [password, setPassword] = useState("Demo@1234");
+  const [emailOrMobile, setEmailOrMobile] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleRoleSelect = (role: Role) => {
     setSelectedRole(role);
-    if (role === Role.DOCTOR) {
-      setEmailOrMobile("9876500002");
-      setPassword("Demo@1234");
-    } else if (role === Role.HOSPITAL_STAFF) {
-      setEmailOrMobile("9876500003");
-      setPassword("Demo@1234");
-    } else {
-      setEmailOrMobile("9876500001");
-      setPassword("Demo@1234");
-    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!emailOrMobile.trim()) {
+      toast.error(isHindi ? "कृपया अपना मोबाइल नंबर या ईमेल दर्ज करें" : "Please enter your phone number or email");
+      return;
+    }
+    if (!password.trim()) {
+      toast.error(isHindi ? "कृपया अपना पासवर्ड दर्ज करें" : "Please enter your password");
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await apiPost<{
@@ -97,16 +95,16 @@ export default function LoginPage() {
       router.push("/");
     } catch (err: unknown) {
       if (process.env.NODE_ENV !== "production") console.error("Login failed:", err);
-      toast.error(err instanceof Error ? err.message : "Unable to log in. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Unable to log in. Please check your credentials and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const roles = [
-    { value: Role.PATIENT, label: isHindi ? "मरीज़" : "Patient", icon: Users, demo: "Aarav", phone: "9876500001" },
-    { value: Role.DOCTOR, label: isHindi ? "डॉक्टर" : "Doctor", icon: Stethoscope, demo: "Dr. Priya", phone: "9876500002" },
-    { value: Role.HOSPITAL_STAFF, label: isHindi ? "स्टाफ़" : "Staff", icon: Building2, demo: "Neha", phone: "9876500003" },
+    { value: Role.PATIENT, label: isHindi ? "मरीज़" : "Patient", icon: Users },
+    { value: Role.DOCTOR, label: isHindi ? "डॉक्टर" : "Doctor", icon: Stethoscope },
+    { value: Role.HOSPITAL_STAFF, label: isHindi ? "स्टाफ़" : "Staff", icon: Building2 },
   ] as const;
 
   return (
@@ -195,7 +193,7 @@ export default function LoginPage() {
       <main className="w-full max-w-7xl mx-auto my-auto py-4 z-20 auth-card-enter">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
-          {/* ── Left Column: Platform Features & 1-Click Demo Accounts ── */}
+          {/* ── Left Column: Platform Features & Info ── */}
           <div className="lg:col-span-6 xl:col-span-7 space-y-6 text-white">
             
             {/* Tagline & Title */}
@@ -273,54 +271,19 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* 1-Click Quick Demo Switcher Cards */}
-            <div className="p-4 rounded-2xl bg-teal-950/60 border border-teal-500/30 backdrop-blur-md space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase tracking-wider text-teal-300 flex items-center gap-1.5">
-                  <HeartPulse className="w-4 h-4" />
-                  {isHindi ? "डेमो परीक्षण के लिए 1-क्लिक ऑटो-फिल:" : "1-Click Demo Account Quick-Fill:"}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 bg-white/10 px-2 py-0.5 rounded">
-                  Pass: Demo@1234
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                {roles.map(({ value, label, icon: Icon, demo, phone }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => handleRoleSelect(value)}
-                    className={`p-2.5 rounded-xl border text-left transition-all ${
-                      selectedRole === value
-                        ? "bg-teal-500/25 border-teal-400 text-white shadow-xs"
-                        : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Icon className="w-3.5 h-3.5 text-teal-300" />
-                      <span className="text-xs font-bold truncate">{label}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-mono truncate">{phone}</p>
-                    <p className="text-[10px] text-teal-300 font-medium truncate">{demo}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* 24/7 Helplines Strip */}
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-1">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-2">
               <span className="flex items-center gap-1 font-semibold text-slate-300">
                 <PhoneCall className="w-3.5 h-3.5 text-rose-400" />
                 {isHindi ? "आपातकालीन हेल्पलाइन:" : "Emergency Helplines:"}
               </span>
-              <span className="bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-extrabold border border-rose-500/30">
+              <span className="bg-rose-500/20 text-rose-300 px-2.5 py-1 rounded-lg font-extrabold border border-rose-500/30">
                 108 (Ambulance)
               </span>
-              <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-extrabold border border-blue-500/30">
+              <span className="bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-lg font-extrabold border border-blue-500/30">
                 104 (Health Info)
               </span>
-              <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-extrabold border border-emerald-500/30">
+              <span className="bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-lg font-extrabold border border-emerald-500/30">
                 1075 (National Health)
               </span>
             </div>
@@ -346,30 +309,25 @@ export default function LoginPage() {
                 <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto">
                   {isHindi
                     ? "Connect to Care राष्ट्रीय स्वास्थ्य पोर्टल में आपका स्वागत है"
-                    : "Welcome back to Connect to Care healthcare portal"}
+                    : "Welcome to Connect to Care healthcare portal"}
                 </p>
               </div>
 
-              {/* Role Selector — 3D Interactive Cards */}
+              {/* Role Selector — Clean Interactive Cards */}
               <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                    {t("iAmA") || "Select Your Role"}
-                  </Label>
-                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
-                    {isHindi ? "डेमो तैयार" : "Demo Ready"}
-                  </span>
-                </div>
+                <Label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                  {t("iAmA") || "Select Your Role"}
+                </Label>
 
                 <div className="grid grid-cols-3 gap-2">
-                  {roles.map(({ value, label, icon: Icon, demo }) => {
+                  {roles.map(({ value, label, icon: Icon }) => {
                     const isActive = selectedRole === value;
                     return (
                       <button
                         key={value}
                         type="button"
                         onClick={() => handleRoleSelect(value)}
-                        className={`relative flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                        className={`relative flex flex-col items-center justify-center py-3 px-2 rounded-2xl border transition-all duration-200 cursor-pointer ${
                           isActive
                             ? "bg-gradient-to-b from-teal-700 to-teal-800 text-white border-teal-600 shadow-[0_4px_0_0_#0f5b55,0_8px_16px_-2px_rgba(15,118,110,0.35)] -translate-y-0.5"
                             : "bg-white/70 hover:bg-white text-slate-600 border-slate-200/90 shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
@@ -377,9 +335,6 @@ export default function LoginPage() {
                       >
                         <Icon className={`w-4 h-4 mb-1 transition-transform ${isActive ? "text-white scale-110" : "text-slate-400"}`} />
                         <span className="text-xs font-bold leading-none">{label}</span>
-                        <span className={`text-[9px] mt-1 font-medium ${isActive ? "text-teal-200" : "text-slate-400"}`}>
-                          {demo}
-                        </span>
                         {isActive && (
                           <div className="absolute top-1.5 right-1.5">
                             <CheckCircle2 className="w-3 h-3 text-teal-300" />
@@ -403,7 +358,7 @@ export default function LoginPage() {
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <Input
                       type="text"
-                      placeholder={isHindi ? "मोबाइल नंबर (उदा. 9876500001)" : "Phone number (e.g. 9876500001)"}
+                      placeholder={isHindi ? "अपना मोबाइल नंबर या ईमेल दर्ज करें" : "Enter your phone number or email"}
                       value={emailOrMobile}
                       onChange={(e) => setEmailOrMobile(e.target.value)}
                       className="pl-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
@@ -426,7 +381,7 @@ export default function LoginPage() {
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder={isHindi ? "पासवर्ड (उदा. Demo@1234)" : "Enter password (Demo@1234)"}
+                      placeholder={isHindi ? "अपना पासवर्ड दर्ज करें" : "Enter your password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10 h-11 rounded-xl border-slate-200/90 bg-white/80 text-xs sm:text-sm font-semibold focus-visible:ring-teal-500 shadow-2xs"
@@ -476,7 +431,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
-                  onClick={() => toast.info("Google Sign-In is configured for demo with phone accounts")}
+                  onClick={() => toast.info("Google Sign-In is configured with national identity services")}
                   className="btn-3d-glass h-9 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-2"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -490,7 +445,7 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => toast.info("Apple Sign-In is configured for demo with phone accounts")}
+                  onClick={() => toast.info("Apple Sign-In is configured with national identity services")}
                   className="btn-3d-glass h-9 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-2"
                 >
                   <svg className="w-4 h-4 fill-current text-slate-800" viewBox="0 0 24 24">
@@ -506,17 +461,6 @@ export default function LoginPage() {
                 <Link href="/signup" className="font-extrabold text-teal-700 hover:text-teal-800 hover:underline">
                   {t("createOne") || "Sign up"}
                 </Link>
-              </div>
-
-              {/* Quick Demo Credentials Reminder */}
-              <div className="mt-3 p-2 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <Shield className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                  {isHindi ? "सभी खातों का पासवर्ड:" : "Demo password:"}
-                </span>
-                <span className="font-mono font-bold text-slate-800 bg-white px-1.5 py-0.5 rounded border border-slate-200">
-                  Demo@1234
-                </span>
               </div>
 
             </div>
