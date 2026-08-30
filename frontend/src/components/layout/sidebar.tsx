@@ -83,7 +83,7 @@ export function Sidebar() {
         <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-xs border border-slate-100 shrink-0 bg-white p-1 flex items-center justify-center">
           <Image 
             src="/logo.png" 
-            alt="Sehat Saathi Logo" 
+            alt="Connect to Care Logo" 
             width={36} 
             height={36} 
             className="object-contain"
@@ -92,10 +92,10 @@ export function Sidebar() {
         </div>
         <div className="flex flex-col">
           <span className="font-extrabold text-[17px] tracking-tight text-slate-900 leading-tight">
-            {t("brandName") || "Sehat Saathi"}
+            {t("brandName") || "Connect to Care"}
           </span>
           <span className="text-[11px] font-semibold text-teal-700 tracking-tight">
-            {language === "hi" ? "सेहत आपकी, साथ हमारा" : "Sehat Aapki, Saath Hamara"}
+            {language === "hi" ? "सेहत आपकी, साथ हमारा" : "Sehat Aapki, Saath Humara"}
           </span>
         </div>
       </Link>

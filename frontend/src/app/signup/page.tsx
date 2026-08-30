@@ -109,8 +109,8 @@ export default function SignupPage() {
       login(user, data.token);
       toast.success(
         isHindi
-          ? `सेहत साथी में आपका स्वागत है, ${fullName}!`
-          : `Welcome to Sehat Saathi, ${fullName}!`
+          ? `Connect to Care में आपका स्वागत है, ${fullName}!`
+          : `Welcome to Connect to Care, ${fullName}!`
       );
       router.push("/profile?onboarding=true");
     } catch (err) {
@@ -163,11 +163,11 @@ export default function SignupPage() {
         {/* Brand Link on Top Left */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-11 h-11 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg border border-white/40 p-1.5 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <Image src="/logo.png" alt="Sehat Saathi" width={36} height={36} className="object-contain" priority />
+            <Image src="/logo.png" alt="Connect to Care" width={36} height={36} className="object-contain" priority />
           </div>
           <div>
             <span className="text-lg font-black text-white tracking-tight drop-shadow-sm block">
-              {t("brandName") || "Sehat Saathi"}
+              {t("brandName") || "Connect to Care"}
             </span>
             <p className="text-[10px] font-bold text-emerald-300 tracking-wider uppercase">
               {isHindi ? "राष्ट्रीय स्वास्थ्य व आपातकालीन नेटवर्क" : "National Health & Emergency Grid"}
@@ -330,7 +330,7 @@ export default function SignupPage() {
               {/* Header & Logo */}
               <div className="text-center space-y-1.5 mb-5">
                 <div className="inline-flex p-2 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/80 shadow-xs mb-1">
-                  <Image src="/logo.png" alt="Sehat Saathi" width={42} height={42} className="object-contain" priority />
+                  <Image src="/logo.png" alt="Connect to Care" width={42} height={42} className="object-contain" priority />
                 </div>
                 
                 <h1 className="text-2xl sm:text-[26px] font-black text-slate-900 tracking-tight">
@@ -539,7 +539,7 @@ export default function SignupPage() {
       {/* ── 5. Footer Trust Badges ── */}
       <footer className="relative z-30 max-w-7xl mx-auto w-full pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
         <div className="flex items-center gap-2 font-medium">
-          <span>© 2026 Sehat Saathi • National Health Stack India</span>
+          <span>© 2026 Connect to Care • National Health Stack India</span>
         </div>
         <div className="flex items-center gap-4 font-semibold text-slate-300">
           <span className="flex items-center gap-1">

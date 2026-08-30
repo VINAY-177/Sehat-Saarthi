@@ -174,8 +174,8 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   en: {
     // Brand
-    brandName: "Sehat Saathi",
-    tagline: "Saath Humara, Sehat Aapki",
+    brandName: "Connect to Care",
+    tagline: "Sehat Aapki, Saath Humara",
     subTagline: "AI-Powered Healthcare Navigation for India",
 
     // Header & User Actions
@@ -221,8 +221,8 @@ export const translations: Record<Language, Translations> = {
     goodEvening: "Good Evening",
     goodNight: "Good Night",
     companionReady: "Your intelligent health companion is ready to assist you.",
-    bookDoctor60Sec: "Book Doctor Consultation with Sehat Saathi in 60 Seconds",
-    bookWithAi: "Book with Sehat Saathi",
+    bookDoctor60Sec: "Book Doctor Consultation with Connect to Care in 60 Seconds",
+    bookWithAi: "Book with Connect to Care",
     voiceAndChat: "Voice & Chat",
     quickServices: "Quick Healthcare Services",
     nearbyHospitals: "Nearby Hospitals",
@@ -276,7 +276,7 @@ export const translations: Record<Language, Translations> = {
     signInTitle: "Sign in to your account",
     signInSub: "Select your role and enter your credentials to continue.",
     signUpTitle: "Create your account",
-    signUpSub: "Join thousands of citizens, doctors, and hospitals on Sehat Saathi.",
+    signUpSub: "Join thousands of citizens, doctors, and hospitals on Connect to Care.",
     iAmA: "I AM A",
     patientRole: "Patient",
     doctorRole: "Doctor",
@@ -300,11 +300,11 @@ export const translations: Record<Language, Translations> = {
     heroHeadlineAccent: "accessible to everyone.",
     heroSubtext: "One platform connecting patients, doctors, and hospitals — powered by AI for a healthier India.",
     signupHeroHeadline: "Create Your Healthcare Account.",
-    signupHeroSubtext: "Join thousands of citizens, certified doctors, and healthcare facilities unified on the Sehat Saathi clinical intelligence network.",
+    signupHeroSubtext: "Join thousands of citizens, certified doctors, and healthcare facilities unified on the Connect to Care clinical intelligence network.",
     trustBadgeText: "ABDM Compliant · End-to-End Encrypted · HIPAA Ready",
 
     // Chatbot Flow
-    botTitle: "Sehat Saathi AI",
+    botTitle: "Connect to Care AI",
     botSubtitle: "Online · Voice & Chat",
     onlineAssistant: "Online",
     resetChat: "Reset Flow",
@@ -342,8 +342,8 @@ export const translations: Record<Language, Translations> = {
 
   hi: {
     // Brand
-    brandName: "सेहत साथी",
-    tagline: "साथ हमारा, सेहत आपकी",
+    brandName: "Connect to Care",
+    tagline: "सेहत आपकी, साथ हमारा",
     subTagline: "भारत के लिए एआई-संचालित स्वास्थ्य सेवा नेविगेशन",
 
     // Header & User Actions
@@ -388,9 +388,9 @@ export const translations: Record<Language, Translations> = {
     goodAfternoon: "शुभ दोपहर",
     goodEvening: "शुभ संध्या",
     goodNight: "शुभ रात्रि",
-    companionReady: "आपका डिजिटल सेहत साथी आपकी सहायता के लिए तैयार है।",
-    bookDoctor60Sec: "सेहत साथी से 60 सेकंड में डॉक्टर परामर्श बुक करें",
-    bookWithAi: "सेहत साथी से बुक करें",
+    companionReady: "आपका डिजिटल Connect to Care साथी आपकी सहायता के लिए तैयार है।",
+    bookDoctor60Sec: "Connect to Care से 60 सेकंड में डॉक्टर परामर्श बुक करें",
+    bookWithAi: "Connect to Care से बुक करें",
     voiceAndChat: "आवाज और चैट",
     quickServices: "त्वरित स्वास्थ्य सेवाएं",
     nearbyHospitals: "नजदीकी अस्पताल",
@@ -444,7 +444,7 @@ export const translations: Record<Language, Translations> = {
     signInTitle: "अपने खाते में साइन इन करें",
     signInSub: "जारी रखने के लिए अपनी भूमिका चुनें और विवरण दर्ज करें।",
     signUpTitle: "नया खाता बनाएं",
-    signUpSub: "सेहत साथी पर हजारों नागरिकों, डॉक्टरों और अस्पतालों से जुड़ें।",
+    signUpSub: "Connect to Care पर हजारों नागरिकों, डॉक्टरों और अस्पतालों से जुड़ें।",
     iAmA: "मेरी भूमिका है",
     patientRole: "रोगी / नागरिक",
     doctorRole: "चिकित्सक (Doctor)",
@@ -468,11 +468,11 @@ export const translations: Record<Language, Translations> = {
     heroHeadlineAccent: "हर भारतीय के लिए सुलभ।",
     heroSubtext: "मरीजों, डॉक्टरों और अस्पतालों को एक साथ जोड़ने वाला AI-संचालित डिजिटल स्वास्थ्य प्लेटफॉर्म।",
     signupHeroHeadline: "अपना डिजिटल स्वास्थ्य खाता बनाएं।",
-    signupHeroSubtext: "सेहत साथी क्लिनिकल इंटेलिजेंस नेटवर्क पर हजारों नागरिकों, प्रमाणित डॉक्टरों और स्वास्थ्य सुविधाओं से जुड़ें।",
+    signupHeroSubtext: "Connect to Care क्लिनिकल इंटेलिजेंस नेटवर्क पर हजारों नागरिकों, प्रमाणित डॉक्टरों और स्वास्थ्य सुविधाओं से जुड़ें।",
     trustBadgeText: "एबीडीएम प्रमाणित · 256-बिट एन्क्रिप्टेड · सुरक्षित डेटा",
 
     // Chatbot Flow
-    botTitle: "सेहत साथी AI",
+    botTitle: "Connect to Care AI",
     botSubtitle: "ऑनलाइन · वॉयस एवं चैट",
     onlineAssistant: "ऑनलाइन",
     resetChat: "रीसेट करें",

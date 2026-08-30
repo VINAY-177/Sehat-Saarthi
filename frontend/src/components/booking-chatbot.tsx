@@ -406,8 +406,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
   const startConversation = useCallback(() => {
     setCurrentStep(ChatStep.NAME);
     const greetingText = isHindi 
-      ? "नमस्ते! मैं आपका सेहत साथी AI सहायक हूँ 🤖। मैं दिल्ली-एनसीआर में डॉक्टर परामर्श और ओपीडी टोकन बुक करने में आपकी सहायता करूँगा।"
-      : "Hello! I am your Sehat Saathi AI Assistant 🤖. I will help you book an OPD doctor appointment across the Delhi-NCR healthcare network.";
+      ? "नमस्ते! मैं आपका Connect to Care AI सहायक हूँ 🤖। मैं दिल्ली-एनसीआर में डॉक्टर परामर्श और ओपीडी टोकन बुक करने में आपकी सहायता करूँगा।"
+      : "Hello! I am your Connect to Care AI Assistant 🤖. I will help you book an OPD doctor appointment across the Delhi-NCR healthcare network.";
     
     const nameQuestion = isHindi
       ? (currentUser?.name ? `शुरू करने के लिए, क्या आपका पूरा नाम "${currentUser.name}" है, या नीचे नाम दर्ज करें:` : `शुरू करने के लिए, कृपया अपना पूरा नाम बताएं:`)
@@ -868,7 +868,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         status: "REQUESTED",
         visitType: "NEW",
         reason: `${finalBooking.doctorSpecialty}: ${finalBooking.reason}`,
-        notes: `Booked via Sehat Saathi AI Assistant. Hospital: ${finalBooking.hospital}. Slot: ${finalBooking.date} at ${finalBooking.time}. Token: ${generatedId}`,
+        notes: `Booked via Connect to Care AI Assistant. Hospital: ${finalBooking.hospital}. Slot: ${finalBooking.date} at ${finalBooking.time}. Token: ${generatedId}`,
       });
       await refreshAppointments();
       await refreshPatients();
