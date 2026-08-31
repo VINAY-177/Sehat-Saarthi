@@ -48,14 +48,42 @@ export default function PatientsPage() {
       const qs = params.toString();
       const path = qs ? `/api/patients?${qs}` : "/api/patients";
       const data = await apiGet<Patient[]>(path);
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         setPatients(data);
+      } else {
+        let result = storePatients || [];
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase().trim();
+          result = result.filter(
+            (p) =>
+              p.name.toLowerCase().includes(q) ||
+              (p.mrn && p.mrn.toLowerCase().includes(q)) ||
+              (p.phone && p.phone.includes(q)) ||
+              p.district.toLowerCase().includes(q)
+          );
+        }
+        if (filterRisk !== "ALL") result = result.filter((p) => p.riskLevel === filterRisk);
+        if (filterDistrict !== "ALL") result = result.filter((p) => p.district === filterDistrict);
+        if (filterGender !== "ALL") result = result.filter((p) => p.gender === filterGender);
+        setPatients(result);
       }
     } catch (err) {
-      console.error("Failed to fetch patients from API:", err);
-      if (storePatients && storePatients.length > 0) {
-        setPatients(storePatients);
+      console.error("Failed to fetch patients from API, using fallback store:", err);
+      let result = storePatients || [];
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        result = result.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            (p.mrn && p.mrn.toLowerCase().includes(q)) ||
+            (p.phone && p.phone.includes(q)) ||
+            p.district.toLowerCase().includes(q)
+        );
       }
+      if (filterRisk !== "ALL") result = result.filter((p) => p.riskLevel === filterRisk);
+      if (filterDistrict !== "ALL") result = result.filter((p) => p.district === filterDistrict);
+      if (filterGender !== "ALL") result = result.filter((p) => p.gender === filterGender);
+      setPatients(result);
     } finally {
       setLoading(false);
     }

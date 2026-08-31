@@ -97,7 +97,7 @@ export interface Doctor {
   phone?: string;
   email?: string;
   facilityId?: string;
-  available: boolean;
+  available?: boolean;
   experience?: string;
   facility?: {
     id: string;
@@ -155,6 +155,8 @@ export interface Medication {
   status: "ACTIVE" | "COMPLETED" | "DISCONTINUED" | string;
   notes?: string | null;
   prescribingDoctor?: Doctor | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PrescriptionItem {
@@ -176,6 +178,8 @@ export interface Prescription {
   notes?: string | null;
   doctor?: Doctor;
   items: PrescriptionItem[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LabReport {
@@ -192,6 +196,8 @@ export interface LabReport {
   reportDate?: string | null;
   notes?: string | null;
   orderingDoctor?: Doctor | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MedicalDocument {
@@ -202,6 +208,8 @@ export interface MedicalDocument {
   category: string;
   notes?: string | null;
   uploadDate: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Insurance {
@@ -214,6 +222,8 @@ export interface Insurance {
   validTo?: string | null;
   pmjayStatus?: string | null;
   cghsStatus?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Appointment {
@@ -229,6 +239,8 @@ export interface Appointment {
   cancelReason?: string | null;
   patient?: Patient;
   doctor?: Doctor;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Encounter {
@@ -362,10 +374,12 @@ export interface Referral {
   patientName: string;
   fromFacilityId?: string | null;
   fromHospitalId?: string | null;
+  fromFacility?: string;
   toFacilityId?: string;
   toFacilityName?: string;
   toHospitalId?: string;
   toHospitalName?: string;
+  toFacility?: string;
   doctorName?: string | null;
   specialty?: string | null;
   status: ReferralStatus;

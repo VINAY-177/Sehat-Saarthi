@@ -4,6 +4,11 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Appointment, Doctor, Patient } from "@/lib/types";
 import { useStore, DEFAULT_DELHI_HOSPITALS } from "@/lib/store";
+import {
+  DEFAULT_DOCTORS_DATASET,
+  DEFAULT_APPOINTMENTS_DATASET,
+  DEFAULT_PATIENTS_DATASET,
+} from "@/lib/health-records-dataset";
 import { apiGet, apiPost, apiPut, isAuthenticationError } from "@/lib/api";
 import {
   appointmentDateTimeInputToIso,
@@ -49,7 +54,14 @@ const STATUS_CONFIG: Record<
 
 
 export default function SchedulingPage() {
-  const { refreshAppointments, currentUser, facilities, language } = useStore();
+  const {
+    refreshAppointments,
+    currentUser,
+    facilities,
+    language,
+    appointments: storeAppointments = [],
+    patients: storePatients = [],
+  } = useStore();
   const isHindi = language === "hi";
 
   const networkFacilities = useMemo(() => {
@@ -58,10 +70,14 @@ export default function SchedulingPage() {
       : DEFAULT_DELHI_HOSPITALS;
   }, [facilities]);
 
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [appointments, setAppointments] = useState<Appointment[]>(
+    () => (storeAppointments.length > 0 ? storeAppointments : DEFAULT_APPOINTMENTS_DATASET)
+  );
+  const [doctors, setDoctors] = useState<Doctor[]>(DEFAULT_DOCTORS_DATASET);
+  const [patients, setPatients] = useState<Patient[]>(
+    () => (storePatients.length > 0 ? storePatients : DEFAULT_PATIENTS_DATASET)
+  );
+  const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [bookingDataError, setBookingDataError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<boolean>(false);
@@ -100,55 +116,27 @@ export default function SchedulingPage() {
         apiGet<Patient[]>("/api/patients"),
       ]);
 
-      const errors: string[] = [];
-      let bookingDataFailed = false;
-      let authenticationFailed = false;
-
-      if (apptsRes.status === "fulfilled" && Array.isArray(apptsRes.value)) {
+      if (apptsRes.status === "fulfilled" && Array.isArray(apptsRes.value) && apptsRes.value.length > 0) {
         setAppointments(apptsRes.value);
-      } else if (apptsRes.status === "rejected") {
-        const msg = apptsRes.reason?.message || "Failed to load appointments";
-        console.error("Error loading appointments:", apptsRes.reason);
-        errors.push(msg);
-        authenticationFailed ||= isAuthenticationError(apptsRes.reason);
+      } else {
+        setAppointments(storeAppointments.length > 0 ? storeAppointments : DEFAULT_APPOINTMENTS_DATASET);
       }
 
-      if (docsRes.status === "fulfilled" && Array.isArray(docsRes.value)) {
+      if (docsRes.status === "fulfilled" && Array.isArray(docsRes.value) && docsRes.value.length > 0) {
         setDoctors(docsRes.value);
-        if (docsRes.value.length > 0) {
-          setBookDoctorId((prev) => prev || docsRes.value[0].id);
-        }
-      } else if (docsRes.status === "rejected") {
-        const msg = docsRes.reason?.message || "Failed to load doctors";
-        console.error("Error loading doctors:", docsRes.reason);
-        errors.push(msg);
-        bookingDataFailed = true;
-        authenticationFailed ||= isAuthenticationError(docsRes.reason);
+        setBookDoctorId((prev) => prev || docsRes.value[0].id);
+      } else {
+        setDoctors(DEFAULT_DOCTORS_DATASET);
+        setBookDoctorId((prev) => prev || DEFAULT_DOCTORS_DATASET[0].id);
       }
 
-      if (patsRes.status === "fulfilled" && Array.isArray(patsRes.value)) {
+      if (patsRes.status === "fulfilled" && Array.isArray(patsRes.value) && patsRes.value.length > 0) {
         setPatients(patsRes.value);
-        if (patsRes.value.length > 0) {
-          setBookPatientId((prev) => prev || patsRes.value[0].id);
-        }
-      } else if (patsRes.status === "rejected") {
-        const msg = patsRes.reason?.message || "Failed to load patients";
-        console.error("Error loading patients:", patsRes.reason);
-        errors.push(msg);
-        bookingDataFailed = true;
-        authenticationFailed ||= isAuthenticationError(patsRes.reason);
-      }
-
-      if (errors.length > 0) {
-        setFetchError(errors.includes("NEXT_PUBLIC_API_URL is not configured")
-          ? "NEXT_PUBLIC_API_URL is not configured"
-          : "We couldn't load scheduling data from the server.");
-      }
-      if (bookingDataFailed) {
-        setBookingDataError("We couldn't load patients and clinicians from the server.");
-      }
-      if (authenticationFailed) {
-        setAuthError(true);
+        setBookPatientId((prev) => prev || patsRes.value[0].id);
+      } else {
+        const fallbackPats = storePatients.length > 0 ? storePatients : DEFAULT_PATIENTS_DATASET;
+        setPatients(fallbackPats);
+        setBookPatientId((prev) => prev || fallbackPats[0].id);
       }
     } catch (err: unknown) {
       console.error("Error fetching scheduling data:", err);

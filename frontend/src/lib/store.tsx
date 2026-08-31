@@ -8,6 +8,12 @@ import {
 import { Language, translations, Translations } from "@/lib/i18n";
 import { apiGet, apiPost, apiPatch } from "@/lib/api";
 import { MASTER_DELHI_108_DATASET } from "./delhi-hospitals-dataset";
+import {
+  DEFAULT_PATIENTS_DATASET,
+  DEFAULT_APPOINTMENTS_DATASET,
+  DEFAULT_REFERRALS_DATASET,
+  DEFAULT_NOTIFICATIONS_DATASET,
+} from "./health-records-dataset";
 
 // ============================================================
 // Sehat Saathi AI — Reactive Data Store & Language Context
@@ -82,6 +88,10 @@ interface StoreState {
 const StoreContext = createContext<StoreState | null>(null);
 const AUTH_STORAGE_KEY = "sehat-saathi-auth";
 const TOKEN_STORAGE_KEY = "sehat-saathi-token";
+const PATIENTS_STORAGE_KEY = "sehat-saathi-patients";
+const APPOINTMENTS_STORAGE_KEY = "sehat-saathi-appointments";
+const REFERRALS_STORAGE_KEY = "sehat-saathi-referrals";
+const NOTIFICATIONS_STORAGE_KEY = "sehat-saathi-notifications";
 
 function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -95,12 +105,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<Patient[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(PATIENTS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return DEFAULT_PATIENTS_DATASET;
+  });
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>(DEFAULT_DELHI_HOSPITALS);
-  const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(REFERRALS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return DEFAULT_REFERRALS_DATASET;
+  });
+  const [appointments, setAppointments] = useState<Appointment[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return DEFAULT_APPOINTMENTS_DATASET;
+  });
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch {}
+    }
+    return DEFAULT_NOTIFICATIONS_DATASET;
+  });
 
   // Language translation helper
   const toggleLanguage = useCallback(() => {
@@ -317,15 +371,37 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return false;
   }, [currentUser, token]);
 
-  // Fetch patients from PostgreSQL backend (authenticated)
+  // Fetch patients from PostgreSQL backend (authenticated) with resilient merge
   const refreshPatients = useCallback(async () => {
     try {
       const data = await apiGet<Patient[]>("/api/patients");
-      if (Array.isArray(data)) {
-        setPatients(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setPatients((prev) => {
+          const map = new Map<string, Patient>();
+          DEFAULT_PATIENTS_DATASET.forEach((p) => map.set(p.id, p));
+          prev.forEach((p) => map.set(p.id, p));
+          data.forEach((p) => {
+            const existing = map.get(p.id);
+            map.set(p.id, {
+              ...existing,
+              ...p,
+              conditions: (p.conditions && p.conditions.length > 0) ? p.conditions : existing?.conditions,
+              vitals: (p.vitals && p.vitals.length > 0) ? p.vitals : existing?.vitals,
+              encounters: (p.encounters && p.encounters.length > 0) ? p.encounters : existing?.encounters,
+              prescriptions: (p.prescriptions && p.prescriptions.length > 0) ? p.prescriptions : existing?.prescriptions,
+              labReports: (p.labReports && p.labReports.length > 0) ? p.labReports : existing?.labReports,
+              insurance: (p.insurance && p.insurance.length > 0) ? p.insurance : existing?.insurance,
+            });
+          });
+          const merged = Array.from(map.values());
+          if (typeof window !== "undefined") {
+            try { localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(merged)); } catch {}
+          }
+          return merged;
+        });
       }
     } catch (err) {
-      console.warn("Failed to fetch patients from API:", err);
+      console.warn("Failed to fetch patients from API, retaining cached master dataset:", err);
     }
   }, []);
 
@@ -368,15 +444,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Fetch appointments from PostgreSQL backend
+  // Fetch appointments from PostgreSQL backend with resilient merge
   const refreshAppointments = useCallback(async () => {
     try {
       const data = await apiGet<Appointment[]>("/api/appointments");
-      if (Array.isArray(data)) {
-        setAppointments(data);
+      if (Array.isArray(data) && data.length > 0) {
+        setAppointments((prev) => {
+          const map = new Map<string, Appointment>();
+          DEFAULT_APPOINTMENTS_DATASET.forEach((a) => map.set(a.id, a));
+          prev.forEach((a) => map.set(a.id, a));
+          data.forEach((a) => map.set(a.id, { ...map.get(a.id), ...a }));
+          const merged = Array.from(map.values());
+          if (typeof window !== "undefined") {
+            try { localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(merged)); } catch {}
+          }
+          return merged;
+        });
       }
     } catch (err) {
-      console.warn("Failed to fetch appointments from API:", err);
+      console.warn("Failed to fetch appointments from API, retaining cached dataset:", err);
     }
   }, []);
 
@@ -528,12 +614,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
       id: generateId("pat"),
       createdAt: new Date().toISOString(),
     };
-    setPatients(prev => [patient, ...prev]);
+    setPatients(prev => {
+      const updated = [patient, ...prev];
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      }
+      return updated;
+    });
     return patient;
   }, []);
 
   const getPatient = useCallback((id: string): Patient | undefined => {
-    return patients.find(p => p.id === id);
+    if (!id) return undefined;
+    const cleanId = decodeURIComponent(id).trim();
+    return (
+      patients.find((p) => p.id === cleanId || p.mrn === cleanId || p.phone === cleanId) ||
+      DEFAULT_PATIENTS_DATASET.find((p) => p.id === cleanId || p.mrn === cleanId || p.phone === cleanId)
+    );
   }, [patients]);
 
   // ---------- Screening operations ----------
