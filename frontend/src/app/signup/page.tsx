@@ -150,8 +150,8 @@ export default function SignupPage() {
           priority
           className="object-cover object-center scale-105 transition-transform duration-1000 ease-out"
         />
-        {/* Ambient Dark & Deep Emerald/Teal Protective Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-emerald-950/75 to-slate-950/90 backdrop-blur-[3.5px]" />
+        {/* Ambient Clean Healthcare Atmospheric Protective Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-900/55 to-slate-950/75 backdrop-blur-[1.5px]" />
       </div>
 
       {/* ── 2. Ambient Lighting Flares ── */}
