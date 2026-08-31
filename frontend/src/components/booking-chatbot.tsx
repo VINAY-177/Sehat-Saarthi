@@ -208,11 +208,11 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 // Strict Client-Side Input Validators
 function validateName(input: string): { valid: boolean; cleanName?: string } {
   const trimmed = input.trim();
-  const cleaned = trimmed.replace(/^(my name is|i am|i'm|मेरा नाम|नाम है)s+/i, "").trim();
-  if (!/^[a-zA-Zऀ-ॿs.'-]{2,50}$/.test(cleaned)) {
+  const cleaned = trimmed.replace(/^(my name is|i am|i'm|मेरा नाम|नाम है)\s+/i, "").trim();
+  if (!/^[a-zA-Z\u0900-\u097F\s.'-]{2,50}$/.test(cleaned)) {
     return { valid: false };
   }
-  if (!/[aeiouyऄ-औा-ौंः]/i.test(cleaned)) {
+  if (!/[aeiouy\u0904-\u0914\u093E-\u094C\u0902\u0903]/i.test(cleaned)) {
     return { valid: false };
   }
   if (/^(asdf|qwerty|zxcv|1234|test|xyz|abc|yxjhgcj|ghjkl|mnbvc)$/i.test(cleaned.toLowerCase())) {
