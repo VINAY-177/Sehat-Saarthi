@@ -1,35 +1,36 @@
 import { NextResponse } from "next/server";
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const SYSTEM_PROMPT = `You are "Connect to Care AI" (सेहत साथी), a friendly, highly intelligent, compassionate bilingual healthcare assistant for Delhi-NCR hospitals.
 You guide patients smoothly through booking an OPD doctor consultation without displaying robotic step numbers.
 
-CRITICAL INSTRUCTIONS:
+CRITICAL RULES:
 1. NO MECHANICAL STEP LABELS: Never output robotic prefixes like "[Step 1/10]" or "[चरण 1/10]". Talk completely naturally and warmly.
 2. STRICT INPUT VALIDATION:
-   - Name: Must be a genuine name (>= 2 letters, alphabetic). Reject random keys like "asdfgh", "12345", single letters.
+   - Name: Must be a genuine human name (at least 2 letters, vowels required, reject random consonant spam like "yxjhgcj", "asdfgh").
    - Phone: Must be a valid 10-digit Indian phone number starting with 6, 7, 8, 9.
-   - Symptoms: Must be a plausible health complaint or reason for visit (e.g. fever, headache, chest pain, checkup, knee pain). Reject gibberish or non-medical spam.
-   - Duration: Must indicate a timeframe (e.g. 2 days, 1 week, since morning).
-   - If invalid: Set "isValid": false and explain politely in the selected language what information is needed.
-3. ENTITY EXTRACTION:
-   - Extract any provided details: fullName, phone, symptoms, duration, hospital, doctorSpecialty, doctorName, date, time.
-4. CLINICAL SUGGESTION:
-   - Recommend the right medical specialty (Cardiology, Orthopaedics, General Physician, Pulmonology, Pediatrics, Neurology, etc.).
-   - Give safe, reassuring home care precautions and red-flag advice (call 108 for acute emergencies).
-5. LANGUAGE:
+   - Symptoms: Must be a plausible health complaint or reason for visit (e.g. fever, headache, chest pain, checkup, knee pain). Reject gibberish or spam.
+   - If invalid: Set "isValid": false and in "reply" explain politely what is needed.
+3. FLOW & TRANSITIONS:
+   - If at NAME step and name is valid -> reply warmly and ask for 10-digit phone number. Set nextStep: "PHONE".
+   - If at PHONE step and phone is valid -> acknowledge and ask what health issues/symptoms they have. Set nextStep: "SYMPTOMS", widgetType: "symptom_selector".
+   - If at SYMPTOMS step -> ask how long they have had these symptoms. Set nextStep: "DURATION".
+   - If at DURATION step -> recommend specialty and ask to select Delhi-NCR hospital. Set nextStep: "HOSPITAL", widgetType: "hospital_cards".
+   - If at HOSPITAL step -> present specialist doctors. Set nextStep: "DOCTOR_SELECTION", widgetType: "doctor_cards".
+   - If at DOCTOR_SELECTION step -> ask for preferred time slot. Set nextStep: "TIMING", widgetType: "time_matrix".
+   - If at TIMING step -> show appointment summary and ask for confirmation. Set nextStep: "CONFIRM_APPOINTMENT", isSummary: true.
+4. LANGUAGE:
    - Hindi/Hinglish if user speaks Hindi/Hinglish or language='hi'.
    - English if user speaks English or language='en'.
 
 You MUST return strictly valid JSON matching this schema:
 {
-  "reply": "Friendly conversational message (NO step numbers)",
+  "reply": "Friendly conversational message (NEVER empty, NO step numbers)",
   "isValid": true,
   "validationError": "",
   "nextStep": "NAME" | "PHONE" | "SYMPTOMS" | "DURATION" | "HOSPITAL" | "SUGGESTION" | "DOCTOR_SELECTION" | "TIMING" | "DOCTOR_AVAILABILITY" | "CONFIRM_APPOINTMENT" | "BOOKED",
-  "options": ["Quick option 1", "Quick option 2"],
+  "options": ["Quick Option 1"],
   "extracted": {
     "fullName": "",
     "phone": "",
@@ -42,10 +43,7 @@ You MUST return strictly valid JSON matching this schema:
     "date": "",
     "time": ""
   },
-  "isSuggestionCard": false,
-  "isAvailabilityCard": false,
-  "isSummary": false,
-  "widgetType": "symptom_selector" | "hospital_cards" | "doctor_cards" | "time_matrix" | "confirmation_card" | null
+  "widgetType": "symptom_selector" | "hospital_cards" | "doctor_cards" | "time_matrix" | null
 }`;
 
 interface ChatHistoryItem {
@@ -88,47 +86,10 @@ async function callGroq(messages: ChatHistoryItem[], userMessage: string): Promi
       if (res.ok) {
         const data = await res.json();
         const content = data.choices?.[0]?.message?.content;
-        if (content) return content;
+        if (content && content.trim().startsWith("{")) return content;
       }
     } catch (e) {
       console.warn(`Groq ${model} error:`, e);
-    }
-  }
-  return null;
-}
-
-// Call Gemini as additional AI verification engine
-async function callGemini(messages: ChatHistoryItem[], promptText: string): Promise<string | null> {
-  if (!GEMINI_API_KEY) return null;
-  const models = ["gemini-flash-latest", "gemini-pro-latest"];
-
-  for (const model of models) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: `${SYSTEM_PROMPT}\n\nContext History: ${JSON.stringify(messages)}\n\nUser Input: ${promptText}\n\nReturn valid JSON.` }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: "application/json"
-          }
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
-      }
-    } catch (e) {
-      console.warn(`Gemini ${model} error:`, e);
     }
   }
   return null;
@@ -145,32 +106,78 @@ export async function POST(req: Request) {
       conversationHistory = [] 
     } = body;
 
+    const isHindi = language === "hi";
     const historyPayload = conversationHistory.slice(-6);
     const contextualMessage = `[Language: ${language} | Active Step: ${currentStep} | Current State: ${JSON.stringify(bookingDetails)}]\nUser Input: ${message}`;
 
-    // 1. Run ultra-fast Groq LPU engine first (Sub-200ms)
-    let rawJson = await callGroq(historyPayload, contextualMessage);
-
-    // 2. If Groq unavailable, call Gemini AI engine
-    if (!rawJson) {
-      rawJson = await callGemini(historyPayload, contextualMessage);
-    }
+    // 1. Run ultra-fast Groq LPU engine (Sub-200ms)
+    const rawJson = await callGroq(historyPayload, contextualMessage);
 
     if (rawJson) {
       try {
         const parsed = JSON.parse(rawJson);
-        return NextResponse.json(parsed);
+        if (parsed && parsed.reply) {
+          return NextResponse.json(parsed);
+        }
       } catch (parseErr) {
         console.warn("AI JSON parse error:", parseErr);
       }
     }
 
-    // 3. Fallback to client-side engine if external APIs are unreachable
+    // 2. Structured fallback if AI is momentarily unreachable
+    let fallbackReply = "";
+    let fallbackNextStep = currentStep;
+    let widgetType: string | null = null;
+
+    if (currentStep === "NAME") {
+      fallbackReply = isHindi
+        ? `आपसे मिलकर खुशी हुई, ${message}! कृपया अपॉइंटमेंट पुष्टि के लिए अपना 10 अंकों का मोबाइल नंबर दर्ज करें:`
+        : `Nice to meet you, ${message}! Please share your 10-digit mobile number for appointment confirmation:`;
+      fallbackNextStep = "PHONE";
+    } else if (currentStep === "PHONE") {
+      fallbackReply = isHindi
+        ? "धन्यवाद! अब कृपया बताएं कि आप किस प्रकार की स्वास्थ्य समस्या या लक्षण महसूस कर रहे हैं:"
+        : "Thank you! What health symptoms or concerns are you experiencing today?";
+      fallbackNextStep = "SYMPTOMS";
+      widgetType = "symptom_selector";
+    } else if (currentStep === "SYMPTOMS") {
+      fallbackReply = isHindi
+        ? `लक्षण नोट कर लिए गए हैं (${message})। आप इन लक्षणों को कितने समय से महसूस कर रहे हैं?`
+        : `Got it. How long have you been experiencing these symptoms (${message})?`;
+      fallbackNextStep = "DURATION";
+    } else if (currentStep === "DURATION") {
+      fallbackReply = isHindi
+        ? "आपके लक्षणों के आधार पर, हम जनरल फिजिशियन या विशेषज्ञ डॉक्टर की सलाह देते हैं। कृपया अपना पसंदीदा दिल्ली-एनसीआर अस्पताल चुनें:"
+        : "Based on your symptoms, we recommend consulting a specialist. Please select your preferred Delhi-NCR hospital:";
+      fallbackNextStep = "HOSPITAL";
+      widgetType = "hospital_cards";
+    } else if (currentStep === "HOSPITAL") {
+      fallbackReply = isHindi
+        ? `अस्पताल चुन लिया गया है। कृपया नीचे उपलब्ध विशेषज्ञ डॉक्टरों में से चुनें:`
+        : `Great facility choice. Please select from the available specialist doctors below:`;
+      fallbackNextStep = "DOCTOR_SELECTION";
+      widgetType = "doctor_cards";
+    } else if (currentStep === "DOCTOR_SELECTION") {
+      fallbackReply = isHindi
+        ? `डॉक्टर चुन लिए गए हैं। कृपया अपना पसंदीदा परामर्श समय चुनें:`
+        : `Doctor selected. Please select your preferred consultation time slot:`;
+      fallbackNextStep = "TIMING";
+      widgetType = "time_matrix";
+    } else {
+      fallbackReply = isHindi
+        ? `कृपया अपने अपॉइंटमेंट विवरण की पुष्टि करें:`
+        : `Please confirm your OPD consultation booking details:`;
+      fallbackNextStep = "CONFIRM_APPOINTMENT";
+    }
+
     return NextResponse.json({
-      fallback: true,
-      message,
-      currentStep,
-      language
+      reply: fallbackReply,
+      isValid: true,
+      validationError: "",
+      nextStep: fallbackNextStep,
+      options: [],
+      extracted: {},
+      widgetType,
     });
 
   } catch (error: unknown) {

@@ -191,8 +191,16 @@ function validateName(input: string): { valid: boolean; cleanName?: string } {
   if (!/^[a-zA-Z\u0900-\u097F\s.'-]{2,50}$/.test(cleaned)) {
     return { valid: false };
   }
-  // Reject keyboard mash
-  if (/^(asdf|qwerty|zxcv|1234|test|xyz|abc)$/i.test(cleaned.toLowerCase())) {
+  // Must contain at least one vowel (Latin or Devanagari)
+  if (!/[aeiouy\u0904-\u0914\u093E-\u094C\u0902\u0903]/i.test(cleaned)) {
+    return { valid: false };
+  }
+  // Reject keyboard mash or common junk patterns
+  if (/^(asdf|qwerty|zxcv|1234|test|xyz|abc|yxjhgcj|ghjkl|mnbvc)$/i.test(cleaned.toLowerCase())) {
+    return { valid: false };
+  }
+  // Reject unpronounceable consonant clusters (5+ consecutive consonants)
+  if (/[bcdfghjklmnpqrstvwxz]{5,}/i.test(cleaned)) {
     return { valid: false };
   }
   return { valid: true, cleanName: cleaned };
@@ -587,21 +595,23 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           .replace(/\[चरण \d+\/\d+[^\]]*\]/gi, "")
           .trim();
 
-        const nextStepEnum = (aiData.nextStep as ChatStep) || getNextFallbackStep(currentStep);
-        setCurrentStep(nextStepEnum);
-        setBooking(currentBooking);
+        if (cleanReply) {
+          const nextStepEnum = (aiData.nextStep as ChatStep) || getNextFallbackStep(currentStep);
+          setCurrentStep(nextStepEnum);
+          setBooking(currentBooking);
 
-        addBotMessage(
-          cleanReply,
-          aiData.options,
-          nextStepEnum,
-          nextStepEnum === ChatStep.CONFIRM_APPOINTMENT,
-          false,
-          nextStepEnum === ChatStep.DOCTOR_AVAILABILITY,
-          nextStepEnum === ChatStep.SUGGESTION,
-          aiData.widgetType
-        );
-        return;
+          addBotMessage(
+            cleanReply,
+            aiData.options,
+            nextStepEnum,
+            nextStepEnum === ChatStep.CONFIRM_APPOINTMENT,
+            false,
+            nextStepEnum === ChatStep.DOCTOR_AVAILABILITY,
+            nextStepEnum === ChatStep.SUGGESTION,
+            aiData.widgetType
+          );
+          return;
+        }
       }
     } catch (aiErr) {
       console.warn("AI validation fallback to local verified engine:", aiErr);
@@ -988,17 +998,19 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
               )}
 
               <div className="space-y-3 max-w-[92%] sm:max-w-[82%]">
-                <div
-                  className={`px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-xs ${
-                    isBot
-                      ? msg.isError
-                        ? "bg-amber-50 text-amber-900 border border-amber-200 font-medium"
-                        : "bg-white text-slate-800 border border-slate-200/70 rounded-tl-xs font-normal"
-                      : "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-tr-xs font-medium shadow-md shadow-teal-600/10"
-                  }`}
-                >
-                  <p className="whitespace-pre-line">{msg.text}</p>
-                </div>
+                {msg.text ? (
+                  <div
+                    className={`px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-xs ${
+                      isBot
+                        ? msg.isError
+                          ? "bg-amber-50 text-amber-900 border border-amber-200 font-medium"
+                          : "bg-white text-slate-800 border border-slate-200/70 rounded-tl-xs font-normal"
+                        : "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-tr-xs font-medium shadow-md shadow-teal-600/10"
+                    }`}
+                  >
+                    <p className="whitespace-pre-line">{msg.text}</p>
+                  </div>
+                ) : null}
 
                 {/* ── Interactive Widget: Category & Symptom Selector ── */}
                 {(msg.widgetType === "symptom_selector" || (msg.step === ChatStep.SYMPTOMS && currentStep === ChatStep.SYMPTOMS)) && (
