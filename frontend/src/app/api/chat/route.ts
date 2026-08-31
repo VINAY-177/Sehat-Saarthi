@@ -1,34 +1,36 @@
 import { NextResponse } from "next/server";
 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-const SYSTEM_PROMPT = `You are "Connect to Care AI" (सेहत साथी), an ultra-smart, empathetic, bilingual clinical assistant for Delhi-NCR healthcare.
-Your primary role is to guide the patient smoothly through the standard 10-Step OPD Appointment Booking flow:
-Step 1: NAME (मरीज का नाम)
-Step 2: PHONE (10-digit mobile number)
-Step 3: SYMPTOMS (Reported health symptoms/complaints)
-Step 4: DURATION (How long symptoms lasted, e.g., 2 days, 1 week)
-Step 5: HOSPITAL (Preferred Delhi-NCR hospital e.g. AIIMS, Safdarjung, GGH Delhi, Fortis Noida, Medanta Gurugram, Amrita Faridabad)
-Step 6: SUGGESTION (AI Clinical Triage & specialty suggestion e.g. Cardiology, Orthopaedics, General Physician)
-Step 7: DOCTOR_SELECTION (Specialist doctor choice)
-Step 8: TIMING (Appointment date & time slot e.g. Tomorrow 10:30 AM)
-Step 9: DOCTOR_AVAILABILITY (Live schedule verification & room lock)
-Step 10: CONFIRM_APPOINTMENT (Summary confirmation & OPD token generation)
+const SYSTEM_PROMPT = `You are "Connect to Care AI" (सेहत साथी), a compassionate, highly accurate bilingual clinical assistant for Delhi-NCR healthcare.
+You guide patients naturally through booking an OPD doctor consultation without displaying mechanical step numbers.
 
-GUIDELINES:
-1. ALWAYS maintain the requested language (Hindi if user talks in Hindi/Hinglish or language='hi', English if English or language='en').
-2. Be warm, empathetic, concise, and helpful.
-3. If user supplies multiple details in a single message (e.g. "I am Rahul, phone 9876543210, having chest pain for 2 days"), extract ALL provided fields immediately into the 'extracted' JSON object and transition to the next unfulfilled step!
-4. If user asks general health questions or clarifications midway, answer them accurately and concisely, then gently bring them back to the active step.
-5. In Step 6 (SUGGESTION), provide a sound clinical recommendation based on symptoms and duration, suggest the right medical department, and include home care / precaution advice.
-6. For emergencies (e.g. crushing chest pain, severe bleeding, acute trauma), emphasize calling 108 Emergency while proceeding.
+CRITICAL RULES:
+1. NEVER include robotic prefixes like "[Step 1/10]" or "[चरण 1/10]" in your replies. Keep your tone completely natural, friendly, and human.
+2. STRICT INPUT VALIDATION:
+   - For Name: Reject gibberish (e.g. "asdfgh", "12345", "@#$%", single letters). Must be a genuine name.
+   - For Phone: Must be a valid 10-digit Indian phone number starting with 6, 7, 8, or 9.
+   - For Symptoms: Must be a medically plausible health complaint or reason for visit (e.g. fever, headache, chest pain, checkup, etc.). Reject random non-health text like "asdasd" or unrelated phrases.
+   - For Duration: Must indicate a timeframe (e.g. 2 days, 1 week, since morning, chronic).
+   - If the input is invalid or nonsensical for the expected field, set "isValid": false and explain politely what information is required.
+3. INGESTION & EXTRACTION:
+   - If a user provides multiple details in one sentence (e.g., "My name is Rohit, phone 9876543210, having bad stomach ache for 3 days"), extract ALL provided fields into 'extracted' and naturally ask for the next missing piece of information.
+4. CLINICAL SUGGESTION (when symptoms + duration are known):
+   - Suggest the appropriate medical department (e.g. Cardiology, Orthopaedics, General Physician, Pulmonology, Pediatrics, Neurology, Dermatology).
+   - Provide safe, comforting care advice (hydration, rest, precautions).
+   - Highlight red flags for emergency care (call 108) if life-threatening symptoms (e.g. severe chest pain, extreme breathlessness) are detected.
+5. LANGUAGE:
+   - If the user uses Hindi/Hinglish or language='hi', respond in clear, natural Hindi.
+   - If English, respond in professional, friendly English.
 
 You MUST respond strictly in valid JSON matching this schema:
 {
-  "reply": "Friendly response to the user in the selected language",
+  "reply": "Friendly, natural conversational response (NO step numbers)",
+  "isValid": true | false,
+  "validationError": "string explaining why input is invalid if isValid is false, else empty",
   "nextStep": "NAME" | "PHONE" | "SYMPTOMS" | "DURATION" | "HOSPITAL" | "SUGGESTION" | "DOCTOR_SELECTION" | "TIMING" | "DOCTOR_AVAILABILITY" | "CONFIRM_APPOINTMENT" | "BOOKED",
-  "options": ["Quick reply option 1", "Quick reply option 2", "Quick reply option 3"],
+  "options": ["Option 1", "Option 2"],
   "extracted": {
     "fullName": "extracted name or empty",
     "phone": "10-digit phone or empty",
@@ -47,6 +49,109 @@ You MUST respond strictly in valid JSON matching this schema:
   "widgetType": "symptom_selector" | "hospital_cards" | "doctor_cards" | "time_matrix" | "confirmation_card" | null
 }`;
 
+interface ChatHistoryItem {
+  sender?: string;
+  text?: string;
+  [key: string]: unknown;
+}
+
+async function callGemini(messages: ChatHistoryItem[], promptText: string): Promise<string | null> {
+  if (!GEMINI_API_KEY) return null;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  
+  try {
+    const formattedContents = [
+      {
+        role: "user",
+        parts: [
+          { text: `${SYSTEM_PROMPT}\n\nChat History & Context:\n${JSON.stringify(messages)}\n\nLatest User Input:\n${promptText}\n\nRespond strictly in valid JSON.` }
+        ]
+      }
+    ];
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: formattedContents,
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+        }
+      })
+    });
+
+    if (!res.ok) {
+      console.warn("Gemini API call failed with status:", res.status);
+      return null;
+    }
+
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch (err) {
+    console.warn("Gemini call error:", err);
+    return null;
+  }
+}
+
+async function callGroq(messages: ChatHistoryItem[], userMessage: string): Promise<string | null> {
+  if (!GROQ_API_KEY) return null;
+  const url = "https://api.groq.com/openai/v1/chat/completions";
+
+  try {
+    const groqMessages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      ...messages.map((m: ChatHistoryItem) => ({
+        role: m.sender === "bot" ? "assistant" : "user",
+        content: m.text || "",
+      })),
+      { role: "user", content: userMessage }
+    ];
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: groqMessages,
+        temperature: 0.2,
+        max_tokens: 800,
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!res.ok) {
+      // Fallback to llama-3.1-8b
+      const resFallback = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: groqMessages,
+          temperature: 0.2,
+          max_tokens: 800,
+          response_format: { type: "json_object" },
+        }),
+      });
+      if (!resFallback.ok) return null;
+      const data = await resFallback.json();
+      return data.choices?.[0]?.message?.content || null;
+    }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || null;
+  } catch (err) {
+    console.warn("Groq call error:", err);
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -58,83 +163,40 @@ export async function POST(req: Request) {
       conversationHistory = [] 
     } = body;
 
-    const apiKey = GROQ_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "Groq API key not configured" }, { status: 500 });
+    const contextPayload = {
+      language,
+      currentStep,
+      bookingDetails,
+      history: conversationHistory.slice(-6)
+    };
+
+    // 1. Try Gemini API first for high-precision verification & reasoning
+    let rawJson = await callGemini(contextPayload.history, message);
+
+    // 2. If Gemini fails or is unavailable, use Groq LPU engine
+    if (!rawJson) {
+      rawJson = await callGroq(contextPayload.history, message);
     }
 
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      { 
-        role: "system", 
-        content: `Current Session State:
-- Language: ${language}
-- Current Active Step: ${currentStep}
-- Current Booking State: ${JSON.stringify(bookingDetails)}` 
-      },
-      ...conversationHistory.slice(-6).map((m: { sender: string; text: string }) => ({
-        role: m.sender === "bot" ? "assistant" : "user",
-        content: m.text,
-      })),
-      { role: "user", content: message }
-    ];
+    if (rawJson) {
+      try {
+        const parsed = JSON.parse(rawJson);
+        return NextResponse.json(parsed);
+      } catch (parseErr) {
+        console.warn("JSON parse error from AI response:", parseErr);
+      }
+    }
 
-    let groqRes = await fetch(GROQ_API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages,
-        temperature: 0.3,
-        max_tokens: 800,
-        response_format: { type: "json_object" },
-      }),
+    // 3. Fallback deterministic validation if both APIs are unreachable
+    return NextResponse.json({
+      fallback: true,
+      message,
+      currentStep
     });
 
-    // Fallback model if 70b is busy
-    if (!groqRes.ok) {
-      groqRes = await fetch(GROQ_API_URL, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages,
-          temperature: 0.3,
-          max_tokens: 800,
-          response_format: { type: "json_object" },
-        }),
-      });
-    }
-
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      console.warn("Groq API error:", errText);
-      return NextResponse.json({ error: "Groq API call failed", details: errText }, { status: 502 });
-    }
-
-    const data = await groqRes.json();
-    const rawContent = data.choices?.[0]?.message?.content || "{}";
-    
-    try {
-      const parsed = JSON.parse(rawContent);
-      return NextResponse.json(parsed);
-    } catch {
-      return NextResponse.json({
-        reply: rawContent,
-        nextStep: currentStep,
-        options: [],
-        extracted: {},
-      });
-    }
   } catch (error: unknown) {
-    console.error("Chat API handler error:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Chat route error:", error);
+    const msg = error instanceof Error ? error.message : "Server error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

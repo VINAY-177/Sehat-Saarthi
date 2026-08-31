@@ -5,7 +5,7 @@ import { BookingChatbot } from "@/components/booking-chatbot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Bot, Sparkles, Mic, Calendar, PhoneCall 
+  Bot, Sparkles, Mic, Calendar, PhoneCall, Compass, ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,12 @@ export default function ChatbotPage() {
   const { t, language } = useStore();
   const isHindi = language === "hi";
 
-  const TEN_STEPS = [
-    { num: 1, titleEn: "Name", titleHi: "नाम", descEn: "Patient's full name", descHi: "मरीज का पूरा नाम" },
-    { num: 2, titleEn: "Phone", titleHi: "फोन नंबर", descEn: "10-digit mobile number", descHi: "10 अंकों का मोबाइल" },
-    { num: 3, titleEn: "Symptoms", titleHi: "लक्षण", descEn: "Reported health complaints", descHi: "स्वास्थ्य संबंधी परेशानी" },
-    { num: 4, titleEn: "Duration", titleHi: "अवधि", descEn: "How long symptoms lasted", descHi: "लक्षणों का समयकाल" },
-    { num: 5, titleEn: "Hospital", titleHi: "अस्पताल", descEn: "Preferred Delhi-NCR facility", descHi: "दिल्ली-एनसीआर अस्पताल" },
-    { num: 6, titleEn: "Suggestion", titleHi: "एआई सुझाव", descEn: "Clinical triage & advice", descHi: "क्लिनिकल ट्रायज व सलाह" },
-    { num: 7, titleEn: "Doctor Selection", titleHi: "डॉक्टर चयन", descEn: "Specialist clinician choice", descHi: "विशेषज्ञ डॉक्टर का चयन" },
-    { num: 8, titleEn: "Timing", titleHi: "समय व तारीख", descEn: "Preferred date & time slot", descHi: "तारीख व समय स्लॉट" },
-    { num: 9, titleEn: "Doctor Availability", titleHi: "डॉक्टर उपलब्धता", descEn: "Live schedule verification", descHi: "लाइव शेड्यूल सत्यापन" },
-    { num: 10, titleEn: "Confirm Appointment", titleHi: "अपॉइंटमेंट पुष्टि", descEn: "OPD token generation", descHi: "ओपीडी टोकन प्राप्ति" },
+  const WORKFLOW_HIGHLIGHTS = [
+    { icon: "👤", titleEn: "Patient Verification", titleHi: "मरीज सत्यापन", descEn: "Name & mobile number validation", descHi: "नाम व मोबाइल सत्यापन" },
+    { icon: "🩺", titleEn: "Symptom Assessment", titleHi: "लक्षण विश्लेषण", descEn: "Clinical triage & duration tracking", descHi: "क्लिनिकल ट्रायज व अवधि" },
+    { icon: "📍", titleEn: "GPS Hospital Locator", titleHi: "जीपीएस अस्पताल खोज", descEn: "Finds closest Delhi-NCR facility", descHi: "निकटतम अस्पताल की दूरी" },
+    { icon: "👨‍⚕️", titleEn: "Doctor & Time Slot", titleHi: "डॉक्टर व समय चयन", descEn: "Verified specialists & live slots", descHi: "सत्यापित डॉक्टर व स्लॉट" },
+    { icon: "🎫", titleEn: "Digital OPD Token", titleHi: "डिजिटल ओपीडी टोकन", descEn: "Instant pass & queue sync", descHi: "तत्काल पर्ची व कतार सिंक" },
   ];
 
   return (
@@ -39,14 +34,15 @@ export default function ChatbotPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-black text-slate-900">{t("botTitle")}</h1>
-              <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-bold text-[10px]">
-                {isHindi ? "10-चरणीय वॉयस लाइव" : "10-Step Voice Live"}
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold text-[10px]">
+                <ShieldCheck className="w-3 h-3 mr-1 text-emerald-600" />
+                {isHindi ? "Gemini AI सत्यापित" : "Gemini AI Verified"}
               </Badge>
             </div>
             <p className="text-xs text-slate-500 font-medium">
               {isHindi
-                ? "ओपीडी क्लीनिक और अस्पतालों में डॉक्टर परामर्श बुक करने के लिए 10-चरणीय वॉयस एवं चैट सहायक।"
-                : "10-step intelligent voice & conversational assistant for booking doctor consultations across Delhi-NCR."}
+                ? "ओपीडी क्लीनिक और अस्पतालों में डॉक्टर परामर्श बुक करने के लिए जीपीएस-सक्षम वॉयस एवं चैट सहायक।"
+                : "GPS-enabled voice & conversational AI assistant for booking specialist OPD consultations."}
             </p>
           </div>
         </div>
@@ -68,23 +64,23 @@ export default function ChatbotPage() {
           <BookingChatbot />
         </div>
 
-        {/* Right Column - Features & 10-Step Guide (4 Cols) */}
+        {/* Right Column - Features & Quick Help (4 Cols) */}
         <div className="lg:col-span-4 space-y-4">
+          
+          {/* Workflow Card */}
           <Card className="shadow-sm border-slate-200/80 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3.5 px-5">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-teal-600" />
                 <CardTitle className="text-sm font-bold text-slate-900">
-                  {isHindi ? "10-चरणीय बुकिंग प्रवाह" : "10-Step Booking Workflow"}
+                  {isHindi ? "स्मार्ट एआई क्षमताएं" : "Smart AI Capabilities"}
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="p-4 space-y-2.5 max-h-[380px] overflow-y-auto scrollbar-hide text-xs text-slate-600">
-              {TEN_STEPS.map((s) => (
-                <div key={s.num} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100/80">
-                  <div className="w-5 h-5 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-black shrink-0 text-[10px]">
-                    {s.num}
-                  </div>
+            <CardContent className="p-4 space-y-2.5 text-xs text-slate-600">
+              {WORKFLOW_HIGHLIGHTS.map((s, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100/80">
+                  <span className="text-base shrink-0">{s.icon}</span>
                   <div className="min-w-0">
                     <h4 className="font-bold text-slate-900 text-xs truncate">
                       {isHindi ? s.titleHi : s.titleEn}
@@ -98,29 +94,45 @@ export default function ChatbotPage() {
             </CardContent>
           </Card>
 
+          {/* GPS Live Locator Highlight */}
+          <Card className="shadow-sm border-emerald-200/80 rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-50/60 to-teal-50/40">
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-sm">
+                  <Compass className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-xs">
+                    {isHindi ? "जीपीएस निकटतम अस्पताल ट्रैकर" : "GPS Nearest Hospital Tracker"}
+                  </h4>
+                  <p className="text-[11px] text-emerald-800 font-medium">
+                    {isHindi ? "एक टैप में अपनी दूरी के अनुसार अस्पताल खोजें" : "Calculates exact km distance in 1-tap"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Voice Command Tips */}
           <Card className="shadow-sm border-teal-200/80 rounded-3xl overflow-hidden bg-gradient-to-br from-teal-50/60 to-emerald-50/30">
-            <CardContent className="p-5 space-y-3">
+            <CardContent className="p-4 space-y-2.5">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-teal-600 text-white rounded-xl shadow-sm">
                   <Mic className="h-4 w-4" />
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-900 text-xs">
-                    {isHindi ? "वॉयस कमांड समर्थित" : "Voice Commands Supported"}
+                    {isHindi ? "वॉयस व चैट बहुभाषी पहचान" : "Voice & Chat Multilingual"}
                   </h4>
                   <p className="text-[11px] text-teal-800 font-medium">
-                    {isHindi ? "हिंदी और अंग्रेजी बहुभाषी पहचान" : "Multilingual recognition enabled"}
+                    {isHindi ? "हिंदी, हिंग्लिश एवं अंग्रेजी समर्थित" : "Supports Hindi, Hinglish & English"}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-1.5 pt-1 text-[11px] text-slate-600 font-medium">
                 <p className="p-2 rounded-xl bg-white border border-teal-100/80">
-                  🗣️ {isHindi ? "कल सुबह हृदय रोग विशेषज्ञ से परामर्श बुक करें" : `"Book an appointment with a cardiologist tomorrow morning"`}
-                </p>
-                <p className="p-2 rounded-xl bg-white border border-teal-100/80">
-                  🗣️ {isHindi ? "मुझे 2 दिनों से तेज बुखार और सिरदर्द है" : `"I have severe fever and headache for 2 days in New Delhi"`}
+                  🗣️ {isHindi ? "कल सुबह एम्स में हृदय रोग डॉक्टर से मिलना है" : `"Book cardiologist consultation at AIIMS tomorrow"`}
                 </p>
               </div>
             </CardContent>
@@ -134,7 +146,7 @@ export default function ChatbotPage() {
                   {t("emergency108")}
                 </span>
                 <p className="text-xs font-bold text-slate-900">
-                  {isHindi ? "तत्काल एम्बुलेंस की आवश्यकता है?" : "Immediate Ambulance Needed?"}
+                  {isHindi ? "तत्काल एम्बुलेंस सहायता" : "Immediate Ambulance 108"}
                 </p>
               </div>
               <a href="tel:108">
