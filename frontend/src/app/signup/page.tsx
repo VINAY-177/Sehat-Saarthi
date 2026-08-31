@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Role, AuthUser } from "@/lib/types";
+import { getApiBaseUrl } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -69,7 +70,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = getApiBaseUrl();
       const res = await fetch(`${API}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
