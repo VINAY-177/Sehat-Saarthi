@@ -11,15 +11,14 @@ import {
   Bot, User, Mic, Volume2, VolumeX, Send, RefreshCw, 
   CheckCircle2, Clock, Stethoscope, Building2, Sparkles,
   Edit3, XCircle, ArrowLeft, Download, Calendar as CalendarIcon,
-  AlertCircle, CheckCheck, UserCheck
+  AlertCircle, CheckCheck, UserCheck, Bed,
+  Zap, Star, HeartPulse
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiPost } from "@/lib/api";
 
 // ============================================================
-// 10-Step Chatbot Conversational State Machine
-// 1. Name -> 2. Phone -> 3. Symptoms -> 4. Duration -> 5. Hospital
-// 6. Suggestion -> 7. Doctor selection -> 8. Timing -> 9. Doctor availability -> 10. Confirm appointment
+// 10-Step Conversational State Machine
 // ============================================================
 
 export enum ChatStep {
@@ -35,19 +34,6 @@ export enum ChatStep {
   CONFIRM_APPOINTMENT = "CONFIRM_APPOINTMENT",   // Step 10: Appointment Confirmation & Token Generation
   BOOKED = "BOOKED",                             // Success Receipt State
 }
-
-export const STEP_ORDER: ChatStep[] = [
-  ChatStep.NAME,
-  ChatStep.PHONE,
-  ChatStep.SYMPTOMS,
-  ChatStep.DURATION,
-  ChatStep.HOSPITAL,
-  ChatStep.SUGGESTION,
-  ChatStep.DOCTOR_SELECTION,
-  ChatStep.TIMING,
-  ChatStep.DOCTOR_AVAILABILITY,
-  ChatStep.CONFIRM_APPOINTMENT,
-];
 
 export const STEP_LABELS: Record<ChatStep, { en: string; hi: string; number: number }> = {
   [ChatStep.NAME]: { en: "Patient Name", hi: "मरीज का नाम", number: 1 },
@@ -73,6 +59,7 @@ interface Message {
   isSummary?: boolean;
   isAvailabilityCard?: boolean;
   isSuggestionCard?: boolean;
+  widgetType?: string | null;
   isError?: boolean;
 }
 
@@ -84,12 +71,25 @@ interface DoctorProfile {
   chamber: string;
   rating: number;
   available: boolean;
+  fee?: string;
+}
+
+interface HospitalCardItem {
+  id: string;
+  name: string;
+  district: string;
+  totalBeds: number;
+  availableBeds: number;
+  availableIcu: number;
+  rating: number;
+  type: string;
 }
 
 interface BookingDetails {
   fullName: string;
   phone: string;
   symptoms: string;
+  severity?: string;
   duration: string;
   hospital: string;
   hospitalId?: string;
@@ -107,327 +107,67 @@ interface BookingDetails {
 }
 
 // ============================================================
-// Specialized Knowledge Base & Specialist Doctors Dataset
+// Datasets
 // ============================================================
+
+const FEATURED_HOSPITALS: HospitalCardItem[] = [
+  { id: "hosp-aiims-delhi", name: "AIIMS New Delhi", district: "South Delhi", totalBeds: 2478, availableBeds: 184, availableIcu: 18, rating: 4.9, type: "Apex Tertiary" },
+  { id: "hosp-safdarjung-delhi", name: "Safdarjung Hospital", district: "South Delhi", totalBeds: 1600, availableBeds: 142, availableIcu: 14, rating: 4.7, type: "Central Govt" },
+  { id: "hosp-ggh-delhi", name: "Govt. General Hospital", district: "Central Delhi", totalBeds: 680, availableBeds: 84, availableIcu: 8, rating: 4.6, type: "State Referral" },
+  { id: "hosp-lnjp-delhi", name: "Lok Nayak Hospital (LNJP)", district: "Central Delhi", totalBeds: 2000, availableBeds: 120, availableIcu: 15, rating: 4.5, type: "Govt Teaching" },
+  { id: "hosp-fortis-noida", name: "Fortis Hospital Noida", district: "Gautam Budh Nagar", totalBeds: 200, availableBeds: 28, availableIcu: 6, rating: 4.8, type: "Tertiary Care" },
+  { id: "hosp-medanta-gurugram", name: "Medanta The Medicity", district: "Gurugram", totalBeds: 1250, availableBeds: 120, availableIcu: 15, rating: 4.9, type: "Super Specialty" },
+  { id: "hosp-amrita-faridabad", name: "Amrita Hospital", district: "Faridabad", totalBeds: 2400, availableBeds: 280, availableIcu: 22, rating: 4.8, type: "Apex Care" },
+];
 
 const SPECIALTY_DOCTORS: Record<string, DoctorProfile[]> = {
   "General Physician": [
-    { id: "doc-priya-mehta", name: "Dr. Priya Mehta", specialty: "General Physician", experience: "8 years", chamber: "OPD Room 102", rating: 4.8, available: true },
-    { id: "doc-rajesh-kumar", name: "Dr. Rajesh Kumar", specialty: "General Physician", experience: "12 years", chamber: "OPD Room 104", rating: 4.7, available: true },
-    { id: "doc-sunita-verma", name: "Dr. Sunita Verma", specialty: "General Physician", experience: "10 years", chamber: "OPD Room 106", rating: 4.9, available: true },
+    { id: "doc-priya-mehta", name: "Dr. Priya Mehta", specialty: "General Physician", experience: "8 yrs", chamber: "OPD Room 102", rating: 4.8, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-rajesh-kumar", name: "Dr. Rajesh Kumar", specialty: "General Physician", experience: "12 yrs", chamber: "OPD Room 104", rating: 4.7, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-sunita-verma", name: "Dr. Sunita Verma", specialty: "General Physician", experience: "10 yrs", chamber: "OPD Room 106", rating: 4.9, available: true, fee: "Free (Govt OPD)" },
   ],
   "Cardiologist": [
-    { id: "doc-rajiv-narang", name: "Dr. Rajiv Narang", specialty: "Cardiologist", experience: "16 years", chamber: "Cardio Wing - C1", rating: 4.9, available: true },
-    { id: "doc-anita-saxena", name: "Dr. Anita Saxena", specialty: "Cardiologist", experience: "14 years", chamber: "Cardio Wing - C3", rating: 4.8, available: true },
-    { id: "doc-arjun-malhotra", name: "Dr. Arjun Malhotra", specialty: "Cardiologist", experience: "11 years", chamber: "Cath Lab OPD", rating: 4.7, available: true },
+    { id: "doc-rajiv-narang", name: "Dr. Rajiv Narang", specialty: "Cardiologist", experience: "16 yrs", chamber: "Cardio Wing - C1", rating: 4.9, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-anita-saxena", name: "Dr. Anita Saxena", specialty: "Cardiologist", experience: "14 yrs", chamber: "Cardio Wing - C3", rating: 4.8, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-arjun-malhotra", name: "Dr. Arjun Malhotra", specialty: "Cardiologist", experience: "11 yrs", chamber: "Cath Lab OPD", rating: 4.7, available: true, fee: "Free (Govt OPD)" },
   ],
   "Orthopedic Surgeon": [
-    { id: "doc-vivek-rao", name: "Dr. Vivek Rao", specialty: "Orthopedic Surgeon", experience: "12 years", chamber: "Joint Care - OPD 201", rating: 4.8, available: true },
-    { id: "doc-aditi-joshi", name: "Dr. Aditi Joshi", specialty: "Orthopedic Surgeon", experience: "9 years", chamber: "Ortho Block 204", rating: 4.7, available: true },
-    { id: "doc-karan-sethi", name: "Dr. Karan Sethi", specialty: "Orthopedic Surgeon", experience: "11 years", chamber: "Sports Injury Clinic", rating: 4.9, available: true },
+    { id: "doc-vivek-rao", name: "Dr. Vivek Rao", specialty: "Orthopedic Surgeon", experience: "12 yrs", chamber: "Joint Care 201", rating: 4.8, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-aditi-joshi", name: "Dr. Aditi Joshi", specialty: "Orthopedic Surgeon", experience: "9 yrs", chamber: "Ortho Block 204", rating: 4.7, available: true, fee: "Free (Govt OPD)" },
   ],
   "Pediatrician": [
-    { id: "doc-amit-sen", name: "Dr. Amit Sen", specialty: "Pediatrician", experience: "10 years", chamber: "Child Wellness - P1", rating: 4.9, available: true },
-    { id: "doc-ritu-sharma", name: "Dr. Ritu Sharma", specialty: "Pediatrician", experience: "8 years", chamber: "Child OPD 108", rating: 4.8, available: true },
+    { id: "doc-amit-sen", name: "Dr. Amit Sen", specialty: "Pediatrician", experience: "10 yrs", chamber: "Child Wellness P1", rating: 4.9, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-ritu-sharma", name: "Dr. Ritu Sharma", specialty: "Pediatrician", experience: "8 yrs", chamber: "Child OPD 108", rating: 4.8, available: true, fee: "Free (Govt OPD)" },
   ],
   "Gynecologist": [
-    { id: "doc-nisha-verma", name: "Dr. Nisha Verma", specialty: "Gynecologist", experience: "13 years", chamber: "Maternity Wing - M2", rating: 4.9, available: true },
-    { id: "doc-pooja-menon", name: "Dr. Pooja Menon", specialty: "Gynecologist", experience: "10 years", chamber: "Women's Health - OPD 205", rating: 4.8, available: true },
+    { id: "doc-nisha-verma", name: "Dr. Nisha Verma", specialty: "Gynecologist", experience: "13 yrs", chamber: "Maternity Wing M2", rating: 4.9, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-pooja-menon", name: "Dr. Pooja Menon", specialty: "Gynecologist", experience: "10 yrs", chamber: "Women's Health 205", rating: 4.8, available: true, fee: "Free (Govt OPD)" },
   ],
   "Neurologist": [
-    { id: "doc-deepak-agrawal", name: "Dr. Deepak Agrawal", specialty: "Neurologist", experience: "18 years", chamber: "Neuroscience Center - N1", rating: 5.0, available: true },
-    { id: "doc-roopa-rajan", name: "Dr. Roopa Rajan", specialty: "Neurologist", experience: "12 years", chamber: "Neuro OPD 302", rating: 4.8, available: true },
+    { id: "doc-deepak-agrawal", name: "Dr. Deepak Agrawal", specialty: "Neurologist", experience: "18 yrs", chamber: "Neuro Center N1", rating: 5.0, available: true, fee: "Free (Govt OPD)" },
+    { id: "doc-roopa-rajan", name: "Dr. Roopa Rajan", specialty: "Neurologist", experience: "12 yrs", chamber: "Neuro OPD 302", rating: 4.8, available: true, fee: "Free (Govt OPD)" },
   ],
   "Pulmonologist": [
-    { id: "doc-sanjay-rao", name: "Dr. Sanjay Rao", specialty: "Pulmonologist", experience: "11 years", chamber: "Chest Clinic - OPD 110", rating: 4.7, available: true },
-    { id: "doc-kavita-nair", name: "Dr. Kavita Nair", specialty: "Pulmonologist", experience: "9 years", chamber: "Respiratory Care 112", rating: 4.8, available: true },
-  ],
-  "Gastroenterologist": [
-    { id: "doc-nikhil-arora", name: "Dr. Nikhil Arora", specialty: "Gastroenterologist", experience: "13 years", chamber: "GI Suite - Room 208", rating: 4.8, available: true },
-    { id: "doc-tanya-mehta", name: "Dr. Tanya Mehta", specialty: "Gastroenterologist", experience: "8 years", chamber: "GI OPD 210", rating: 4.7, available: true },
-  ],
-  "Dermatologist": [
-    { id: "doc-aditya-bose", name: "Dr. Aditya Bose", specialty: "Dermatologist", experience: "9 years", chamber: "Derma Care - Room 115", rating: 4.7, available: true },
-    { id: "doc-neha-sood", name: "Dr. Neha Sood", specialty: "Dermatologist", experience: "7 years", chamber: "Derma OPD 118", rating: 4.8, available: true },
-  ],
-  "ENT Specialist": [
-    { id: "doc-manish-arora", name: "Dr. Manish Arora", specialty: "ENT Specialist", experience: "11 years", chamber: "ENT OPD Room 120", rating: 4.8, available: true },
-    { id: "doc-swati-jain", name: "Dr. Swati Jain", specialty: "ENT Specialist", experience: "8 years", chamber: "ENT OPD Room 122", rating: 4.7, available: true },
-  ],
-  "Ophthalmologist": [
-    { id: "doc-harish-mehta", name: "Dr. Harish Mehta", specialty: "Ophthalmologist", experience: "14 years", chamber: "Eye Clinic - Room 301", rating: 4.9, available: true },
-    { id: "doc-sneha-rao", name: "Dr. Sneha Rao", specialty: "Ophthalmologist", experience: "9 years", chamber: "Vision Center 304", rating: 4.8, available: true },
+    { id: "doc-sanjay-rao", name: "Dr. Sanjay Rao", specialty: "Pulmonologist", experience: "11 yrs", chamber: "Chest Clinic 110", rating: 4.7, available: true, fee: "Free (Govt OPD)" },
   ],
 };
 
-const SYMPTOMS_SPECIALTY_MAP: Array<{ keywords: string[]; specialty: string; adviceEn: string; adviceHi: string }> = [
-  {
-    keywords: ["chest pain", "heart", "cardio", "breathless", "palpitation", "सीने में दर्द", "दिल", "छाती", "घबराहट"],
-    specialty: "Cardiologist",
-    adviceEn: "We recommend an urgent in-person cardiac evaluation with a 12-lead ECG and Troponin test. Avoid heavy physical exertion.",
-    adviceHi: "हम 12-लीड ईसीजी जांच के साथ तत्काल हृदय रोग विशेषज्ञ से परामर्श की सलाह देते हैं। भारी शारीरिक श्रम से बचें।",
-  },
-  {
-    keywords: ["knee", "joint", "bone", "fracture", "back pain", "spine", "arthritis", "हड्डी", "जोड़", "कमर दर्द", "घुटना"],
-    specialty: "Orthopedic Surgeon",
-    adviceEn: "Recommended for orthopedic and musculoskeletal assessment. Consider an X-Ray or MRI if pain is aggravated by weight bearing.",
-    adviceHi: "हड्डी व जोड़ों की जांच कराने की सलाह दी जाती है। वजन डालने पर दर्द बढ़ने की स्थिति में एक्स-रे कराएं।",
-  },
-  {
-    keywords: ["fever", "cold", "cough", "flu", "weakness", "body ache", "chills", "बुखार", "जुकाम", "खांसी", "कमजोरी", "बदन दर्द"],
-    specialty: "General Physician",
-    adviceEn: "General medical consultation advised. Stay hydrated, monitor oral temperature twice daily, and avoid unprescribed antibiotics.",
-    adviceHi: "सामान्य चिकित्सक से परामर्श लें। पर्याप्त पानी पिएं, दिन में दो बार तापमान मापें और बिना डॉक्टर की सलाह के दवा न लें।",
-  },
-  {
-    keywords: ["headache", "migraine", "dizziness", "nerve", "stroke", "seizure", "सिरदर्द", "माइग्रेन", "चक्कर", "नसों"],
-    specialty: "Neurologist",
-    adviceEn: "Neurological consultation advised. Track headache triggers and monitor blood pressure regularly.",
-    adviceHi: "न्यूरोलॉजिस्ट से परामर्श की सलाह दी जाती है। नियमित रूप से ब्लड प्रेशर की जांच करते रहें।",
-  },
-  {
-    keywords: ["stomach", "acidity", "vomit", "digest", "gastric", "diarrhea", "constipation", "पेट दर्द", "एसिडिटी", "उल्टी", "दस्त"],
-    specialty: "Gastroenterologist",
-    adviceEn: "Gastroenterology review recommended. Maintain a light bland diet, avoid spicy food, and stay hydrated with ORS.",
-    adviceHi: "गैस्ट्रोएंटेरोलॉजिस्ट से परामर्श लें। हल्का सुपाच्य भोजन लें, मसालेदार खाने से बचें और ओआरएस का सेवन करें।",
-  },
-  {
-    keywords: ["skin", "rash", "itch", "acne", "pimples", "allergy", "त्वचा", "खुजली", "एलर्जी", "चकत्ते"],
-    specialty: "Dermatologist",
-    adviceEn: "Dermatological evaluation advised. Avoid scrubbing the affected area and keep skin moisturized with gentle hypoallergenic lotion.",
-    adviceHi: "त्वचा विशेषज्ञ से परामर्श लें। प्रभावित त्वचा को रगड़ने से बचें और हल्के मॉइस्चराइज़र का उपयोग करें।",
-  },
-  {
-    keywords: ["pregnancy", "pregnant", "period", "maternity", "women", "गर्भवती", "महिला रोग", "मासिक धर्म"],
-    specialty: "Gynecologist",
-    adviceEn: "Obstetrics & Gynecology consultation recommended. Bring past ultrasound scans and prenatal prescription history.",
-    adviceHi: "स्त्री एवं प्रसूति रोग विशेषज्ञ से परामर्श लें। पूर्व के अल्ट्रासाउंड स्कैन व पर्चे साथ लाएं।",
-  },
-  {
-    keywords: ["child", "baby", "infant", "kid", "vaccine", "बच्चा", "शिशु", "टीकाकरण"],
-    specialty: "Pediatrician",
-    adviceEn: "Pediatric consultation recommended for comprehensive child growth and vaccination assessment.",
-    adviceHi: "शिशु रोग विशेषज्ञ से परामर्श लें और बच्चे का टीकाकरण कार्ड साथ रखें।",
-  },
-  {
-    keywords: ["lung", "asthma", "wheezing", "breath", "respiratory", "सांस", "दमा", "फेफड़े"],
-    specialty: "Pulmonologist",
-    adviceEn: "Pulmonology evaluation recommended. Carry existing inhalers and avoid exposure to dust or smoke pollutants.",
-    adviceHi: "छाती एवं सांस रोग विशेषज्ञ से परामर्श लें। धूल और धुएं से बचें और अपने इन्हेलर साथ रखें।",
-  },
-  {
-    keywords: ["ear", "nose", "throat", "sinus", "hearing", "tonsil", "कान", "नाक", "गला"],
-    specialty: "ENT Specialist",
-    adviceEn: "ENT specialist examination advised. Avoid probing the ear canal and practice warm saline gargles for throat relief.",
-    adviceHi: "ईएनटी विशेषज्ञ से परामर्श लें। कान में कोई वस्तु न डालें और गले के लिए गुनगुने नमक के पानी से गरारे करें।",
-  },
-  {
-    keywords: ["eye", "vision", "glasses", "cataract", "redness", "आंख", "नेत्र", "दृष्टि"],
-    specialty: "Ophthalmologist",
-    adviceEn: "Ophthalmology examination advised. Avoid rubbing the eyes and reduce digital screen time.",
-    adviceHi: "नेत्र विशेषज्ञ से जांच कराएं। आंखों को मलने से बचें और स्क्रीन का कम से कम उपयोग करें।",
-  },
+const SYMPTOM_CATEGORIES = [
+  { icon: "🌡️", titleEn: "Fever & Infection", titleHi: "बुखार व संक्रमण", val: "High Fever & Body Ache" },
+  { icon: "🫀", titleEn: "Heart & Chest", titleHi: "हृदय व छाती", val: "Chest Pain & Palpitations" },
+  { icon: "🦴", titleEn: "Joints & Spine", titleHi: "जोड़ व हड्डी", val: "Knee & Joint Pain" },
+  { icon: "🧠", titleEn: "Headache & Neuro", titleHi: "सिरदर्द व नसों", val: "Severe Migraine & Dizziness" },
+  { icon: "🫁", titleEn: "Cough & Breathing", titleHi: "खांसी व सांस", val: "Persistent Cough & Breathlessness" },
+  { icon: "🤰", titleEn: "Maternity & Women", titleHi: "गर्भावस्था व महिला", val: "Prenatal & Maternity Care" },
+  { icon: "👶", titleEn: "Child Wellness", titleHi: "शिशु रोग", val: "Pediatric Health Checkup" },
+  { icon: "🩺", titleEn: "General Checkup", titleHi: "सामान्य जांच", val: "Routine Health Checkup" },
 ];
 
-const HOSPITALS_CATALOG = [
-  { id: "hosp-aiims-delhi", name: "AIIMS New Delhi", synonyms: ["aiims", "ansari nagar", "एम्स", "aiims delhi"] },
-  { id: "hosp-safdarjung-delhi", name: "Safdarjung Hospital, New Delhi", synonyms: ["safdarjung", "vmmc", "सफदरजंग"] },
-  { id: "hosp-ggh-delhi", name: "Government General Hospital — Delhi", synonyms: ["ggh", "general hospital", "गवर्नमेंट जनरल", "civil lines"] },
-  { id: "hosp-lnjp-delhi", name: "Lok Nayak Hospital (LNJP)", synonyms: ["lnjp", "lok nayak", "लोक नायक", "delhi gate"] },
-  { id: "hosp-rml-delhi", name: "Dr. Ram Manohar Lohia Hospital", synonyms: ["rml", "ram manohar lohia", "आरएमएल", "connaught place"] },
-  { id: "hosp-gtb-delhi", name: "Guru Teg Bahadur Hospital (GTB)", synonyms: ["gtb", "dilshad garden", "shahdara", "जीटीबी"] },
-  { id: "hosp-gbpant-delhi", name: "Govind Ballabh Pant Hospital (G.B. Pant)", synonyms: ["gb pant", "g.b. pant", "pant hospital", "जीबी पंत"] },
-  { id: "hosp-ddu-delhi", name: "Deen Dayal Upadhyay Hospital (DDU)", synonyms: ["ddu", "deen dayal", "hari nagar", "दीन दयाल"] },
-  { id: "hosp-igh-dwarka", name: "Indira Gandhi Hospital Dwarka", synonyms: ["dwarka", "indira gandhi dwarka", "igh", "द्वारका"] },
-  { id: "hosp-rtrm-najafgarh", name: "RTRM Hospital Najafgarh", synonyms: ["najafgarh", "rtrm", "jaffarpur", "नजफगढ़"] },
-  { id: "hosp-district-noida", name: "District Combined Hospital Noida", synonyms: ["noida", "sector 39 noida", "district noida", "नोएडा"] },
-  { id: "hosp-fortis-noida", name: "Fortis Hospital Noida", synonyms: ["fortis noida", "sector 62", "फोर्टिस नोएडा"] },
-  { id: "hosp-jaypee-noida", name: "Jaypee Hospital", synonyms: ["jaypee", "sector 128", "जेपी"] },
-  { id: "hosp-gims-grnoida", name: "GIMS Greater Noida", synonyms: ["gims", "greater noida", "knowledge park", "जिम्स ग्रेटर नोएडा"] },
-  { id: "hosp-sharda-grnoida", name: "Sharda Hospital", synonyms: ["sharda", "knowledge park 3", "शारदा"] },
-  { id: "hosp-mmg-ghaziabad", name: "MMG District Hospital Ghaziabad", synonyms: ["ghaziabad", "mmg", "sanjay nagar", "गाजियाबाद"] },
-  { id: "hosp-max-vaishali", name: "Max Super Speciality Hospital Vaishali", synonyms: ["max", "max vaishali", "vaishali", "मैक्स वैशाली"] },
-  { id: "hosp-yashoda-kaushambi", name: "Yashoda Super Speciality Hospital Kaushambi", synonyms: ["yashoda", "kaushambi", "यशोदा कौशाम्बी"] },
-  { id: "hosp-medanta-gurugram", name: "Medanta — The Medicity", synonyms: ["medanta", "gurugram", "gurgaon", "sector 38 gurgaon", "मेदांता"] },
-  { id: "hosp-fortis-gurugram", name: "Fortis Memorial Research Institute", synonyms: ["fortis gurgaon", "fortis gurugram", "fmri", "फोर्टिस गुड़गांव"] },
-  { id: "hosp-civil-gurugram", name: "Civil Hospital Gurugram", synonyms: ["civil hospital gurgaon", "civil hospital gurugram", "सिविल हॉस्पिटल गुड़गांव"] },
-  { id: "hosp-amrita-faridabad", name: "Amrita Hospital Faridabad", synonyms: ["amrita", "faridabad", "sector 88 faridabad", "अमृता फरीदाबाद"] },
-  { id: "hosp-bk-faridabad", name: "B.K. Civil Hospital Faridabad", synonyms: ["bk hospital", "b.k. faridabad", "nit faridabad", "बीके फरीदाबाद"] },
-];
-
-const POPULAR_HOSPITALS = [
-  "AIIMS New Delhi",
-  "Safdarjung Hospital, New Delhi",
-  "Government General Hospital — Delhi",
-  "Lok Nayak Hospital (LNJP)",
-  "Indira Gandhi Hospital Dwarka",
-  "Fortis Hospital Noida",
-  "Medanta — The Medicity",
-  "Amrita Hospital Faridabad",
-];
-
-const COMMON_SYMPTOMS_EN = [
-  "High Fever & Chills",
-  "Severe Chest Pain & Palpitations",
-  "Joint Pain & Knee Stiffness",
-  "Severe Headache & Dizziness",
-  "Stomach Pain & Acidity",
-  "Persistent Cough & Breathlessness",
-  "Skin Rash & Allergic Itching",
-  "Eye Irritation & Blurry Vision",
-];
-
-const COMMON_SYMPTOMS_HI = [
-  "तेज बुखार व कंपकंपी",
-  "सीने में तेज दर्द व घबराहट",
-  "जोड़ों का दर्द व घुटने की अकड़न",
-  "तेज सिरदर्द व चक्कर",
-  "पेट दर्द व गंभीर एसिडिटी",
-  "लगातार खांसी व सांस फूलना",
-  "त्वचा पर चकत्ते व खुजली",
-  "आंखों में जलन व धुंधलापन",
-];
-
-const DURATION_OPTIONS_EN = [
-  "Since today (< 24 hours)",
-  "2 to 3 days",
-  "About 1 week",
-  "2 to 4 weeks",
-  "More than 1 month (Chronic)",
-];
-
-const DURATION_OPTIONS_HI = [
-  "आज से ही (< 24 घंटे)",
-  "2 से 3 दिन",
-  "लगभग 1 सप्ताह",
-  "2 से 4 सप्ताह",
-  "1 महीने से अधिक (पुरानी)",
-];
-
-const TIME_SLOTS = [
-  "09:00 AM - 10:00 AM",
-  "10:30 AM - 11:30 AM",
-  "12:00 PM - 01:00 PM",
-  "02:30 PM - 03:30 PM",
-  "04:00 PM - 05:00 PM",
-];
-
-// Helper Functions
-function parseNaturalDate(input: string): { label: string; isoDate: string } | null {
-  const clean = input.toLowerCase().trim();
-  const now = new Date();
-  
-  if (clean.includes("today") || clean.includes("आज")) {
-    return { label: "Today", isoDate: now.toISOString().slice(0, 10) };
-  }
-  if (clean.includes("day after") || clean.includes("परसों")) {
-    const target = new Date(now);
-    target.setDate(target.getDate() + 2);
-    return { label: "Day After Tomorrow", isoDate: target.toISOString().slice(0, 10) };
-  }
-  if (clean.includes("tomorrow") || clean.includes("कल")) {
-    const target = new Date(now);
-    target.setDate(target.getDate() + 1);
-    return { label: "Tomorrow", isoDate: target.toISOString().slice(0, 10) };
-  }
-
-  const daysOfWeek = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const hindiDays = ["रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"];
-
-  for (let i = 0; i < 7; i++) {
-    if (clean.includes(daysOfWeek[i]) || clean.includes(hindiDays[i])) {
-      const currentDay = now.getDay();
-      let diff = i - currentDay;
-      if (diff <= 0) diff += 7;
-      const target = new Date(now);
-      target.setDate(target.getDate() + diff);
-      const dayName = daysOfWeek[i].charAt(0).toUpperCase() + daysOfWeek[i].slice(1);
-      return { 
-        label: `${dayName} (${target.toLocaleDateString("en-IN", { month: "short", day: "numeric" })})`, 
-        isoDate: target.toISOString().slice(0, 10) 
-      };
-    }
-  }
-
-  const parsed = new Date(input);
-  if (!Number.isNaN(parsed.getTime()) && parsed.getTime() >= now.getTime() - 86400000) {
-    return {
-      label: parsed.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }),
-      isoDate: parsed.toISOString().slice(0, 10),
-    };
-  }
-
-  return { label: "Tomorrow", isoDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10) };
-}
-
-function parseNaturalTime(input: string): string | null {
-  const clean = input.toLowerCase().trim();
-  if (clean.includes("09") || clean.includes("9 am") || clean.includes("सुबह 9")) return "09:00 AM - 10:00 AM";
-  if (clean.includes("10:30") || clean.includes("10 am") || clean.includes("सुबह 10")) return "10:30 AM - 11:30 AM";
-  if (clean.includes("12") || clean.includes("noon") || clean.includes("दोपहर 12")) return "12:00 PM - 01:00 PM";
-  if (clean.includes("02") || clean.includes("2 pm") || clean.includes("दोपहर 2")) return "02:30 PM - 03:30 PM";
-  if (clean.includes("04") || clean.includes("4 pm") || clean.includes("शाम 4")) return "04:00 PM - 05:00 PM";
-
-  for (const slot of TIME_SLOTS) {
-    if (clean.includes(slot.toLowerCase())) return slot;
-  }
-  return "10:30 AM - 11:30 AM";
-}
-
-function inferSpecialtyAndAdvice(symptoms: string, isHindi: boolean): { specialty: string; advice: string } {
-  const clean = symptoms.toLowerCase();
-  for (const map of SYMPTOMS_SPECIALTY_MAP) {
-    for (const kw of map.keywords) {
-      if (clean.includes(kw.toLowerCase())) {
-        return {
-          specialty: map.specialty,
-          advice: isHindi ? map.adviceHi : map.adviceEn,
-        };
-      }
-    }
-  }
-  return {
-    specialty: "General Physician",
-    advice: isHindi 
-      ? "हम प्राथमिक जांच व परामर्श के लिए जनरल फिजिशियन से मिलने की सलाह देते हैं।" 
-      : "We recommend consulting a General Physician for comprehensive primary evaluation.",
-  };
-}
-
-function matchHospital(input: string): { id: string; name: string } | null {
-  const clean = input.toLowerCase().trim();
-  for (const h of HOSPITALS_CATALOG) {
-    if (clean.includes(h.name.toLowerCase())) return { id: h.id, name: h.name };
-    for (const syn of h.synonyms) {
-      if (clean.includes(syn)) return { id: h.id, name: h.name };
-    }
-  }
-  return null;
-}
-
-function extractPhone(input: string): string | null {
-  const digits = input.replace(/\D/g, "");
-  if (digits.length === 10 && /^[6-9]\d{9}$/.test(digits)) return digits;
-  const match = input.match(/\b([6-9]\d{9})\b/);
-  if (match) return match[1];
-  if (digits.length >= 10) {
-    const last10 = digits.slice(-10);
-    if (/^[6-9]\d{9}$/.test(last10)) return last10;
-  }
-  return null;
-}
-
-function extractName(input: string): string | null {
-  let clean = input.trim();
-  clean = clean.replace(/^(my name is|i am|i'm|this is|मेरा नाम|नाम है)\s+/i, "").trim();
-  clean = clean.replace(/[,.!?].*$/, "").trim();
-  if (clean.length >= 2 && /^[a-zA-Z\u0900-\u097F\s.'-]+$/.test(clean)) {
-    if (!["yes", "no", "hi", "hello", "test", "ok", "sure", "हाँ", "नहीं"].includes(clean.toLowerCase())) {
-      return clean;
-    }
-  }
-  return null;
-}
+const TIME_MATRIX = {
+  morning: ["09:00 AM", "10:00 AM", "11:15 AM"],
+  afternoon: ["01:30 PM", "02:45 PM", "03:30 PM"],
+  evening: ["04:30 PM", "05:15 PM"],
+};
 
 interface ISpeechRecognitionInstance {
   continuous: boolean;
@@ -464,6 +204,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     fullName: currentUser?.name || "",
     phone: currentUser?.phone || "",
     symptoms: "Fever & Body Ache",
+    severity: "Moderate",
     duration: "2 to 3 days",
     hospital: "Government General Hospital — Delhi",
     hospitalId: "hosp-ggh-delhi",
@@ -474,7 +215,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     doctorExperience: "8 years",
     doctorChamber: "OPD Room 102",
     date: "Tomorrow",
-    time: "10:30 AM - 11:30 AM",
+    time: "10:30 AM",
     doctorAvailabilityStatus: "AVAILABLE",
   });
 
@@ -495,13 +236,13 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     if (!isSpeechEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#🤖🩺👤👨‍⚕️🏥📅🎉🟢💡]/g, ""));
-      utterance.rate = 1.0;
+      const utterance = new SpeechSynthesisUtterance(text.replace(/[*_#🤖🩺👤👨‍⚕️🏥📅🎉🟢💡⚡]/g, ""));
+      utterance.rate = 1.05;
       utterance.pitch = 1.0;
       utterance.lang = isHindi ? "hi-IN" : "en-IN";
       window.speechSynthesis.speak(utterance);
     } catch (e) {
-      console.warn("TTS speech synthesis error:", e);
+      console.warn("TTS error:", e);
     }
   }, [isSpeechEnabled, isHindi]);
 
@@ -513,7 +254,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     isSummary?: boolean, 
     isError?: boolean,
     isAvailabilityCard?: boolean,
-    isSuggestionCard?: boolean
+    isSuggestionCard?: boolean,
+    widgetType?: string | null
   ) => {
     setIsTyping(true);
     setTimeout(() => {
@@ -528,11 +270,12 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         isError,
         isAvailabilityCard,
         isSuggestionCard,
+        widgetType,
       };
       setMessages((prev) => [...prev, msg]);
       setIsTyping(false);
       speakText(text);
-    }, 300);
+    }, 180);
   }, [speakText]);
 
   const addUserMessage = (text: string) => {
@@ -565,15 +308,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           setIsListening(false);
         };
 
-        recognition.onerror = (event: { error: string }) => {
-          console.warn("Speech recognition error:", event.error);
-          setIsListening(false);
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
         recognitionRef.current = recognition;
       }
     }
@@ -593,23 +329,23 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         recognitionRef.current.lang = isHindi ? "hi-IN" : "en-IN";
         recognitionRef.current.start();
         setIsListening(true);
-        toast.info(isHindi ? "सुन रहे हैं... बोलें" : "Listening... speak clearly");
+        toast.info(isHindi ? "सुन रहे हैं... बोलें" : "Listening with Groq AI speed...");
       } catch (err) {
-        console.warn("Could not start recognition:", err);
+        console.warn("Could not start voice recognition:", err);
       }
     }
   };
 
-  // Start / Reset Conversation Flow (Step 1: Name)
+  // Start Conversation (Step 1: Name)
   const startConversation = useCallback(() => {
     setCurrentStep(ChatStep.NAME);
     const greetingText = isHindi 
-      ? "नमस्ते! मैं आपका Connect to Care AI सहायक हूँ 🤖। मैं 10 आसान चरणों में विशेषज्ञ डॉक्टर अपॉइंटमेंट और ओपीडी टोकन बुक करने में आपकी सहायता करूँगा।"
-      : "Hello! I am your Connect to Care AI Assistant 🤖. I will guide you through 10 quick steps to book your specialist OPD consultation.";
+      ? "नमस्ते! मैं आपका Connect to Care AI सहायक हूँ 🤖 (Groq LPU Powered ⚡)। मैं 10 आसान चरणों में आपके विशेषज्ञ डॉक्टर का अपॉइंटमेंट बुक करूँगा।"
+      : "Hello! I am your Connect to Care AI Assistant 🤖 (Powered by Groq LPU ⚡). I will guide you through 10 fast steps to book your specialist OPD consultation.";
     
     const step1Prompt = isHindi
       ? (currentUser?.name ? `[चरण 1/10: नाम] क्या आपका पूरा नाम "${currentUser.name}" है, या नीचे नाम लिखें:` : `[चरण 1/10: नाम] कृपया मरीज का पूरा नाम बताएं:`)
-      : (currentUser?.name ? `[Step 1/10: Patient Name] Is your full name "${currentUser.name}", or enter patient name below:` : `[Step 1/10: Patient Name] Please enter the patient's full name to begin:`);
+      : (currentUser?.name ? `[Step 1/10: Patient Name] Is your full name "${currentUser.name}", or enter patient name below:` : `[Step 1/10: Patient Name] Please enter the patient's full name to get started:`);
 
     setMessages([
       {
@@ -623,7 +359,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
     setTimeout(() => {
       addBotMessage(step1Prompt, currentUser?.name ? [currentUser.name] : undefined, ChatStep.NAME);
-    }, 350);
+    }, 250);
   }, [isHindi, currentUser?.name, addBotMessage, speakText]);
 
   useEffect(() => {
@@ -636,288 +372,242 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
   }, [messages, isTyping]);
 
   // ============================================================
-  // Step Transition Engine (10-Step Sequential Flow)
+  // Groq AI Hybrid Processor (AI + 10-Step Deterministic Flow)
   // ============================================================
-  const handleUserInput = (input: string) => {
+  const handleUserInput = async (input: string) => {
     if (!input.trim()) return;
     const cleanInput = input.trim();
     addUserMessage(cleanInput);
     setInputText("");
+    setIsTyping(true);
 
     const currentBooking = { ...booking };
 
-    switch (currentStep) {
-      // ──────────────────────────────────────────
-      // Step 1: NAME
-      // ──────────────────────────────────────────
-      case ChatStep.NAME: {
-        const name = extractName(cleanInput);
-        if (!name) {
-          addBotMessage(
-            isHindi 
-              ? "⚠️ कृपया एक मान्य नाम दर्ज करें (उदा. राहुल शर्मा):" 
-              : "⚠️ Please enter a valid full name with at least 2 letters (e.g., Rahul Sharma):",
-            currentUser?.name ? [currentUser.name] : undefined,
-            ChatStep.NAME,
-            false,
-            true
-          );
-          return;
+    try {
+      // Call Next.js Groq AI route
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: cleanInput,
+          currentStep,
+          language,
+          bookingDetails: currentBooking,
+          conversationHistory: messages.slice(-6),
+        }),
+      });
+
+      if (res.ok) {
+        const aiData = await res.json();
+        
+        // Merge extracted entities
+        if (aiData.extracted) {
+          if (aiData.extracted.fullName) currentBooking.fullName = aiData.extracted.fullName;
+          if (aiData.extracted.phone) currentBooking.phone = aiData.extracted.phone;
+          if (aiData.extracted.symptoms) currentBooking.symptoms = aiData.extracted.symptoms;
+          if (aiData.extracted.duration) currentBooking.duration = aiData.extracted.duration;
+          if (aiData.extracted.hospital) currentBooking.hospital = aiData.extracted.hospital;
+          if (aiData.extracted.doctorSpecialty) currentBooking.doctorSpecialty = aiData.extracted.doctorSpecialty;
+          if (aiData.extracted.suggestion) currentBooking.suggestion = aiData.extracted.suggestion;
+          if (aiData.extracted.doctorName) currentBooking.doctorName = aiData.extracted.doctorName;
+          if (aiData.extracted.date) currentBooking.date = aiData.extracted.date;
+          if (aiData.extracted.time) currentBooking.time = aiData.extracted.time;
         }
-        currentBooking.fullName = name;
+
+        // Advance Step
+        const nextStepEnum = (aiData.nextStep as ChatStep) || getNextFallbackStep(currentStep);
+        setCurrentStep(nextStepEnum);
         setBooking(currentBooking);
 
+        addBotMessage(
+          aiData.reply,
+          aiData.options,
+          nextStepEnum,
+          nextStepEnum === ChatStep.CONFIRM_APPOINTMENT,
+          false,
+          nextStepEnum === ChatStep.DOCTOR_AVAILABILITY,
+          nextStepEnum === ChatStep.SUGGESTION,
+          aiData.widgetType
+        );
+        return;
+      }
+    } catch (aiErr) {
+      console.warn("Groq AI stream fallback to local engine:", aiErr);
+    }
+
+    // Fallback deterministic 10-step state machine
+    runLocalStepMachine(cleanInput, currentBooking);
+  };
+
+  const getNextFallbackStep = (step: ChatStep): ChatStep => {
+    switch (step) {
+      case ChatStep.NAME: return ChatStep.PHONE;
+      case ChatStep.PHONE: return ChatStep.SYMPTOMS;
+      case ChatStep.SYMPTOMS: return ChatStep.DURATION;
+      case ChatStep.DURATION: return ChatStep.HOSPITAL;
+      case ChatStep.HOSPITAL: return ChatStep.SUGGESTION;
+      case ChatStep.SUGGESTION: return ChatStep.DOCTOR_SELECTION;
+      case ChatStep.DOCTOR_SELECTION: return ChatStep.TIMING;
+      case ChatStep.TIMING: return ChatStep.DOCTOR_AVAILABILITY;
+      case ChatStep.DOCTOR_AVAILABILITY: return ChatStep.CONFIRM_APPOINTMENT;
+      case ChatStep.CONFIRM_APPOINTMENT: return ChatStep.BOOKED;
+      default: return ChatStep.NAME;
+    }
+  };
+
+  const runLocalStepMachine = (cleanInput: string, currentBooking: BookingDetails) => {
+    switch (currentStep) {
+      case ChatStep.NAME: {
+        currentBooking.fullName = cleanInput;
+        setBooking(currentBooking);
         setCurrentStep(ChatStep.PHONE);
         addBotMessage(
-          isHindi 
-            ? `[चरण 2/10: फोन] आपसे मिलकर खुशी हुई, ${name}! कृपया पुष्टि और एसएमएस के लिए अपना 10 अंकों का मोबाइल नंबर दर्ज करें:` 
-            : `[Step 2/10: Phone] Nice to meet you, ${name}! Please enter your 10-digit mobile phone number:`,
+          isHindi ? `[चरण 2/10: फोन] नमस्ते ${cleanInput}! कृपया 10 अंकों का मोबाइल नंबर दर्ज करें:` : `[Step 2/10: Phone] Nice to meet you, ${cleanInput}! Please enter your 10-digit mobile number:`,
           currentUser?.phone ? [currentUser.phone] : undefined,
           ChatStep.PHONE
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 2: PHONE
-      // ──────────────────────────────────────────
       case ChatStep.PHONE: {
-        const phone = extractPhone(cleanInput);
-        if (!phone) {
-          addBotMessage(
-            isHindi 
-              ? "⚠️ कृपया 10 अंकों का मान्य भारतीय मोबाइल नंबर दर्ज करें (उदा. 9876543210):" 
-              : "⚠️ Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9 (e.g., 9876543210):",
-            currentUser?.phone ? [currentUser.phone] : undefined,
-            ChatStep.PHONE,
-            false,
-            true
-          );
-          return;
-        }
-        currentBooking.phone = phone;
+        const digits = cleanInput.replace(/\D/g, "");
+        currentBooking.phone = digits.length >= 10 ? digits.slice(-10) : cleanInput;
         setBooking(currentBooking);
-
         setCurrentStep(ChatStep.SYMPTOMS);
         addBotMessage(
-          isHindi 
-            ? `[चरण 3/10: लक्षण] फोन नंबर सत्यापित हुआ (${phone})। मरीज को क्या लक्षण या परेशानी हो रही है? (नीचे चुनें या लिखें)` 
-            : `[Step 3/10: Symptoms] Mobile verified (${phone}). What health symptoms or discomfort are you experiencing?`,
-          isHindi ? COMMON_SYMPTOMS_HI : COMMON_SYMPTOMS_EN,
-          ChatStep.SYMPTOMS
+          isHindi ? `[चरण 3/10: लक्षण] क्या लक्षण या परेशानी हो रही है? (नीचे कार्ड चुनें या लिखें)` : `[Step 3/10: Symptoms] What health symptoms or discomfort are you experiencing?`,
+          isHindi ? ["तेज बुखार व कंपकंपी", "सीने में दर्द व घबराहट", "जोड़ों का दर्द", "लगातार खांसी"] : ["High Fever & Body Ache", "Chest Pain & Palpitations", "Joint & Knee Pain", "Persistent Cough"],
+          ChatStep.SYMPTOMS,
+          false,
+          false,
+          false,
+          false,
+          "symptom_selector"
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 3: SYMPTOMS
-      // ──────────────────────────────────────────
       case ChatStep.SYMPTOMS: {
-        if (cleanInput.length < 2) {
-          addBotMessage(
-            isHindi ? "कृपया लक्षणों का संक्षिप्त विवरण दें:" : "Please describe your symptoms briefly:",
-            isHindi ? COMMON_SYMPTOMS_HI : COMMON_SYMPTOMS_EN,
-            ChatStep.SYMPTOMS,
-            false,
-            true
-          );
-          return;
-        }
         currentBooking.symptoms = cleanInput;
         setBooking(currentBooking);
-
         setCurrentStep(ChatStep.DURATION);
         addBotMessage(
-          isHindi 
-            ? `[चरण 4/10: अवधि] लक्षण: "${cleanInput}"। ये लक्षण आपको कब से हैं (अवधि)?` 
-            : `[Step 4/10: Duration] Symptoms recorded: "${cleanInput}". How long have you had these symptoms?`,
-          isHindi ? DURATION_OPTIONS_HI : DURATION_OPTIONS_EN,
+          isHindi ? `[चरण 4/10: अवधि] लक्षण "${cleanInput}" कितने समय से हैं?` : `[Step 4/10: Duration] How long have you had these symptoms?`,
+          isHindi ? ["आज से ही (< 24 घंटे)", "2 से 3 दिन", "1 सप्ताह", "1 महीने से अधिक"] : ["Since today (< 24 hrs)", "2 to 3 days", "About 1 week", "More than 1 month"],
           ChatStep.DURATION
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 4: DURATION
-      // ──────────────────────────────────────────
       case ChatStep.DURATION: {
         currentBooking.duration = cleanInput;
         setBooking(currentBooking);
-
         setCurrentStep(ChatStep.HOSPITAL);
         addBotMessage(
-          isHindi 
-            ? `[चरण 5/10: अस्पताल] अवधि: "${cleanInput}"। आप दिल्ली-एनसीआर में किस अस्पताल में दिखाना चाहते हैं?` 
-            : `[Step 5/10: Hospital] Duration noted: "${cleanInput}". Which hospital across Delhi-NCR would you like to visit?`,
-          POPULAR_HOSPITALS,
-          ChatStep.HOSPITAL
+          isHindi ? `[चरण 5/10: अस्पताल] दिल्ली-एनसीआर में अपना पसंदीदा अस्पताल चुनें:` : `[Step 5/10: Hospital] Which hospital across Delhi-NCR would you like to visit?`,
+          ["AIIMS New Delhi", "Safdarjung Hospital", "Govt. General Hospital", "Fortis Hospital Noida", "Medanta Gurugram", "Amrita Faridabad"],
+          ChatStep.HOSPITAL,
+          false,
+          false,
+          false,
+          false,
+          "hospital_cards"
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 5: HOSPITAL
-      // ──────────────────────────────────────────
       case ChatStep.HOSPITAL: {
-        const hosp = matchHospital(cleanInput);
-        const hospitalName = hosp ? hosp.name : cleanInput;
-        const hospitalId = hosp ? hosp.id : "hosp-ggh-delhi";
-
-        currentBooking.hospital = hospitalName;
-        currentBooking.hospitalId = hospitalId;
-
-        // Run AI Triage & Suggestion
-        const { specialty, advice } = inferSpecialtyAndAdvice(currentBooking.symptoms, isHindi);
-        currentBooking.doctorSpecialty = specialty;
-        currentBooking.suggestion = advice;
+        currentBooking.hospital = cleanInput;
+        // Clinical rule inference
+        const lower = currentBooking.symptoms.toLowerCase();
+        if (lower.includes("chest") || lower.includes("heart") || lower.includes("दर्द") || lower.includes("दिल")) {
+          currentBooking.doctorSpecialty = "Cardiologist";
+          currentBooking.suggestion = isHindi ? "12-लीड ईसीजी के साथ तत्काल हृदय रोग विशेषज्ञ से जांच की सलाह दी जाती है।" : "Immediate in-person cardiac evaluation recommended.";
+        } else if (lower.includes("joint") || lower.includes("knee") || lower.includes("हड्डी")) {
+          currentBooking.doctorSpecialty = "Orthopedic Surgeon";
+          currentBooking.suggestion = isHindi ? "हड्डी व जोड़ों के विशेषज्ञ से परामर्श लें।" : "Orthopedic joint and mobility consultation recommended.";
+        } else {
+          currentBooking.doctorSpecialty = "General Physician";
+          currentBooking.suggestion = isHindi ? "व्यापक प्राथमिक स्वास्थ्य जांच की सलाह दी जाती है।" : "Comprehensive primary care clinical consultation advised.";
+        }
         setBooking(currentBooking);
-
         setCurrentStep(ChatStep.SUGGESTION);
         addBotMessage(
-          isHindi 
-            ? `[चरण 6/10: एआई क्लिनिकल सुझाव] आपके लक्षणों ("${currentBooking.symptoms}") और अवधि ("${currentBooking.duration}") के आधार पर, हमारा क्लिनिकल सुझाव है:` 
-            : `[Step 6/10: AI Clinical Suggestion] Based on your reported symptoms ("${currentBooking.symptoms}") and duration ("${currentBooking.duration}"), here is our AI clinical assessment:`,
-          [isHindi ? "डॉक्टर चयन के लिए आगे बढ़ें" : "Proceed with Doctor Selection", isHindi ? "अस्पताल बदलें" : "Change Hospital"],
+          isHindi ? `[चरण 6/10: एआई सुझाव] हमारे एआई क्लिनिकल ट्रायज के आधार पर:` : `[Step 6/10: AI Suggestion] Based on our AI clinical triage:`,
+          [isHindi ? "डॉक्टर चुनें" : "Proceed with Doctor Selection", isHindi ? "अस्पताल बदलें" : "Change Hospital"],
           ChatStep.SUGGESTION,
           false,
           false,
           false,
-          true // Show Suggestion Card
+          true
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 6: SUGGESTION -> DOCTOR SELECTION
-      // ──────────────────────────────────────────
       case ChatStep.SUGGESTION: {
-        if (cleanInput.includes("Change") || cleanInput.includes("बदलें")) {
-          setCurrentStep(ChatStep.HOSPITAL);
-          addBotMessage(
-            isHindi ? "कृपया अपना पसंदीदा अस्पताल पुनः चुनें:" : "Please pick your hospital again:",
-            POPULAR_HOSPITALS,
-            ChatStep.HOSPITAL
-          );
-          return;
-        }
-
         setCurrentStep(ChatStep.DOCTOR_SELECTION);
-        const doctorsList = SPECIALTY_DOCTORS[currentBooking.doctorSpecialty] || SPECIALTY_DOCTORS["General Physician"];
-        const docOptions = doctorsList.map((d) => `${d.name} (${d.specialty} • ${d.experience})`);
-
+        const docs = SPECIALTY_DOCTORS[currentBooking.doctorSpecialty] || SPECIALTY_DOCTORS["General Physician"];
         addBotMessage(
-          isHindi 
-            ? `[चरण 7/10: डॉक्टर चयन] ${currentBooking.hospital} में उपलब्ध विशेषज्ञ डॉक्टर। कृपया अपना डॉक्टर चुनें:` 
-            : `[Step 7/10: Doctor Selection] Available specialists at ${currentBooking.hospital}. Please select your doctor:`,
-          docOptions,
-          ChatStep.DOCTOR_SELECTION
+          isHindi ? `[चरण 7/10: डॉक्टर चयन] ${currentBooking.hospital} में उपलब्ध विशेषज्ञ:` : `[Step 7/10: Doctor Selection] Available specialists at ${currentBooking.hospital}:`,
+          docs.map((d) => `${d.name} (${d.specialty})`),
+          ChatStep.DOCTOR_SELECTION,
+          false,
+          false,
+          false,
+          false,
+          "doctor_cards"
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 7: DOCTOR SELECTION
-      // ──────────────────────────────────────────
       case ChatStep.DOCTOR_SELECTION: {
-        const doctorsList = SPECIALTY_DOCTORS[currentBooking.doctorSpecialty] || SPECIALTY_DOCTORS["General Physician"];
-        const matchedDoc = doctorsList.find((d) => cleanInput.toLowerCase().includes(d.name.toLowerCase())) || doctorsList[0];
-
-        currentBooking.doctorName = matchedDoc.name;
-        currentBooking.doctorId = matchedDoc.id;
-        currentBooking.doctorExperience = matchedDoc.experience;
-        currentBooking.doctorChamber = matchedDoc.chamber;
+        const docs = SPECIALTY_DOCTORS[currentBooking.doctorSpecialty] || SPECIALTY_DOCTORS["General Physician"];
+        const matched = docs.find((d) => cleanInput.toLowerCase().includes(d.name.toLowerCase())) || docs[0];
+        currentBooking.doctorName = matched.name;
+        currentBooking.doctorId = matched.id;
+        currentBooking.doctorChamber = matched.chamber;
         setBooking(currentBooking);
-
         setCurrentStep(ChatStep.TIMING);
         addBotMessage(
-          isHindi 
-            ? `[चरण 8/10: समय व स्लॉट] डॉक्टर: ${matchedDoc.name} (${matchedDoc.specialty})। परामर्श के लिए तारीख और समय स्लॉट चुनें:` 
-            : `[Step 8/10: Timing] Selected: ${matchedDoc.name} (${matchedDoc.specialty}). Please pick your appointment date and time slot:`,
-          isHindi 
-            ? ["कल (Tomorrow) 10:30 AM", "कल (Tomorrow) 02:30 PM", "आज (Today) 04:00 PM", "परसों (Day After) 11:30 AM", "सोमवार 09:00 AM"] 
-            : ["Tomorrow at 10:30 AM", "Tomorrow at 02:30 PM", "Today at 04:00 PM", "Day After at 11:30 AM", "Monday at 09:00 AM"],
-          ChatStep.TIMING
+          isHindi ? `[चरण 8/10: समय व स्लॉट] ${matched.name} के लिए समय स्लॉट चुनें:` : `[Step 8/10: Timing] Select time slot for ${matched.name}:`,
+          ["Tomorrow 10:00 AM", "Tomorrow 02:45 PM", "Today 04:30 PM", "Day After 11:15 AM"],
+          ChatStep.TIMING,
+          false,
+          false,
+          false,
+          false,
+          "time_matrix"
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 8: TIMING -> DOCTOR AVAILABILITY
-      // ──────────────────────────────────────────
       case ChatStep.TIMING: {
-        const dateObj = parseNaturalDate(cleanInput);
-        const timeSlot = parseNaturalTime(cleanInput);
-
-        currentBooking.date = dateObj ? dateObj.label : "Tomorrow";
-        currentBooking.isoDate = dateObj ? dateObj.isoDate : new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-        currentBooking.time = timeSlot || "10:30 AM - 11:30 AM";
-        currentBooking.doctorAvailabilityStatus = "AVAILABLE";
+        currentBooking.time = cleanInput;
+        currentBooking.date = "Tomorrow";
         setBooking(currentBooking);
-
         setCurrentStep(ChatStep.DOCTOR_AVAILABILITY);
         addBotMessage(
-          isHindi 
-            ? `[चरण 9/10: डॉक्टर उपलब्धता] ${currentBooking.doctorName} की लाइव उपलब्धता की पुष्टि हो गई है:` 
-            : `[Step 9/10: Doctor Availability] Live schedule check for ${currentBooking.doctorName} is verified:`,
-          [isHindi ? "अपॉइंटमेंट सारांश देखें व पुष्टि करें" : "Review Summary & Confirm Appointment", isHindi ? "समय बदलें" : "Change Timing"],
+          isHindi ? `[चरण 9/10: डॉक्टर उपलब्धता] लाइव शेड्यूल सत्यापित हो गया है:` : `[Step 9/10: Doctor Availability] Live schedule check verified:`,
+          [isHindi ? "अपॉइंटमेंट की पुष्टि करें" : "Confirm Appointment", isHindi ? "समय बदलें" : "Change Timing"],
           ChatStep.DOCTOR_AVAILABILITY,
           false,
           false,
-          true // Show Availability Card
+          true
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 9: DOCTOR AVAILABILITY -> CONFIRM APPOINTMENT
-      // ──────────────────────────────────────────
       case ChatStep.DOCTOR_AVAILABILITY: {
-        if (cleanInput.includes("Change") || cleanInput.includes("बदलें")) {
-          setCurrentStep(ChatStep.TIMING);
-          addBotMessage(
-            isHindi ? "कृपया दूसरा समय स्लॉट चुनें:" : "Please choose another time slot:",
-            TIME_SLOTS,
-            ChatStep.TIMING
-          );
-          return;
-        }
-
         setCurrentStep(ChatStep.CONFIRM_APPOINTMENT);
         addBotMessage(
-          isHindi 
-            ? `[चरण 10/10: अपॉइंटमेंट पुष्टि] आपका संपूर्ण अपॉइंटमेंट सारांश तैयार है। कृपया विवरण की समीक्षा करें और टोकन बुक करें:` 
-            : `[Step 10/10: Confirm Appointment] Complete appointment summary is ready. Please review the 10 details and confirm booking:`,
+          isHindi ? `[चरण 10/10: अपॉइंटमेंट पुष्टि] कृपया सारांश की समीक्षा करें और पुष्टि करें:` : `[Step 10/10: Confirm Appointment] Please review summary and confirm booking:`,
           [isHindi ? "पुष्टि करें और टोकन बुक करें (Confirm)" : "Confirm & Book OPD Token", isHindi ? "विवरण बदलें" : "Edit Details", isHindi ? "रद्द करें" : "Cancel"],
           ChatStep.CONFIRM_APPOINTMENT,
-          true // Show Summary Card
+          true
         );
         break;
       }
-
-      // ──────────────────────────────────────────
-      // Step 10: CONFIRM APPOINTMENT
-      // ──────────────────────────────────────────
       case ChatStep.CONFIRM_APPOINTMENT: {
         const lower = cleanInput.toLowerCase();
-        if (lower.includes("yes") || lower.includes("confirm") || lower.includes("book") || lower.includes("ok") || lower.includes("हाँ") || lower.includes("पुष्टि")) {
+        if (lower.includes("yes") || lower.includes("confirm") || lower.includes("book") || lower.includes("हाँ") || lower.includes("पुष्टि")) {
           handleConfirmBooking();
-        } else if (lower.includes("edit") || lower.includes("change") || lower.includes("बदलें")) {
-          handleEditBooking();
-        } else if (lower.includes("no") || lower.includes("cancel") || lower.includes("रद्द")) {
-          handleCancelBooking();
         } else {
-          addBotMessage(
-            isHindi 
-              ? "कृपया 'पुष्टि करें और टोकन बुक करें' बटन पर क्लिक करें या विवरण बदलने के लिए 'विवरण बदलें' चुनें।" 
-              : "Please click [Confirm & Book OPD Token] to finalize your booking, or [Edit Details] to make changes.",
-            [isHindi ? "पुष्टि करें और टोकन बुक करें (Confirm)" : "Confirm & Book OPD Token", isHindi ? "विवरण बदलें" : "Edit Details", isHindi ? "रद्द करें" : "Cancel"],
-            ChatStep.CONFIRM_APPOINTMENT,
-            true
-          );
+          handleCancelBooking();
         }
         break;
       }
-
       default:
         break;
     }
@@ -925,9 +615,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
   handleUserInputRef.current = handleUserInput;
 
-  // ============================================================
-  // Final Confirmation Flow (Persisting to PostgreSQL DB / Store)
-  // ============================================================
+  // Final Confirmation
   const handleConfirmBooking = async () => {
     const generatedId = `OPD-2026-${Math.floor(100000 + Math.random() * 900000)}`;
     const finalBooking = { ...booking, appointmentId: generatedId };
@@ -935,27 +623,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     setCurrentStep(ChatStep.BOOKED);
 
     const now = new Date();
-    let apptDate = new Date(now);
-
-    if (finalBooking.isoDate) {
-      apptDate = new Date(`${finalBooking.isoDate}T00:00:00.000Z`);
-    } else if (finalBooking.date.includes("Tomorrow") || finalBooking.date.includes("कल")) {
-      apptDate.setDate(apptDate.getDate() + 1);
-    } else if (finalBooking.date.includes("Day After") || finalBooking.date.includes("परसों")) {
-      apptDate.setDate(apptDate.getDate() + 2);
-    }
-
-    const timeMatch = finalBooking.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (timeMatch) {
-      let h = parseInt(timeMatch[1], 10);
-      const m = parseInt(timeMatch[2], 10);
-      const ampm = timeMatch[3].toUpperCase();
-      if (ampm === "PM" && h < 12) h += 12;
-      if (ampm === "AM" && h === 12) h = 0;
-      apptDate.setHours(h, m, 0, 0);
-    } else {
-      apptDate.setHours(10, 30, 0, 0);
-    }
+    const apptDate = new Date(now.getTime() + 86400000);
 
     try {
       await apiPost("/api/appointments", {
@@ -968,8 +636,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
         dateTime: apptDate.toISOString(),
         status: "REQUESTED",
         visitType: "NEW",
-        reason: `${finalBooking.doctorSpecialty} (Symptoms: ${finalBooking.symptoms}, Duration: ${finalBooking.duration})`,
-        notes: `AI 10-Step Booking. Hospital: ${finalBooking.hospital}. Room: ${finalBooking.doctorChamber}. Suggestion: ${finalBooking.suggestion}. Token: ${generatedId}`,
+        reason: `${finalBooking.doctorSpecialty} (Symptoms: ${finalBooking.symptoms})`,
+        notes: `Groq AI Booking. Hospital: ${finalBooking.hospital}. Room: ${finalBooking.doctorChamber}. Token: ${generatedId}`,
       });
       await refreshAppointments();
       await refreshPatients();
@@ -980,7 +648,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
     addBotMessage(
       isHindi 
         ? `🎉 बधाई ${finalBooking.fullName}! आपका अपॉइंटमेंट सफलतापूर्वक दर्ज हो गया है। आपका ओपीडी टोकन आईडी: ${generatedId}`
-        : `🎉 Congratulations ${finalBooking.fullName}! Your OPD appointment has been confirmed and registered. Token ID: ${generatedId}`,
+        : `🎉 Congratulations ${finalBooking.fullName}! Your OPD appointment is registered. Token ID: ${generatedId}`,
       undefined,
       ChatStep.BOOKED
     );
@@ -991,9 +659,14 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
   const handleEditBooking = () => {
     setCurrentStep(ChatStep.SYMPTOMS);
     addBotMessage(
-      isHindi ? "आइए लक्षणों से विवरण अपडेट करें। आपको क्या परेशानी हो रही है?" : "Let's update your details from symptoms. What symptoms are you experiencing?",
-      isHindi ? COMMON_SYMPTOMS_HI : COMMON_SYMPTOMS_EN,
-      ChatStep.SYMPTOMS
+      isHindi ? "आइए लक्षणों से विवरण अपडेट करें। आपको क्या परेशानी हो रही है?" : "Let's update details from symptoms. What are you experiencing?",
+      isHindi ? ["तेज बुखार व कंपकंपी", "सीने में दर्द", "जोड़ों का दर्द"] : ["High Fever & Body Ache", "Chest Pain & Palpitations", "Joint & Knee Pain"],
+      ChatStep.SYMPTOMS,
+      false,
+      false,
+      false,
+      false,
+      "symptom_selector"
     );
   };
 
@@ -1009,7 +682,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[82vh] bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden font-sans">
+    <div className="flex flex-col h-full max-h-[84vh] bg-white rounded-3xl border border-slate-200/80 shadow-xl overflow-hidden font-sans">
       
       {/* ── Header ── */}
       <div className="bg-[#0f172a] h-16 px-4 sm:px-5 text-white flex items-center justify-between shadow-xs border-b border-slate-800 shrink-0">
@@ -1027,19 +700,24 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           )}
 
           <div className="relative shrink-0">
-            <div className="w-9 h-9 rounded-full bg-teal-500/20 border border-teal-500/40 text-teal-400 flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 text-slate-950 flex items-center justify-center shadow-md font-black">
               <Bot className="w-5 h-5" />
             </div>
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#0f172a] rounded-full" />
           </div>
 
           <div className="min-w-0">
-            <h2 className="font-bold text-sm text-white truncate leading-tight">
-              Connect to Care AI
-            </h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="font-extrabold text-sm text-white truncate leading-tight">
+                Connect to Care AI
+              </h2>
+              <Badge className="bg-amber-400/20 text-amber-300 border-amber-400/40 text-[9px] font-black px-1.5 py-0">
+                <Zap className="w-2.5 h-2.5 mr-0.5 text-amber-400" /> Groq LPU
+              </Badge>
+            </div>
             <div className="flex items-center gap-1.5 text-[11px] text-teal-400 font-medium leading-none mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{isHindi ? "10-चरणीय इंटेलिजेंट ओपीडी बुकिंग" : "10-Step Intelligent OPD Booking"}</span>
+              <span>{isHindi ? "10-चरणीय इंटेलिजेंट ओपीडी बुकिंग" : "10-Step Interactive OPD Assistant"}</span>
             </div>
           </div>
         </div>
@@ -1093,23 +771,23 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
       {/* ── 10-Step Interactive Progress Bar ── */}
       <div className="bg-slate-900/95 border-b border-slate-800 px-4 py-2 text-white flex items-center justify-between text-xs font-bold shrink-0">
         <div className="flex items-center gap-2">
-          <Badge className="bg-teal-600 text-white font-extrabold text-[10px] px-2 py-0.5">
+          <Badge className="bg-gradient-to-r from-teal-500 to-emerald-600 text-slate-950 font-black text-[10px] px-2 py-0.5 shadow-xs">
             {isHindi ? `चरण ${currentStepNumber}/10` : `Step ${currentStepNumber}/10`}
           </Badge>
           <span className="text-teal-300 text-xs font-semibold truncate">
             {isHindi ? STEP_LABELS[currentStep]?.hi : STEP_LABELS[currentStep]?.en}
           </span>
         </div>
-        <div className="w-28 sm:w-40 bg-slate-800 rounded-full h-2 overflow-hidden">
+        <div className="w-28 sm:w-44 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/50">
           <div 
-            className="bg-gradient-to-r from-teal-400 to-emerald-500 h-full transition-all duration-300 rounded-full"
+            className="bg-gradient-to-r from-teal-400 via-emerald-400 to-amber-300 h-full transition-all duration-300 rounded-full"
             style={{ width: `${currentStepProgress}%` }}
           />
         </div>
       </div>
 
       {/* ── Messages Chat Stream ── */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-[#f8fafc]">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-[#f8fafc]">
         {messages.map((msg) => {
           const isBot = msg.sender === "bot";
           return (
@@ -1125,18 +803,187 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
                 </div>
               )}
 
-              <div className="space-y-2.5 max-w-[88%] sm:max-w-[78%]">
+              <div className="space-y-3 max-w-[92%] sm:max-w-[82%]">
                 <div
                   className={`px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-xs ${
                     isBot
                       ? msg.isError
                         ? "bg-amber-50 text-amber-900 border border-amber-200 font-medium"
                         : "bg-white text-slate-800 border border-slate-200/70 rounded-tl-xs font-normal"
-                      : "bg-teal-600 text-white rounded-tr-xs font-medium"
+                      : "bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-tr-xs font-medium shadow-md shadow-teal-600/10"
                   }`}
                 >
                   <p className="whitespace-pre-line">{msg.text}</p>
                 </div>
+
+                {/* ── Interactive Widget: Category & Symptom Selector ── */}
+                {(msg.widgetType === "symptom_selector" || (msg.step === ChatStep.SYMPTOMS && currentStep === ChatStep.SYMPTOMS)) && (
+                  <div className="p-3 bg-white rounded-2xl border border-teal-200 shadow-sm space-y-2.5 animate-in fade-in duration-300">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1.5">
+                        <HeartPulse className="w-3.5 h-3.5 text-teal-600" />
+                        {isHindi ? "त्वरित लक्षण चुनें (टैप करें):" : "Tap Chief Symptom Category:"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {SYMPTOM_CATEGORIES.map((cat, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => handleUserInput(cat.val)}
+                          className="flex flex-col items-center text-center p-2 rounded-xl border border-slate-100 hover:border-teal-400 bg-slate-50/70 hover:bg-teal-50/50 transition-all text-xs group"
+                        >
+                          <span className="text-lg group-hover:scale-110 transition-transform">{cat.icon}</span>
+                          <span className="font-bold text-slate-800 text-[11px] mt-1 line-clamp-1">
+                            {isHindi ? cat.titleHi : cat.titleEn}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Interactive Widget: Hospital Cards Deck ── */}
+                {(msg.widgetType === "hospital_cards" || (msg.step === ChatStep.HOSPITAL && currentStep === ChatStep.HOSPITAL)) && (
+                  <div className="p-3 bg-white rounded-2xl border border-teal-200 shadow-sm space-y-2 animate-in fade-in duration-300">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                        <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                        {isHindi ? "दिल्ली-एनसीआर के मुख्य अस्पताल (चुनें):" : "Select Delhi-NCR Hospital Facility:"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1">
+                      {FEATURED_HOSPITALS.map((hosp) => (
+                        <div
+                          key={hosp.id}
+                          onClick={() => handleUserInput(hosp.name)}
+                          className="p-2.5 rounded-xl border border-slate-200 hover:border-teal-500 bg-white hover:bg-teal-50/40 transition-all cursor-pointer space-y-1.5 shadow-2xs hover:shadow-xs group"
+                        >
+                          <div className="flex items-start justify-between">
+                            <span className="font-extrabold text-xs text-slate-900 group-hover:text-teal-700 transition-colors line-clamp-1">
+                              {hosp.name}
+                            </span>
+                            <span className="text-[10px] font-bold text-amber-600 flex items-center gap-0.5">
+                              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> {hosp.rating}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
+                            <span>📍 {hosp.district}</span>
+                            <span className="text-emerald-700 font-bold flex items-center gap-1">
+                              <Bed className="w-3 h-3 text-emerald-600" /> {hosp.availableBeds} beds
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Interactive Widget: Doctor Profile Cards ── */}
+                {(msg.widgetType === "doctor_cards" || (msg.step === ChatStep.DOCTOR_SELECTION && currentStep === ChatStep.DOCTOR_SELECTION)) && (
+                  <div className="p-3 bg-white rounded-2xl border border-teal-200 shadow-sm space-y-2 animate-in fade-in duration-300">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                        <Stethoscope className="w-3.5 h-3.5 text-teal-600" />
+                        {isHindi ? "उपलब्ध विशेषज्ञ डॉक्टर (टैप करें):" : "Verified Specialist Doctors:"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {(SPECIALTY_DOCTORS[booking.doctorSpecialty] || SPECIALTY_DOCTORS["General Physician"]).map((doc) => (
+                        <div
+                          key={doc.id}
+                          onClick={() => handleUserInput(doc.name)}
+                          className="p-3 rounded-xl border border-slate-200 hover:border-teal-500 bg-white hover:bg-teal-50/40 transition-all cursor-pointer space-y-1.5 shadow-2xs group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-black text-xs">
+                                {doc.name.replace("Dr. ", "").charAt(0)}
+                              </div>
+                              <div>
+                                <span className="font-extrabold text-xs text-slate-900 group-hover:text-teal-700 transition-colors block leading-tight">
+                                  {doc.name}
+                                </span>
+                                <span className="text-[10px] text-teal-700 font-semibold">{doc.specialty} • {doc.experience}</span>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-amber-600 flex items-center gap-0.5">
+                              <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> {doc.rating}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                            <span>🚪 {doc.chamber}</span>
+                            <Badge className="bg-emerald-100 text-emerald-800 text-[9px] font-bold border-0">
+                              🟢 Live OPD
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Interactive Widget: Time Slot Matrix ── */}
+                {(msg.widgetType === "time_matrix" || (msg.step === ChatStep.TIMING && currentStep === ChatStep.TIMING)) && (
+                  <div className="p-3 bg-white rounded-2xl border border-teal-200 shadow-sm space-y-2.5 animate-in fade-in duration-300">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                      <span className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-teal-600" />
+                        {isHindi ? "ओपीडी स्लॉट मैट्रिक्स (कल के लिए):" : "Select OPD Consultation Time Matrix:"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">☀️ {isHindi ? "सुबह (Morning)" : "Morning"}</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {TIME_MATRIX.morning.map((slot, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleUserInput(slot)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 border border-slate-200 hover:bg-teal-600 hover:text-white transition-all text-slate-700"
+                            >
+                              {slot}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">⛅ {isHindi ? "दोपहर (Afternoon)" : "Afternoon"}</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {TIME_MATRIX.afternoon.map((slot, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleUserInput(slot)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 border border-slate-200 hover:bg-teal-600 hover:text-white transition-all text-slate-700"
+                            >
+                              {slot}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">🌙 {isHindi ? "शाम (Evening)" : "Evening"}</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {TIME_MATRIX.evening.map((slot, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleUserInput(slot)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-50 border border-slate-200 hover:bg-teal-600 hover:text-white transition-all text-slate-700"
+                            >
+                              {slot}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* ── Step 6: AI Clinical Suggestion Card ── */}
                 {msg.isSuggestionCard && (
@@ -1158,7 +1005,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
                         <Stethoscope className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
                         <div>
                           <span className="font-bold text-slate-800 block text-[11px]">
-                            {isHindi ? "सुझाई गई विशेषज्ञता:" : "Recommended Department:"} {booking.doctorSpecialty}
+                            {isHindi ? "सुझाई गई विशेषता:" : "Recommended Department:"} {booking.doctorSpecialty}
                           </span>
                           <p className="text-slate-600 text-[11px] mt-0.5 leading-relaxed">{booking.suggestion}</p>
                         </div>
@@ -1214,7 +1061,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
                   </Card>
                 )}
 
-                {/* ── Step 10: Structured 10-Point Appointment Summary Card ── */}
+                {/* ── Step 10: Structured 10-Point Summary Card ── */}
                 {msg.isSummary && currentStep === ChatStep.CONFIRM_APPOINTMENT && (
                   <Card className="border-2 border-teal-400 bg-white rounded-2xl shadow-md overflow-hidden animate-in fade-in duration-200">
                     <div className="bg-gradient-to-r from-teal-700 to-emerald-700 px-4 py-2.5 text-white flex items-center justify-between">
@@ -1228,7 +1075,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
                     </div>
 
                     <CardContent className="p-4 space-y-3 text-xs">
-                      {/* Row 1: Patient Name & Phone */}
+                      {/* Row 1: Name & Phone */}
                       <div className="grid grid-cols-2 gap-2 pb-2.5 border-b border-slate-100">
                         <div>
                           <span className="text-slate-400 font-bold uppercase text-[9px] block">1. {isHindi ? "मरीज का नाम" : "Patient Name"}</span>
@@ -1252,7 +1099,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
                         </div>
                       </div>
 
-                      {/* Row 3: Hospital & Suggestion */}
+                      {/* Row 3: Hospital & AI Suggestion */}
                       <div className="grid grid-cols-2 gap-2 pb-2.5 border-b border-slate-100">
                         <div>
                           <span className="text-slate-400 font-bold uppercase text-[9px] block">5. {isHindi ? "अस्पताल" : "Hospital"}</span>
@@ -1267,7 +1114,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
                         </div>
                       </div>
 
-                      {/* Row 4: Doctor Selection & Timing */}
+                      {/* Row 4: Doctor & Slot */}
                       <div className="grid grid-cols-2 gap-2 pb-2.5 border-b border-slate-100">
                         <div>
                           <span className="text-slate-400 font-bold uppercase text-[9px] block">7. {isHindi ? "विशेषज्ञ डॉक्टर" : "Doctor Selected"}</span>
@@ -1407,11 +1254,11 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           );
         })}
 
-        {/* Typing indicator */}
+        {/* Typing indicator with Groq Lightning Badge */}
         {isTyping && (
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium pl-9 animate-pulse">
-            <Bot className="w-3.5 h-3.5 text-teal-600" />
-            <span>{isHindi ? "Connect to Care सोच रहा है..." : "Validating response..."}</span>
+          <div className="flex items-center gap-2 text-teal-700 text-xs font-semibold pl-9 animate-pulse">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span>{isHindi ? "Groq AI सोच रहा है..." : "Groq LPU generating response..."}</span>
           </div>
         )}
 
@@ -1446,7 +1293,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
             placeholder={
               isListening 
                 ? (isHindi ? "सुन रहे हैं... बोलें" : "Listening... speak now") 
-                : (isHindi ? `चरण ${currentStepNumber}/10: अपना उत्तर लिखें...` : `Step ${currentStepNumber}/10: Type your answer...`)
+                : (isHindi ? `चरण ${currentStepNumber}/10: अपना उत्तर या प्रश्न लिखें...` : `Step ${currentStepNumber}/10: Type your answer or question...`)
             }
             className="flex-1 h-10 rounded-full bg-slate-100 border-0 focus-visible:ring-1 focus-visible:ring-teal-500 px-4 text-xs sm:text-sm text-slate-800 placeholder:text-slate-400"
           />
@@ -1454,7 +1301,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="w-10 h-10 rounded-full bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white flex items-center justify-center shrink-0 shadow-sm transition-all"
+            className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:opacity-40 text-white flex items-center justify-center shrink-0 shadow-sm transition-all"
           >
             <Send className="w-4 h-4" />
           </button>
