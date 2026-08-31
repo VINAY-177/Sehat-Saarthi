@@ -377,7 +377,7 @@ export default function LoginPage() {
             
             {/* Tagline Badge & Title */}
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/25 border border-teal-400/30 text-teal-300 text-[11px] font-extrabold backdrop-blur-md">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/90 border border-teal-500/50 text-teal-300 text-[11px] font-extrabold shadow-sm">
                 <Sparkles className="w-3 h-3 text-teal-300" />
                 <span>{isHindi ? "ABDM डिजिटल हेल्थ नेटवर्क" : "ABDM Digital Health Grid"}</span>
               </div>
@@ -396,7 +396,7 @@ export default function LoginPage() {
 
             {/* Feature Cards Deck */}
             <div className="space-y-2.5">
-              <div className="p-3 rounded-2xl bg-slate-900/60 backdrop-blur-md border border-white/15 shadow-sm space-y-1">
+              <div className="p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 shadow-lg space-y-1.5">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-teal-500/30 text-teal-300 flex items-center justify-center">
                     <Bed className="w-3.5 h-3.5" />
@@ -410,7 +410,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-900/60 backdrop-blur-md border border-white/15 shadow-sm space-y-1">
+              <div className="p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 shadow-lg space-y-1.5">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-rose-500/30 text-rose-300 flex items-center justify-center">
                     <Siren className="w-3.5 h-3.5" />
@@ -424,7 +424,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-900/60 backdrop-blur-md border border-white/15 shadow-sm space-y-1">
+              <div className="p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 shadow-lg space-y-1.5">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/30 text-emerald-300 flex items-center justify-center">
                     <Activity className="w-3.5 h-3.5" />
@@ -440,7 +440,7 @@ export default function LoginPage() {
             </div>
 
             {/* 24/7 Helplines Strip */}
-            <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1.5">
+            <div className="p-3 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 shadow-lg space-y-2">
               <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
                 <PhoneCall className="w-3 h-3 text-rose-400" />
                 {isHindi ? "24/7 आपातकालीन हेल्पलाइन:" : "24/7 Emergency Helplines:"}
@@ -774,7 +774,7 @@ export default function LoginPage() {
           <div className="lg:col-span-3 xl:col-span-3 space-y-3.5 text-white order-3">
             
             {/* Quick Demo Credentials Autofill Card */}
-            <div className="p-4 rounded-2xl bg-slate-900/65 backdrop-blur-md border border-white/15 shadow-sm space-y-2.5">
+            <div className="p-4 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 shadow-lg space-y-3">
               <div className="flex items-center gap-1.5 text-xs font-black text-emerald-300">
                 <Zap className="w-4 h-4 text-amber-400" />
                 <span>{isHindi ? "एक-क्लिक त्वरित डेमो लॉगिन:" : "One-Click Quick Demo Login:"}</span>
@@ -784,7 +784,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => handleQuickDemoLogin("9876500001", Role.PATIENT)}
-                  className="w-full p-2.5 rounded-xl bg-white/10 hover:bg-teal-500/30 border border-white/10 hover:border-teal-400/50 transition-all text-left flex items-center justify-between group cursor-pointer"
+                  className="w-full p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/60 transition-all text-left flex items-center justify-between group cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-teal-500/30 text-teal-200 flex items-center justify-center font-bold text-xs">
@@ -803,7 +803,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => handleQuickDemoLogin("9876500002", Role.DOCTOR)}
-                  className="w-full p-2.5 rounded-xl bg-white/10 hover:bg-teal-500/30 border border-white/10 hover:border-teal-400/50 transition-all text-left flex items-center justify-between group cursor-pointer"
+                  className="w-full p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/60 transition-all text-left flex items-center justify-between group cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-emerald-500/30 text-emerald-200 flex items-center justify-center font-bold text-xs">
@@ -822,7 +822,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => handleQuickDemoLogin("9876500003", Role.HOSPITAL_STAFF)}
-                  className="w-full p-2.5 rounded-xl bg-white/10 hover:bg-teal-500/30 border border-white/10 hover:border-teal-400/50 transition-all text-left flex items-center justify-between group cursor-pointer"
+                  className="w-full p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/60 transition-all text-left flex items-center justify-between group cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-blue-500/30 text-blue-200 flex items-center justify-center font-bold text-xs">
@@ -841,7 +841,7 @@ export default function LoginPage() {
             </div>
 
             {/* Emergency SOS Card */}
-            <div className="p-3.5 rounded-2xl bg-rose-950/60 backdrop-blur-md border border-rose-500/40 shadow-sm space-y-2">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-950/95 to-slate-950/95 backdrop-blur-xl border border-rose-600/50 shadow-lg space-y-2.5">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-rose-500 text-white rounded-lg animate-pulse">
                   <Siren className="w-4 h-4" />
@@ -868,7 +868,7 @@ export default function LoginPage() {
             </div>
 
             {/* Trust Badges */}
-            <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs space-y-1.5 text-slate-300 font-semibold">
+            <div className="p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 shadow-lg text-xs space-y-2 text-slate-200 font-semibold">
               <div className="flex items-center gap-1.5">
                 <CheckCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>110+ National Health Schemes</span>
