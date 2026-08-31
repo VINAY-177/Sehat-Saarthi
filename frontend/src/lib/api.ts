@@ -48,7 +48,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
+  const timeout = setTimeout(() => controller.abort(), 6000);
 
   try {
     const res = await fetch(`${baseUrl}${normalizedPath}`, {
@@ -69,7 +69,7 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     return res.json();
   } catch (err: unknown) {
     if (err instanceof Error && err.name === "AbortError") {
-      throw new ApiError(`Request to ${path} timed out after 30 seconds.`);
+      throw new ApiError(`Request to ${path} timed out after 6 seconds.`);
     }
     throw err;
   } finally {
