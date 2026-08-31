@@ -230,6 +230,7 @@ export interface Appointment {
   id: string;
   patientId: string;
   doctorId: string;
+  facilityId?: string;
   dateTime: string;
   endTime?: string | null;
   status: "REQUESTED" | "CONFIRMED" | "CHECKED_IN" | "IN_CONSULTATION" | "COMPLETED" | "DECLINED" | "CANCELLED" | string;
@@ -237,8 +238,8 @@ export interface Appointment {
   reason?: string | null;
   notes?: string | null;
   cancelReason?: string | null;
-  patient?: Patient;
-  doctor?: Doctor;
+  patient?: Patient | Partial<Patient>;
+  doctor?: Doctor | Partial<Doctor>;
   createdAt?: string;
   updatedAt?: string;
 }

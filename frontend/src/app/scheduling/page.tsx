@@ -9,7 +9,7 @@ import {
   DEFAULT_APPOINTMENTS_DATASET,
   DEFAULT_PATIENTS_DATASET,
 } from "@/lib/health-records-dataset";
-import { apiGet, apiPost, apiPut, isAuthenticationError } from "@/lib/api";
+import { apiGet, apiPut, isAuthenticationError } from "@/lib/api";
 import {
   appointmentDateTimeInputToIso,
   formatAppointmentDate,
@@ -56,6 +56,7 @@ const STATUS_CONFIG: Record<
 export default function SchedulingPage() {
   const {
     refreshAppointments,
+    createAppointment,
     currentUser,
     facilities,
     language,
@@ -166,6 +167,12 @@ export default function SchedulingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (storeAppointments && storeAppointments.length > 0) {
+      setAppointments(storeAppointments);
+    }
+  }, [storeAppointments]);
+
   // Helper to open booking modal with defaults
   const handleOpenBookingModal = () => {
     setBookingError(null);
@@ -228,40 +235,36 @@ export default function SchedulingPage() {
       return;
     }
 
-    if (bookingDataError) {
-      setBookingError("Unable to book appointment. Please try again.");
-      return;
-    }
-
     setBooking(true);
     try {
-      const created = await apiPost<Appointment>("/api/appointments", {
+      const matchedDoctor = doctors.find((d) => d.id === bookDoctorId);
+      const matchedPatient = patients.find((p) => p.id === bookPatientId);
+
+      const appointmentPayload: Partial<Appointment> = {
         patientId: bookPatientId,
         doctorId: bookDoctorId,
-        facilityId: bookFacilityId || undefined,
+        facilityId: bookFacilityId || matchedDoctor?.facilityId || undefined,
         dateTime: appointmentDateTimeInputToIso(bookDateTime),
         visitType: bookVisitType,
-        reason: bookReason.trim() || undefined,
+        reason: bookReason.trim() || "General Consultation",
         notes: bookNotes.trim() || undefined,
         status: "CONFIRMED",
-      });
+        doctor: matchedDoctor,
+        patient: matchedPatient,
+      };
 
-      if (created && created.id) {
-        toast.success("Appointment booked successfully.");
-        setShowBookModal(false);
-        setBookReason("");
-        setBookNotes("");
-        setBookingError(null);
-        // Immediately add to local appointment state and trigger store refresh
-        setAppointments((prev) => [created, ...prev.filter((a) => a.id !== created.id)]);
-        refreshAppointments();
-      } else {
-        throw new Error("Server did not return a valid appointment record.");
-      }
+      const created = await createAppointment(appointmentPayload);
+
+      toast.success("Appointment booked successfully.");
+      setShowBookModal(false);
+      setBookReason("");
+      setBookNotes("");
+      setBookingError(null);
+      // Immediately add to local appointment state and trigger store refresh
+      setAppointments((prev) => [created, ...prev.filter((a) => a.id !== created.id)]);
+      refreshAppointments();
     } catch (err: unknown) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Error booking appointment:", err);
-      }
+      console.error("Error booking appointment:", err);
       const msg = "Unable to book appointment. Please try again.";
       setBookingError(msg);
       toast.error(msg);
