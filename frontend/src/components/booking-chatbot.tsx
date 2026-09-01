@@ -1097,13 +1097,13 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
 
     addBotMessage(
       isHindi 
-        ? `🎉 बधाई ${finalBooking.fullName}! आपका अपॉइंटमेंट सफलतापूर्वक दर्ज हो गया है और शेड्यूल में जोड़ दिया गया है। आपका ओपीडी टोकन आईडी: ${generatedId}`
-        : `🎉 Congratulations ${finalBooking.fullName}! Your OPD appointment is confirmed and synced to your schedule. Token ID: ${generatedId}`,
+        ? `✅ ${finalBooking.fullName} जी, आपका अपॉइंटमेंट सफलतापूर्वक दर्ज कर लिया गया है और शेड्यूल में जोड़ दिया गया है। हम आपके शीघ्र स्वस्थ होने और अच्छे स्वास्थ्य की कामना करते हैं। आपका ओपीडी टोकन आईडी: ${generatedId}`
+        : `✅ ${finalBooking.fullName}, your OPD appointment has been confirmed and scheduled. We wish you good health and a speedy recovery. Token ID: ${generatedId}`,
       undefined,
       ChatStep.BOOKED
     );
 
-    toast.success(isHindi ? "अपॉइंटमेंट टोकन सफलतापूर्वक बुक हो गया!" : "OPD Appointment Confirmed & Synced to Schedule!");
+    toast.success(isHindi ? "अपॉइंटमेंट टोकन सफलतापूर्वक दर्ज हुआ!" : "OPD Appointment Confirmed & Synced to Schedule!");
   };
 
   const handleEditBooking = () => {
