@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Role, AuthUser } from "@/lib/types";
@@ -53,6 +53,32 @@ export default function LoginPage() {
   const [signupPhone, setSignupPhone] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [specialty, setSpecialty] = useState("General Physician");
+
+  // Animated hospital counter (0 → 118)
+  const [hospitalCount, setHospitalCount] = useState(0);
+  const counterStarted = useRef(false);
+
+  useEffect(() => {
+    if (counterStarted.current) return;
+    counterStarted.current = true;
+    const target = 118;
+    const duration = 2000; // 2 seconds
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic for a satisfying deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(eased * target);
+      setHospitalCount(current);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, []);
 
   const DEMO_ACCOUNTS: Record<string, AuthUser> = {
     "9876500001": {
@@ -402,7 +428,7 @@ export default function LoginPage() {
                     <Bed className="w-3.5 h-3.5" />
                   </div>
                   <h4 className="font-extrabold text-xs text-white">
-                    {isHindi ? "118+ अस्पताल नेटवर्क" : "118+ NCR Hospital Grid"}
+                    {isHindi ? <><span className="tabular-nums">{hospitalCount}</span>+ अस्पताल नेटवर्क</> : <><span className="tabular-nums">{hospitalCount}</span>+ NCR Hospital Grid</>}
                   </h4>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-snug">
