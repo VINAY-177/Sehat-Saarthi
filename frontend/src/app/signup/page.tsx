@@ -344,8 +344,8 @@ export default function LoginPage() {
             <span className="text-base sm:text-lg font-black text-white tracking-tight drop-shadow-sm block">
               {t("brandName") || "Sehat Saarthi"}
             </span>
-            <p className="text-[9px] sm:text-[10px] font-bold text-teal-300 tracking-wider uppercase">
-              {isHindi ? "राष्ट्रीय स्वास्थ्य व आपातकालीन नेटवर्क" : "National Health & Emergency Grid"}
+            <p className="text-[10px] sm:text-[11px] font-bold text-teal-300 tracking-tight">
+              {t("tagline") || (isHindi ? "स्वस्थ आपका, साथ हमारा" : "Swasth Aapka, Saath Humara")}
             </p>
           </div>
         </Link>
