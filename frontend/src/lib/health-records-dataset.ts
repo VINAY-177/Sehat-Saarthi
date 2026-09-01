@@ -9,7 +9,7 @@ import {
 } from "@/lib/types";
 
 // ============================================================
-// Sehat Saathi AI — Master Clinical Health Records Dataset
+// Sehat Saarthi AI — Master Clinical Health Records Dataset
 // ============================================================
 
 export const DEFAULT_DOCTORS_DATASET: Doctor[] = [

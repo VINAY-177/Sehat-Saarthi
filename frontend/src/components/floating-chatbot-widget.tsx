@@ -46,7 +46,7 @@ export function FloatingChatbotWidget() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="!w-[calc(100vw-2rem)] !max-w-[1400px] !h-[calc(100vh-2rem)] !max-h-[94vh] p-0 overflow-hidden rounded-3xl border-0 shadow-2xl bg-transparent [&>button]:z-50 [&>button]:text-white [&>button]:bg-slate-900/60 [&>button]:rounded-full [&>button]:p-1.5 [&>button]:right-4 [&>button]:top-4">
           <DialogHeader className="sr-only">
-            <DialogTitle>Sehat Saathi AI Voice Assistant</DialogTitle>
+            <DialogTitle>Sehat Saarthi AI Voice Assistant</DialogTitle>
           </DialogHeader>
           <div className="h-full w-full min-w-0 overflow-hidden">
             <BookingChatbot onBackToDashboard={() => setIsOpen(false)} />

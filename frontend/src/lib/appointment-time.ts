@@ -1,5 +1,5 @@
 /**
- * Appointments are scheduled at Sehat Saathi facilities in India. Persist the
+ * Appointments are scheduled at Sehat Saarthi facilities in India. Persist the
  * selected India Standard Time (IST) as a UTC ISO instant, and always render
  * appointment times in IST. This avoids browser-local timezone shifts.
  */

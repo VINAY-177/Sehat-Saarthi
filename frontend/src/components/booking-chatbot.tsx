@@ -488,8 +488,8 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
   const startConversation = useCallback(() => {
     setCurrentStep(ChatStep.NAME);
     const greetingText = isHindi 
-      ? "नमस्ते! मैं आपका Connect to Care AI सहायक हूँ 🤖। मैं दिल्ली-एनसीआर में डॉक्टर परामर्श और ओपीडी टोकन बुक करने में आपकी सहायता करूँगा।"
-      : "Hello! I am your Connect to Care AI Assistant 🤖. I will help you find the right specialist doctor and book your OPD token across Delhi-NCR.";
+      ? "नमस्ते! मैं आपका Sehat Saarthi AI सहायक हूँ 🤖। मैं दिल्ली-एनसीआर में डॉक्टर परामर्श और ओपीडी टोकन बुक करने में आपकी सहायता करूँगा।"
+      : "Hello! I am your Sehat Saarthi AI Assistant 🤖. I will help you find the right specialist doctor and book your OPD token across Delhi-NCR.";
     
     const nameQuestion = isHindi
       ? (currentUser?.name ? `शुरू करने के लिए, क्या आपका पूरा नाम "${currentUser.name}" है, या नीचे अपना नाम बताएं:` : `शुरू करने के लिए, कृपया मरीज का पूरा नाम बताएं:`)
@@ -1159,7 +1159,7 @@ export function BookingChatbot({ onBackToDashboard }: { onBackToDashboard?: () =
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-sm sm:text-base text-white truncate">
-                {isHindi ? "सेहत साथी एआई" : "Connect to Care AI"}
+                {isHindi ? "सेहत सारथी एआई" : "Sehat Saarthi AI"}
               </span>
               <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold px-1.5 py-0">
                 ⚡ LPU Fast

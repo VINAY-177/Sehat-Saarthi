@@ -16,7 +16,7 @@ import {
 } from "./health-records-dataset";
 
 // ============================================================
-// Sehat Saathi AI — Reactive Data Store & Language Context
+// Sehat Saarthi AI — Reactive Data Store & Language Context
 // ============================================================
 
 interface StoreState {

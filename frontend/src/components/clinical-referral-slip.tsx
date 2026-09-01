@@ -54,7 +54,7 @@ export function ClinicalReferralSlipModal({
               </div>
               <h2 className="text-xl font-extrabold mt-0.5">INTER-FACILITY CLINICAL REFERRAL FORM</h2>
               <div className="text-xs text-muted-foreground mt-0.5">
-                Sehat Saathi AI Verified Digital Triage Slip
+                Sehat Saarthi AI Verified Digital Triage Slip
               </div>
             </div>
             <div className="text-right">
@@ -129,7 +129,7 @@ export function ClinicalReferralSlipModal({
           </div>
 
           <div className="text-[10px] text-muted-foreground text-center pt-2">
-            Generated via Sehat Saathi AI Integrated Rural Health Navigation System • Timestamp: {new Date(referral.createdAt).toLocaleString()}
+            Generated via Sehat Saarthi AI Integrated Rural Health Navigation System • Timestamp: {new Date(referral.createdAt).toLocaleString()}
           </div>
         </div>
 

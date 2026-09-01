@@ -113,7 +113,7 @@ export default function RegisterPage() {
       });
 
       if (typeof window !== "undefined") {
-        localStorage.removeItem("Sehat Saathi-draft");
+        localStorage.removeItem("Sehat Saarthi-draft");
       }
 
       toast.success("Patient registered and recorded in PostgreSQL database!");

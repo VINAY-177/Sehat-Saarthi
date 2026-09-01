@@ -312,8 +312,8 @@ export default function ProfilePage() {
             <h2 className="text-xl font-bold">{language === "hi" ? "अपनी प्रोफ़ाइल पूरी करें" : "Complete Your Profile"}</h2>
             <p className="text-teal-50 text-sm">
               {language === "hi"
-                ? "अपनी स्वास्थ्य प्रोफ़ाइल पूरी करें ताकि Connect to Care एक सहज क्लिनिकल और रेफरल अनुभव प्रदान कर सके।"
-                : "Let's complete your healthcare profile so Connect to Care can provide a seamless clinical and referral experience."}
+                ? "अपनी स्वास्थ्य प्रोफ़ाइल पूरी करें ताकि Sehat Saarthi एक सहज क्लिनिकल और रेफरल अनुभव प्रदान कर सके।"
+                : "Let's complete your healthcare profile so Sehat Saarthi can provide a seamless clinical and referral experience."}
             </p>
           </div>
         </div>

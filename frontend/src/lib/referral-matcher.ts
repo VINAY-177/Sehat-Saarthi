@@ -1,7 +1,7 @@
 import { Facility, FacilityMatch, Urgency, BloodGroup } from "@/lib/types";
 
 // ============================================================
-// Sehat Saathi AI — Referral & Facility Matching Engine
+// Sehat Saarthi AI — Referral & Facility Matching Engine
 // Ranks facilities by distance, capability, and availability
 // ============================================================
 

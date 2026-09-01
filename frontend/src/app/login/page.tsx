@@ -338,11 +338,11 @@ export default function LoginPage() {
         {/* Brand Link on Top Left */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-2xl bg-white/95 backdrop-blur-md shadow-lg border border-white/40 p-1.5 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <Image src="/logo.png" alt="Connect to Care" width={32} height={32} className="object-contain" priority />
+            <Image src="/logo.png" alt="Sehat Saarthi" width={32} height={32} className="object-contain" priority />
           </div>
           <div>
             <span className="text-base sm:text-lg font-black text-white tracking-tight drop-shadow-sm block">
-              {t("brandName") || "Connect to Care"}
+              {t("brandName") || "Sehat Saarthi"}
             </span>
             <p className="text-[9px] sm:text-[10px] font-bold text-teal-300 tracking-wider uppercase">
               {isHindi ? "राष्ट्रीय स्वास्थ्य व आपातकालीन नेटवर्क" : "National Health & Emergency Grid"}
@@ -531,7 +531,7 @@ export default function LoginPage() {
                 </h1>
                 <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto">
                   {isHindi
-                    ? "Connect to Care राष्ट्रीय स्वास्थ्य पोर्टल में आपका स्वागत है"
+                    ? "Sehat Saarthi राष्ट्रीय स्वास्थ्य पोर्टल में आपका स्वागत है"
                     : "Access appointments, beds, 108 SOS & medical records"}
                 </p>
               </div>
@@ -917,7 +917,7 @@ export default function LoginPage() {
       {/* ── 5. Footer Trust Bar ── */}
       <footer className="relative z-30 max-w-7xl mx-auto w-full pt-3 pb-1 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
         <div className="flex items-center gap-2 font-medium">
-          <span>© 2026 Connect to Care • National Health Stack India</span>
+          <span>© 2026 Sehat Saarthi • National Health Stack India</span>
         </div>
         <div className="flex items-center gap-4 font-semibold text-slate-300">
           <span className="flex items-center gap-1">

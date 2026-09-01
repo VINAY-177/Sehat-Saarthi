@@ -1,5 +1,5 @@
 // ============================================================
-// Sehat Saathi AI — Comprehensive Bilingual Localization (English / हिंदी)
+// Sehat Saarthi AI — Comprehensive Bilingual Localization (English / हिंदी)
 // ============================================================
 
 export type Language = "en" | "hi";
@@ -174,8 +174,8 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   en: {
     // Brand
-    brandName: "Connect to Care",
-    tagline: "Sehat Aapki, Saath Humara",
+    brandName: "Sehat Saarthi",
+    tagline: "Swasth Aapka, Saath Humara",
     subTagline: "AI-Powered Healthcare Navigation for India",
 
     // Header & User Actions
@@ -221,8 +221,8 @@ export const translations: Record<Language, Translations> = {
     goodEvening: "Good Evening",
     goodNight: "Good Night",
     companionReady: "Your intelligent health companion is ready to assist you.",
-    bookDoctor60Sec: "Book Doctor Consultation with Connect to Care in 60 Seconds",
-    bookWithAi: "Book with Connect to Care",
+    bookDoctor60Sec: "Book Doctor Consultation with Sehat Saarthi in 60 Seconds",
+    bookWithAi: "Book with Sehat Saarthi",
     voiceAndChat: "Voice & Chat",
     quickServices: "Quick Healthcare Services",
     nearbyHospitals: "Nearby Hospitals",
@@ -276,7 +276,7 @@ export const translations: Record<Language, Translations> = {
     signInTitle: "Sign in to your account",
     signInSub: "Select your role and enter your credentials to continue.",
     signUpTitle: "Create your account",
-    signUpSub: "Join thousands of citizens, doctors, and hospitals on Connect to Care.",
+    signUpSub: "Join thousands of citizens, doctors, and hospitals on Sehat Saarthi.",
     iAmA: "I AM A",
     patientRole: "Patient",
     doctorRole: "Doctor",
@@ -300,11 +300,11 @@ export const translations: Record<Language, Translations> = {
     heroHeadlineAccent: "accessible to everyone.",
     heroSubtext: "One platform connecting patients, doctors, and hospitals — powered by AI for a healthier India.",
     signupHeroHeadline: "Create Your Healthcare Account.",
-    signupHeroSubtext: "Join thousands of citizens, certified doctors, and healthcare facilities unified on the Connect to Care clinical intelligence network.",
+    signupHeroSubtext: "Join thousands of citizens, certified doctors, and healthcare facilities unified on the Sehat Saarthi clinical intelligence network.",
     trustBadgeText: "ABDM Compliant · End-to-End Encrypted · HIPAA Ready",
 
     // Chatbot Flow
-    botTitle: "Connect to Care AI",
+    botTitle: "Sehat Saarthi AI",
     botSubtitle: "Online · Voice & Chat",
     onlineAssistant: "Online",
     resetChat: "Reset Flow",
@@ -342,8 +342,8 @@ export const translations: Record<Language, Translations> = {
 
   hi: {
     // Brand
-    brandName: "Connect to Care",
-    tagline: "सेहत आपकी, साथ हमारा",
+    brandName: "सेहत सारथी",
+    tagline: "स्वस्थ आपका, साथ हमारा",
     subTagline: "भारत के लिए एआई-संचालित स्वास्थ्य सेवा नेविगेशन",
 
     // Header & User Actions
@@ -388,9 +388,9 @@ export const translations: Record<Language, Translations> = {
     goodAfternoon: "शुभ दोपहर",
     goodEvening: "शुभ संध्या",
     goodNight: "शुभ रात्रि",
-    companionReady: "आपका डिजिटल Connect to Care साथी आपकी सहायता के लिए तैयार है।",
-    bookDoctor60Sec: "Connect to Care से 60 सेकंड में डॉक्टर परामर्श बुक करें",
-    bookWithAi: "Connect to Care से बुक करें",
+    companionReady: "आपका डिजिटल Sehat Saarthi साथी आपकी सहायता के लिए तैयार है।",
+    bookDoctor60Sec: "Sehat Saarthi से 60 सेकंड में डॉक्टर परामर्श बुक करें",
+    bookWithAi: "Sehat Saarthi से बुक करें",
     voiceAndChat: "आवाज और चैट",
     quickServices: "त्वरित स्वास्थ्य सेवाएं",
     nearbyHospitals: "नजदीकी अस्पताल",
@@ -444,7 +444,7 @@ export const translations: Record<Language, Translations> = {
     signInTitle: "अपने खाते में साइन इन करें",
     signInSub: "जारी रखने के लिए अपनी भूमिका चुनें और विवरण दर्ज करें।",
     signUpTitle: "नया खाता बनाएं",
-    signUpSub: "Connect to Care पर हजारों नागरिकों, डॉक्टरों और अस्पतालों से जुड़ें।",
+    signUpSub: "Sehat Saarthi पर हजारों नागरिकों, डॉक्टरों और अस्पतालों से जुड़ें।",
     iAmA: "मेरी भूमिका है",
     patientRole: "रोगी / नागरिक",
     doctorRole: "चिकित्सक (Doctor)",
@@ -468,11 +468,11 @@ export const translations: Record<Language, Translations> = {
     heroHeadlineAccent: "हर भारतीय के लिए सुलभ।",
     heroSubtext: "मरीजों, डॉक्टरों और अस्पतालों को एक साथ जोड़ने वाला AI-संचालित डिजिटल स्वास्थ्य प्लेटफॉर्म।",
     signupHeroHeadline: "अपना डिजिटल स्वास्थ्य खाता बनाएं।",
-    signupHeroSubtext: "Connect to Care क्लिनिकल इंटेलिजेंस नेटवर्क पर हजारों नागरिकों, प्रमाणित डॉक्टरों और स्वास्थ्य सुविधाओं से जुड़ें।",
+    signupHeroSubtext: "Sehat Saarthi क्लिनिकल इंटेलिजेंस नेटवर्क पर हजारों नागरिकों, प्रमाणित डॉक्टरों और स्वास्थ्य सुविधाओं से जुड़ें।",
     trustBadgeText: "एबीडीएम प्रमाणित · 256-बिट एन्क्रिप्टेड · सुरक्षित डेटा",
 
     // Chatbot Flow
-    botTitle: "Connect to Care AI",
+    botTitle: "Sehat Saarthi AI",
     botSubtitle: "ऑनलाइन · वॉयस एवं चैट",
     onlineAssistant: "ऑनलाइन",
     resetChat: "रीसेट करें",

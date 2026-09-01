@@ -6,8 +6,8 @@ import { AppShell } from "@/components/layout/app-shell";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Connect to Care — Sehat Aapki, Saath Humara",
-  description: "Connect to Care — Intelligent healthcare navigation, hospital bed telemetry, and emergency 108 dispatch network. Sehat Aapki, Saath Humara.",
+  title: "Sehat Saarthi — Swasth Aapka, Saath Humara",
+  description: "Sehat Saarthi — Intelligent healthcare navigation, hospital bed telemetry, and emergency 108 dispatch network. Swasth Aapka, Saath Humara.",
 };
 
 export default function RootLayout({
